@@ -38,6 +38,7 @@ Built for AWS today (EC2, Auto Scaling Groups, SpotFleet, EC2Fleet, Lambda Micro
 **Provider support:**
 - **AWS** — EC2 RunInstances, EC2Fleet, SpotFleet, Auto Scaling Groups, Lambda MicroVMs
 - **Kubernetes** — Pod, Deployment, StatefulSet, Job (`pip install "orb-py[k8s]"`; see [Kubernetes provider docs](docs/root/providers/k8s/index.md))
+- **OCI** - Compute instances, Flex and bare-metal shapes, preemptible capacity, and instance-principal authentication ([setup guide](docs/root/deployment/oci-integration.md))
 - **Custom** — extensible via [provider registry](docs/root/developer_guide/architecture.md) and the [`orb.providers` entry-point group](docs/root/providers/k8s/plugin-authoring.md)
 
 **Scheduler support:**

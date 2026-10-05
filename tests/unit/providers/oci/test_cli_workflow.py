@@ -1,0 +1,98 @@
+"""Offline smoke test through the installed CLI and real application bootstrap."""
+
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+
+import pytest
+
+
+@pytest.mark.parametrize("scheduler", ["default", "hostfactory"])
+def test_init_generate_list_with_oci_defaults(tmp_path, scheduler):
+    config_dir = tmp_path / "config"
+    config_path = config_dir / "config.json"
+    orb = Path(sys.executable).parent / ("orb.exe" if os.name == "nt" else "orb")
+    env = {
+        **os.environ,
+        "PYTHONUTF8": "1",
+        "ORB_CONFIG_DIR": str(config_dir),
+        "ORB_WORK_DIR": str(tmp_path / "work"),
+        "ORB_LOG_DIR": str(tmp_path / "logs"),
+    }
+
+    def run(*args):
+        result = subprocess.run(
+            [str(orb), *args],
+            cwd=tmp_path,
+            env=env,
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=60,
+        )
+        assert result.returncode == 0, result.stdout + result.stderr
+        return result.stdout
+
+    run(
+        "init",
+        "--non-interactive",
+        "--scheduler",
+        scheduler,
+        "--provider-type",
+        "oci",
+        "--oci-credential-source",
+        "instance_principal",
+        "--oci-region",
+        "us-ashburn-1",
+        "--config-dir",
+        str(config_dir),
+    )
+    config = json.loads(config_path.read_text(encoding="utf-8"))
+    provider = config["provider"]["providers"][0]
+    assert provider["type"] == "oci"
+    assert provider["config"] == {
+        "region": "us-ashburn-1",
+        "credential_source": "instance_principal",
+    }
+    provider["template_defaults"] = {
+        "image_id": "ocid1.image.oc1..example",
+        "subnet_ids": ["ocid1.subnet.oc1..example"],
+        "compartment_id": "ocid1.compartment.oc1..example",
+        "availability_domain": "AD-1",
+    }
+    config_path.write_text(json.dumps(config), encoding="utf-8")
+    run("--config", str(config_path), "templates", "generate")
+    output = run("--config", str(config_path), "templates", "list")
+    payload = json.loads(output)
+    assert len(payload["templates"]) == 4
+    # Both scheduler representations must carry resolved deployment defaults.
+    assert "ocid1.image.oc1..example" in output
+    if scheduler == "default":
+        assert "ocid1.subnet.oc1..example" in output
+        assert "ocid1.compartment.oc1..example" in output
+    assert "VM.Standard.E6.Flex" in output
+
+    # Exercise the current single-object create contract without cloud calls.
+    new_template = {
+        "template_id": "oci-created-test",
+        "provider_type": "oci",
+        "provider_name": provider["name"],
+        "provider_api": "OCICompute",
+        "machine_image": "ocid1.image.oc1..example",
+        "machine_types": {"VM.Standard.E4.Flex": 1},
+        "subnet_ids": ["ocid1.subnet.oc1..example"],
+        "compartment_id": "ocid1.compartment.oc1..example",
+        "shape_config": {"ocpus": 2, "memoryInGBs": 16},
+    }
+    source = tmp_path / "new-template.json"
+    source.write_text(json.dumps(new_template), encoding="utf-8")
+    created = json.loads(
+        run("--config", str(config_path), "templates", "create", "--file", str(source))
+    )
+    assert created["status"] == "created", created
+    shown = run("--config", str(config_path), "templates", "show", "oci-created-test")
+    assert "oci-created-test" in shown
+    assert "VM.Standard.E4.Flex" in shown
