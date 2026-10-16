@@ -6,6 +6,7 @@ from importlib import import_module
 import pytest
 
 from orb.infrastructure.template.factories import TemplateDTOFactory
+from orb.infrastructure.mocking.dry_run_context import dry_run_context
 from orb.infrastructure.scheduler.hostfactory.field_mapper import HostFactoryFieldMapper
 from orb.infrastructure.scheduler.hostfactory.field_mapping_registry import FieldMappingRegistry
 from orb.providers.base.strategy import ProviderOperation, ProviderOperationType
@@ -239,6 +240,23 @@ async def test_rdma_dry_run_does_not_contact_oci(template):
     )
     assert result.success
     assert all(p["compute_cluster_id"] == "cluster-1" for p in result.data["launch_requests"])
+    handler._run_oci.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_cli_global_dry_run_blocks_live_cli_without_pytest_or_operation_flags(template):
+    handler = make_handler()
+    handler._is_test_context = MagicMock(return_value=False)
+    handler._run_oci = MagicMock(side_effect=AssertionError("global dry run contacted OCI"))
+    with dry_run_context():
+        result = await handler.create_instances(
+            ProviderOperation(
+                operation_type=ProviderOperationType.CREATE_INSTANCES,
+                parameters={"template_config": template, "count": 2},
+            )
+        )
+    assert result.success
+    assert len(result.data["instance_ids"]) == 2
     handler._run_oci.assert_not_called()
 
 

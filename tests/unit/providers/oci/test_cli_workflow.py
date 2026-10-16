@@ -21,6 +21,21 @@ def test_init_generate_list_with_oci_defaults(tmp_path, scheduler):
         "ORB_WORK_DIR": str(tmp_path / "work"),
         "ORB_LOG_DIR": str(tmp_path / "logs"),
     }
+    # Exercise production CLI mode: pytest's environment must not implicitly
+    # enable OCI mocks and conceal a missing --dry-run context check.
+    env.pop("PYTEST_CURRENT_TEST", None)
+    fake_bin = tmp_path / "fake-bin"
+    fake_bin.mkdir()
+    invoked = tmp_path / "unexpected-oci-call"
+    fake_cli = fake_bin / ("oci.cmd" if os.name == "nt" else "oci")
+    if os.name == "nt":
+        fake_cli.write_text(f'@echo off\necho invoked > "{invoked}"\nexit /b 97\n')
+    else:
+        import shlex
+
+        fake_cli.write_text(f"#!/bin/sh\necho invoked > {shlex.quote(str(invoked))}\nexit 97\n")
+        fake_cli.chmod(0o755)
+    env["PATH"] = str(fake_bin) + os.pathsep + env.get("PATH", "")
 
     def run(*args):
         result = subprocess.run(
@@ -126,3 +141,4 @@ def test_init_generate_list_with_oci_defaults(tmp_path, scheduler):
     if scheduler == "default":
         assert request["provider_type"] == "oci"
         assert request["provider_api"] == "OCICompute"
+    assert not invoked.exists(), "Offline workflow invoked OCI CLI"

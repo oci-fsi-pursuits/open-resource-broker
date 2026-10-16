@@ -12,6 +12,7 @@ from uuid import uuid4
 
 from orb.domain.base.ports import LoggingPort
 from orb.domain.base.provider_fulfilment import FulfilmentState, ProviderFulfilment
+from orb.infrastructure.mocking.dry_run_context import is_dry_run_active
 from orb.providers.base.strategy import ProviderOperation, ProviderResult
 from orb.providers.oci.mapping import OCITemplateMapper
 from orb.providers.oci.oci_cli_auth import build_oci_cli_extra_args, build_oci_cli_env
@@ -42,6 +43,8 @@ class OCIComputeHandler:
         return bool(os.environ.get("PYTEST_CURRENT_TEST"))
 
     def _use_live_cli(self, operation: ProviderOperation | None = None) -> bool:
+        if is_dry_run_active():
+            return False
         if operation is not None and any(
             (operation.context or {}).get(key) for key in ("dry_run", "mock", "allow_mock")
         ):
@@ -55,7 +58,10 @@ class OCIComputeHandler:
     def _use_mock_mode(self, operation: ProviderOperation) -> bool:
         context = operation.context or {}
         return self._is_test_context() or bool(
-            context.get("dry_run") or context.get("mock") or context.get("allow_mock")
+            is_dry_run_active()
+            or context.get("dry_run")
+            or context.get("mock")
+            or context.get("allow_mock")
         )
 
     @staticmethod
