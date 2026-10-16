@@ -167,7 +167,9 @@ nav:
       - Supported APIs: hostfactory/supported-apis.md
   - Providers:
     - OCI:
-      - Overview: deployment/oci-integration.md
+      - Compute Instances (OCICompute): providers/oci/compute.md
+      - Deployment and Authentication: deployment/oci-integration.md
+      - Compute Templates and Flex Sizing: providers/oci/templates.md
       - Compute Clusters and RDMA: providers/oci/compute-clusters.md
     - AWS:
       - EC2 Instances (RunInstances): providers/aws/run-instances.md

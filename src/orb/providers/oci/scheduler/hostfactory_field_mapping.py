@@ -13,6 +13,10 @@ class OCIFieldMapping:
 
     def get_mappings(self) -> dict[str, str]:
         return {
+            "subnetId": "subnet_ids",
+            "subnetIds": "subnet_ids",
+            "securityGroupIds": "security_group_ids",
+            "userDataScript": "machine_bootstrap",
             "compartmentId": "compartment_id",
             "availabilityDomain": "availability_domain",
             "computeClusterId": "compute_cluster_id",

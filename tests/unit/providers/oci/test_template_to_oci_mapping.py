@@ -233,6 +233,6 @@ def test_oci_template_example_generator_uses_active_provider_name() -> None:
 
     templates = generator.generate_example_templates("oci_DEFAULT_us-phoenix-1")
 
-    assert len(templates) == 5
+    assert len(templates) == 25
     assert {template["provider_name"] for template in templates} == {"oci_DEFAULT_us-phoenix-1"}
     assert {template["provider_api"] for template in templates} == {"OCICompute"}

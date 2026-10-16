@@ -3,6 +3,7 @@ from __future__ import annotations
 """Template-to-OCI launch payload mapping helpers."""
 
 from typing import Any
+from math import isfinite
 
 from orb.providers.oci.services import OCIPricingService
 
@@ -12,6 +13,12 @@ class OCITemplateMapper:
 
     REQUIRED_FIELDS = ("template_id", "image_id", "shape", "subnet_id", "compartment_id")
     CAPACITY_TYPES = {"ondemand", "preemptible"}
+    # DenseIO is Flex in fixed NVMe-backed increments, not arbitrary CPU/RAM.
+    DENSE_FLEX_SIZES: dict[str, dict[float, float]] = {
+        "VM.DenseIO.E4.Flex": {8: 128, 16: 256, 32: 512},
+        "VM.DenseIO.E5.Flex": {ocpus: ocpus * 12 for ocpus in range(8, 49, 8)},
+        "VM.DenseIO.E6.Ax.Flex": {ocpus: ocpus * 12 for ocpus in range(8, 49, 8)},
+    }
 
     @staticmethod
     def _shape_family(shape: str | None) -> str | None:
@@ -79,25 +86,27 @@ class OCITemplateMapper:
         if not isinstance(shape_config, dict):
             shape_config = {}
 
-        ocpus = cls._to_float(
-            _get("ocpus", "ocpu", "shape_ocpus")
-            or shape_config.get("ocpus")
-            or shape_config.get("OCPUs")
-        )
-        memory_gbs = cls._to_float(
-            _get("memory_gbs", "memoryInGBs", "memory_gb", "memory")
-            or shape_config.get("memoryInGBs")
-            or shape_config.get("memory_gbs")
-        )
+        raw_ocpus = _get("ocpus", "ocpu", "shape_ocpus")
+        if raw_ocpus is None:
+            raw_ocpus = shape_config.get("ocpus", shape_config.get("OCPUs"))
+        raw_memory = _get("memory_gbs", "memoryInGBs", "memory_gb", "memory")
+        if raw_memory is None:
+            raw_memory = shape_config.get("memoryInGBs", shape_config.get("memory_gbs"))
+        ocpus = cls._to_float(raw_ocpus)
+        memory_gbs = cls._to_float(raw_memory)
         boot_volume_gbs = cls._to_float(
             _get("boot_volume_gbs", "machine_disk_size_gb", "storage_gbs", "bootVolumeSizeInGBs")
         )
 
         effective_shape_config = dict(shape_config)
-        if ocpus is not None:
-            effective_shape_config["ocpus"] = ocpus
-        if memory_gbs is not None:
-            effective_shape_config["memoryInGBs"] = memory_gbs
+        effective_shape_config.pop("OCPUs", None)
+        effective_shape_config.pop("memory_gbs", None)
+        if raw_ocpus is not None:
+            effective_shape_config["ocpus"] = ocpus if ocpus is not None else raw_ocpus
+        if raw_memory is not None:
+            effective_shape_config["memoryInGBs"] = (
+                memory_gbs if memory_gbs is not None else raw_memory
+            )
 
         capacity_type = str(_get("capacity_type", "capacityType") or "ondemand").lower()
         fallback_to_ondemand = bool(
@@ -174,6 +183,20 @@ class OCITemplateMapper:
             or normalized.get("shape_config")
         ):
             missing.append("bm_shape_does_not_support_flex_sizing")
+
+        shape_config = normalized.get("shape_config") or {}
+        for field in ("ocpus", "memoryInGBs"):
+            if field in shape_config:
+                value = cls._to_float(shape_config[field])
+                if value is None or not isfinite(value) or value <= 0:
+                    missing.append(f"shape_config.{field}(must be finite and positive)")
+
+        dense_sizes = cls.DENSE_FLEX_SIZES.get(str(normalized.get("shape") or ""))
+        if dense_sizes is not None:
+            ocpus = normalized.get("ocpus")
+            expected_memory = dense_sizes.get(ocpus) if ocpus is not None else None
+            if expected_memory is None or normalized.get("memory_gbs") != expected_memory:
+                missing.append("dense_flex_requires_supported_ocpu_memory_pair")
 
         if normalized.get("compute_cluster_id"):
             if not is_bm:

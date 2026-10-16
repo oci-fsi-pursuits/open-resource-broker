@@ -182,9 +182,11 @@ membership, and returned both workers successfully.
 These are smoke-test observations, not a performance guarantee. The live test
 enabled the HPC plugins on the running nodes through `UpdateInstance`; the example
 now supplies the same configuration at launch. Launch-time `agent_config` forwarding
-and partial-batch rollback are also covered by offline tests. Actual Symphony
-registration and running the broker with instance-principal authentication are
-separate validation steps.
+and partial-batch rollback are also covered by offline tests. A separate
+[instance-principal canary](../../deployment/oci-integration.md#validation-record-2026-10-16-utc)
+passed the E5 Flex lifecycle from an OCI broker and verified read access to this
+cluster. It did not launch RDMA workers with instance-principal authentication.
+Actual Symphony registration remains a separate validation step.
 
 Record infrastructure readiness, driver/agent readiness, verbs results, MPI results,
 and cleanup as separate outcomes. A cluster reaching `ACTIVE` or two nodes reaching

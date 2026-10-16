@@ -117,7 +117,7 @@ def test_template_factory_retains_oci_fields_after_early_initialization(plugin):
 def test_example_generation_uses_current_registry(plugin):
     generator = TemplateExampleGeneratorRegistry.get_or_none("oci")
     templates = generator.generate_example_templates("oci-team", "OCICompute")
-    assert len(templates) == 5
+    assert len(templates) == 25
     assert all(t["provider_name"] == "oci-team" for t in templates)
     assert generator.generate_example_templates("oci-team", "NotOCI") == []
 

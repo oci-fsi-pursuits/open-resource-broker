@@ -82,7 +82,7 @@ def test_init_generate_list_with_oci_defaults(tmp_path, scheduler):
     run("--config", str(config_path), "templates", "generate")
     output = run("--config", str(config_path), "templates", "list")
     payload = json.loads(output)
-    assert len(payload["templates"]) == 5
+    assert len(payload["templates"]) == 25
     # Both scheduler representations must carry resolved deployment defaults.
     assert "ocid1.image.oc1..example" in output
     if scheduler == "default":

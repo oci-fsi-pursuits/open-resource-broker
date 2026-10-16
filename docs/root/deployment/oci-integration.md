@@ -3,6 +3,9 @@
 This guide documents OCI provider support in Open Resource Broker and the
 recommended operational flow.
 
+For handler fields, machine data, fulfilment, and release behaviour, see the
+[OCI Compute Instances provider reference](../providers/oci/compute.md).
+
 ## Overview
 
 OCI support includes:
@@ -80,6 +83,63 @@ Remote provider block:
 
 OCI templates keep compute-grid choices in `config/oci_templates.json`. Deployment-specific values such as image OCID, subnet OCID, compartment OCID, NSGs, SSH keys, tags, and user data live in `provider_defaults.oci.template_defaults` in the config file.
 
+### Broker instance-principal setup
+
+Use Python 3.12 for the broker's virtual environment. The current branch imports
+newer typing features during startup; Ubuntu 22.04's default Python 3.10 fails
+before OCI provisioning even though package metadata currently permits 3.10.
+This runtime requirement concerns the broker; worker images need the runtime
+required by their own workload and bootstrap.
+
+Create a dynamic group matching the broker instance explicitly, for example:
+
+```text
+ALL {instance.id = '<broker-instance-ocid>'}
+```
+
+For a broker provisioning into one compartment, the tested policy grants are:
+
+```text
+Allow dynamic-group <broker-group> to manage instance-family in compartment id <worker-compartment-ocid>
+Allow dynamic-group <broker-group> to use volume-family in compartment id <worker-compartment-ocid>
+Allow dynamic-group <broker-group> to use virtual-network-family in compartment id <worker-compartment-ocid>
+Allow dynamic-group <broker-group> to use compute-clusters in compartment id <worker-compartment-ocid>
+```
+
+The compute-cluster grant is needed for RDMA cluster placement. These statements
+assume the worker subnet, NSGs, custom image, and cluster are in that compartment;
+adjust policy scope when resources are elsewhere. Membership must not include
+workers merely because they share the broker's compartment. See
+[Oracle's instance-principal guide](https://docs.oracle.com/en-us/iaas/Content/Identity/Tasks/callingservicesfrominstances.htm).
+
+Install ORB and OCI CLI in virtual environments on the broker, configure
+`credential_source: instance_principal`, and verify API access there before a live
+canary. No OCI profile, user private key, or workstation session token is needed
+on the broker. A profile-based workstation canary does not validate this path.
+Use the one-machine gate below from the broker itself, then independently inspect
+worker termination and boot-volume cleanup. Remove temporary validation IAM grants
+when retiring a disposable test broker.
+
+#### Validation record: 2026-10-16 UTC
+
+A fresh core wheel passed the one-worker lifecycle gate from a private Ubuntu
+24.04 broker in Phoenix AD-2, using Python 3.12.3 and OCI CLI 3.94.1. The broker
+ran with an empty home directory, no OCI config/profile, and no OCI credential
+environment variables. ORB generated all 25 templates, acquired a
+`VM.Standard.E5.Flex` worker with 1 OCPU / 8 GB, reported its private IP/DNS name,
+and returned it successfully. OCI independently confirmed termination; the worker
+needed no fallback termination. A 100 GB boot disk matched the existing custom
+image's minimum size. OCI Audit recorded the broker instance as the principal for
+the worker's successful `LaunchInstance` and `TerminateInstance` calls, with auth
+type `instance`. Both VMs and their boot volumes were removed after validation,
+along with the temporary dynamic group, policy, NSG, and Bastion session; the
+existing Bastion egress rules were restored.
+
+Instance-principal preflight also read the existing RDMA compute cluster and
+listed its members. This verifies cluster visibility; RDMA worker launch and
+RDMA/MPI performance were tested separately using workstation authentication.
+Actual Symphony registration remains a separate acceptance test.
+
 ## Authentication precedence
 
 OCI CLI auth selection order:
@@ -99,6 +159,10 @@ Supported credential source values:
 - `default`
 
 ## Template contract (OCI)
+
+See [Compute templates and Flex sizing](../providers/oci/templates.md) for AMD
+E5/E6, Intel, Ampere, Standard, and DenseIO coverage, including image architecture
+and DenseIO sizing requirements.
 
 Required fields for reliable launches:
 
