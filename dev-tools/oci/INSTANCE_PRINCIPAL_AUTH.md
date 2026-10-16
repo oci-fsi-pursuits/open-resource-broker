@@ -66,7 +66,7 @@ Passed to `oci --auth` by `oci_cli_auth.py`:
 | `ORB_OCI_CREDENTIAL_SOURCE` | Overrides config `credential_source` |
 | `OCI_CLI_AUTH` | Fallback if config omits `credential_source` |
 
-Precedence: **config `credential_source` → `ORB_OCI_CREDENTIAL_SOURCE` → `OCI_CLI_AUTH` → `--profile`**.
+Precedence: **config `credential_source` â†’ `ORB_OCI_CREDENTIAL_SOURCE` â†’ `OCI_CLI_AUTH` â†’ `--profile`**.
 
 ORB provider entries nest settings under `"config"`; `create_oci_strategy()` must unwrap that inner object (`registration.py`).
 
@@ -103,11 +103,11 @@ source ~/.bashrc.d/oci.sh
 
 ## IAM: dynamic group
 
-Create in **Identity → Dynamic groups** (tenancy or identity domain).
+Create in **Identity â†’ Dynamic groups** (tenancy or identity domain).
 
 **Name:** e.g. `orb-broker-instances`
 
-**Matching rule** (single broker VM — tightest):
+**Matching rule** (single broker VM â€” tightest):
 
 ```text
 ALL {instance.id = '<broker-instance-ocid>'}
@@ -135,8 +135,8 @@ Create the policy in the **tenancy root** (recommended), with statements scoped 
 
 Replace:
 
-- `Agents` → exact compartment **name** from the Console (case-sensitive).
-- `<subnet-ocid>` → subnet where VMs are launched.
+- `Agents` â†’ exact compartment **name** from the Console (case-sensitive).
+- `<subnet-ocid>` â†’ subnet where VMs are launched.
 
 ### Dynamic group (caller on the broker VM)
 
@@ -197,7 +197,7 @@ Allow service compute to use virtual-network-family in compartment Agents
 | `use virtual-network-family` | Launch fails after volumes/subnet checks pass |
 | `Allow service compute ...` | Launch fails with `NotAuthorizedOrNotFound` on image path |
 
-**Note:** `instance update` succeeding does **not** prove launch works — update uses `manage`, launch needs `use instances` plus service-compute lines.
+**Note:** `instance update` succeeding does **not** prove launch works â€” update uses `manage`, launch needs `use instances` plus service-compute lines.
 
 ### Statements that break the policy builder
 
@@ -251,7 +251,7 @@ Sync after edits:
 orb --config config/oci_config.json templates update \
   --template-id oci-flex-2x16-template \
   --file config/oci_templates.json \
-  --provider oci-default
+  --provider-name oci-default
 ```
 
 ---
@@ -273,9 +273,9 @@ oci iam region list --auth instance_principal --region us-phoenix-1 --query 'dat
 | `oci compute image get --image-id <image> ...` | Success |
 | `oci bv volume create ...` | Success (needs `manage volume-family`) |
 | `oci compute instance update --instance-id <self> ...` | Success (`manage instance-family`) |
-| `oci compute instance launch ... --image-id <image> ...` | Success → real `ocid1.instance.oc1....` |
+| `oci compute instance launch ... --image-id <image> ...` | Success â†’ real `ocid1.instance.oc1....` |
 
-Launch command (full flags — do not omit `--auth`):
+Launch command (full flags â€” do not omit `--auth`):
 
 ```bash
 oci compute instance launch \
@@ -291,7 +291,7 @@ oci compute instance launch \
   --region us-phoenix-1
 ```
 
-IAM changes can take **5–15 minutes** to propagate.
+IAM changes can take **5â€“15 minutes** to propagate.
 
 ### 3. ORB template + request
 
@@ -302,12 +302,12 @@ source ~/.bashrc.d/oci.sh
 orb --config config/oci_config.json templates validate \
   --template-id oci-flex-2x16-template \
   --file config/oci_templates.json \
-  --provider oci-default
+  --provider-name oci-default
 
 orb --config config/oci_config.json machines request \
   --template-id oci-flex-2x16-template \
   --count 1 \
-  --provider oci-default
+  --provider-name oci-default
 ```
 
 Check status (use **`requests show`**, not `machines request show`):
@@ -315,7 +315,7 @@ Check status (use **`requests show`**, not `machines request show`):
 ```bash
 orb --config config/oci_config.json requests show \
   --request-id <request-id> \
-  --provider oci-default
+  --provider-name oci-default
 ```
 
 Or watch until complete:
@@ -323,7 +323,7 @@ Or watch until complete:
 ```bash
 orb --config config/oci_config.json requests watch \
   <request-id> \
-  --provider oci-default
+  --provider-name oci-default
 ```
 
 ### 4. Pre-live gate
@@ -332,7 +332,7 @@ orb --config config/oci_config.json requests watch \
 .venv/bin/python dev-tools/oci/run_pre_live_gate.py \
   --config config/oci_config.json \
   --template-file config/oci_templates.json \
-  --provider oci-default \
+  --provider-name oci-default \
   --template-id oci-flex-2x16-template \
   --orb-bin "$(pwd)/.venv/bin/orb" \
   --counts 1 \
@@ -350,7 +350,7 @@ The gate fails if any instance ID contains `mock` (unless `--allow-mock-ocids`).
 | Mock OCIDs (`...mock1`) in live runs | Test/dry-run path leaked into live flow | Treat as a bug; live launch failures should return provider errors |
 | Hang on `oci` | Missing config, interactive prompt | `credential_source: instance_principal`; remove `profile` |
 | `NotAuthorizedOrNotFound` on launch; volume create OK | Missing `use instances`, `use virtual-network-family`, or **service compute** policies | Add policy blocks above |
-| `NotAuthorizedOrNotFound` on launch; instance update OK | Missing **`use instances`** (manage ≠ use for launch) | Add `use instances in compartment ...` |
+| `NotAuthorizedOrNotFound` on launch; instance update OK | Missing **`use instances`** (manage â‰  use for launch) | Add `use instances in compartment ...` |
 | Policy builder: `No permissions found` | Invalid statement grammar | Remove `inspect availability-domains`; avoid `where target.vcn.id` on `virtual-network-family` |
 | Subnet get 404 | Wrong subnet or IAM read | Align config default subnet OCID with policy; set `availability_domain` in template defaults or the template |
 | Wrong region | Config vs OCID mismatch | Set `region` to image/subnet region (e.g. `us-phoenix-1`) |
@@ -368,10 +368,10 @@ Shows the exact `oci` command and stderr from the handler.
 
 ## Code references
 
-- `src/orb/providers/oci/oci_cli_auth.py` — builds `--auth` / `--profile` args
-- `src/orb/providers/oci/handlers/oci_compute_handler.py` — launch/terminate/status; live OCI failures return provider errors
-- `src/orb/providers/oci/configuration/config.py` — `credential_source` field + validation
-- `dev-tools/oci/run_pre_live_gate.py` — end-to-end smoke with mock OCID rejection
+- `src/orb/providers/oci/oci_cli_auth.py` â€” builds `--auth` / `--profile` args
+- `src/orb/providers/oci/handlers/oci_compute_handler.py` â€” launch/terminate/status; live OCI failures return provider errors
+- `src/orb/providers/oci/configuration/config.py` â€” `credential_source` field + validation
+- `dev-tools/oci/run_pre_live_gate.py` â€” end-to-end smoke with mock OCID rejection
 
 ---
 

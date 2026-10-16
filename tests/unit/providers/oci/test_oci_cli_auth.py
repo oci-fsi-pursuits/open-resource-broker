@@ -6,6 +6,38 @@ from unittest.mock import patch
 from orb.providers.oci.oci_cli_auth import build_oci_cli_extra_args
 
 
+def test_subprocess_resolves_windows_cli_wrapper(monkeypatch) -> None:
+    from types import SimpleNamespace
+    from unittest.mock import MagicMock
+
+    from orb.providers.oci.handlers.oci_compute_handler import OCIComputeHandler
+
+    wrapper = r"C:\Users\test\bin\oci.CMD"
+    monkeypatch.setattr(
+        "orb.providers.oci.handlers.oci_compute_handler.shutil.which", lambda _: wrapper
+    )
+    run = MagicMock(return_value=SimpleNamespace(returncode=0, stdout='{"data": []}'))
+    monkeypatch.setattr("orb.providers.oci.handlers.oci_compute_handler.subprocess.run", run)
+    handler = OCIComputeHandler(
+        MagicMock(), "us-phoenix-1", profile="BENCHMARK", credential_source="security_token"
+    )
+    assert handler._run_oci(["iam", "availability-domain", "list"]) == {"data": []}
+    assert run.call_args.args[0][0] == wrapper
+    assert run.call_args.args[0][-4:] == ["--auth", "security_token", "--profile", "BENCHMARK"]
+
+
+def test_security_token_preserves_selected_profile() -> None:
+    args = build_oci_cli_extra_args(profile="BENCHMARK", credential_source="security_token")
+    assert args == ["--auth", "security_token", "--profile", "BENCHMARK"]
+
+
+def test_env_security_token_preserves_selected_profile(monkeypatch) -> None:
+    monkeypatch.delenv("ORB_OCI_CREDENTIAL_SOURCE", raising=False)
+    monkeypatch.setenv("OCI_CLI_AUTH", "security_token")
+    args = build_oci_cli_extra_args(profile="BENCHMARK")
+    assert args == ["--auth", "security_token", "--profile", "BENCHMARK"]
+
+
 def test_instance_principal_from_config() -> None:
     args = build_oci_cli_extra_args(
         profile="DEFAULT",

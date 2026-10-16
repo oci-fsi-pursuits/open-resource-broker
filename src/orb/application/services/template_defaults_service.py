@@ -286,6 +286,16 @@ class TemplateDefaultsService(TemplateDefaultsPort):
         provider_type, matching_instance = self._provider_context(
             template_dict, provider_instance_name
         )
+        # Persisted DTOs carry provider fields under provider_config. Promote
+        # those authored values before applying defaults, so an instance default
+        # cannot override an explicit field merely because it was serialized.
+        nested_config = template_dict.get("provider_config")
+        if isinstance(nested_config, dict):
+            template_dict = self._merge_layer(
+                {k: v for k, v in nested_config.items() if v is not None},
+                {k: v for k, v in template_dict.items() if v is not None},
+                self._template_and_extension_alias_groups(provider_type),
+            )
         if provider_type:
             provider_type_defaults = self._get_provider_type_defaults(provider_type)
             resolved_defaults = self._merge_layer(resolved_defaults, provider_type_defaults)

@@ -26,6 +26,7 @@ class OCICLISpec:
                     "default",
                     "profile",
                     "api_key",
+                    "security_token",
                     "instance_principal",
                     "resource_principal",
                 ]

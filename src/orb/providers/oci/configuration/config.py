@@ -25,7 +25,7 @@ class OCIProviderConfig(BaseSettings, BaseProviderConfig):  # type: ignore[misc]
         default=None,
         description=(
             "OCI auth mode for CLI calls: instance_principal, resource_principal, "
-            "api_key, profile, or default"
+            "api_key, security_token, profile, or default"
         ),
     )
     profile: Optional[str] = Field(default=None, description="OCI config profile")
@@ -57,6 +57,11 @@ class OCIProviderConfig(BaseSettings, BaseProviderConfig):  # type: ignore[misc]
 
         if source in {"instance_principal", "resource_principal"}:
             return True, "Principal-based OCI auth selected", [], source
+
+        if source == "security_token":
+            if not effective.get("profile"):
+                return False, "OCI session authentication requires a profile", ["profile"], source
+            return True, "OCI session profile configuration is valid", [], source
 
         if source == "api_key":
             missing = [field for field in api_key_fields if not effective.get(field)]

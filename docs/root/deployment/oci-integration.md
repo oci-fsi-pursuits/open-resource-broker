@@ -29,6 +29,21 @@ Custom profile names are supported by `--oci-profile`. For Symphony, add
 `--scheduler hostfactory` to initialization. With a custom `--config-dir`, pass
 `--config /path/to/config.json` to subsequent commands.
 
+### Local browser-session authentication
+
+For an existing OCI CLI session, use its profile name and select `security_token`
+explicitly. This passes both `--auth security_token` and `--profile` to OCI CLI:
+
+```bash
+oci session authenticate --region us-phoenix-1 --profile-name ORB
+orb init --non-interactive --provider-type oci --oci-region us-phoenix-1 --oci-credential-source security_token --oci-profile ORB
+```
+
+Use an existing session profile instead of `ORB` if one is already configured.
+Session tokens expire; reauthenticate when needed. Provider health checks validate
+configuration structure, so verify a read-only OCI API call before provisioning.
+See [Oracle's token authentication guide](https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/clitoken.htm).
+
 ## Provider configuration
 
 Choose exactly one OCI config baseline:
@@ -79,6 +94,7 @@ Supported credential source values:
 - `instance_principal`
 - `resource_principal`
 - `api_key`
+- `security_token` (requires a session profile)
 - `profile`
 - `default`
 
@@ -111,9 +127,9 @@ orb --config config/oci_config.json templates validate oci-vm-flex-ondemand-smal
 The following commands provision and terminate real instances:
 
 ```bash
-orb --config config/oci_config.json machines request oci-vm-flex-ondemand-small 1 --provider oci-default
+orb --config config/oci_config.json machines request oci-vm-flex-ondemand-small 1 --provider-name oci-default
 orb --config config/oci_config.json requests status <request-id>
-orb --config config/oci_config.json machines return <instance-ocid> --provider oci-default
+orb --config config/oci_config.json machines return <instance-ocid> --provider-name oci-default
 ```
 
 `templates create --file` and `templates update --file` accept a single template
@@ -128,7 +144,11 @@ selects the requested catalog entry and resolves its defaults before calling the
 - Template input accepts canonical `machine_image`, `machine_type`, and
   `machine_disk_size_gb` as well as the existing OCI catalog fields.
 - Live launch results require asynchronous polling. Status and resource discovery
-  return ORB's flat instance-list format and normalized machine states.
+  return ORB's flat instance-list format, normalized machine states, and the
+  `ProviderFulfilment` verdict required by the current request state machine.
+- Template create/update uses the registered provider extension before saving.
+  OCI fields round-trip through `provider_config`; explicit saved fields take
+  precedence over provider defaults when the catalog is reloaded.
 - Dry-run operations never invoke the OCI CLI. Unit tests mock cloud responses;
   they do not establish that IAM, quotas, images, or network configuration work
   in a particular tenancy.
@@ -146,6 +166,31 @@ selects the requested catalog entry and resolves its defaults before calling the
 - confirm routing fields are OCI:
   - `provider_type=oci`
   - `provider_api=OCICompute`
+
+### Live one-machine canary
+
+Use an isolated default-scheduler config and generated template catalog. Fill in
+the real image, subnet, compartment, shape, and availability domain first. Run this
+from the repository root, with the built ORB CLI and OCI CLI available on PATH:
+
+```bash
+python dev-tools/oci/run_pre_live_gate.py --config /path/to/config.json --template-file /path/to/oci_templates.json --provider oci-default --counts 1 --report-file work/oci-canary-report.json
+```
+
+Replace the provider name with the name from your config. The script updates the
+selected template with a unique `orb_canary_run` tag, requests one machine, checks
+its routing and private IP, verifies OCI reports it running, then returns it and
+waits for OCI to confirm termination. It needs permission to list instances in the
+test compartment for tag-scoped recovery after partial launches or lost responses.
+Running status resolves the primary VNIC's addresses and, when configured, its
+private DNS name using the subnet's real DNS domain.
+
+Failures and interrupts trigger cleanup of this run's tagged instances and write a
+`hold` report. Direct OCI termination is attempted if ORB return fails; such a
+fallback keeps the gate failed. Cleanup failures are recorded for manual recovery.
+The default count is one; mock IDs and skipped cleanup cannot pass this gate.
+This check does not establish bootstrap completion, workload execution, or actual
+Symphony worker registration; verify those separately before production use.
 
 ## Troubleshooting
 

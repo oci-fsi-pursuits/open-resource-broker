@@ -11,6 +11,7 @@ from typing import Any
 from uuid import uuid4
 
 from orb.domain.base.ports import LoggingPort
+from orb.domain.base.provider_fulfilment import FulfilmentState, ProviderFulfilment
 from orb.providers.base.strategy import ProviderOperation, ProviderResult
 from orb.providers.oci.mapping import OCITemplateMapper
 from orb.providers.oci.oci_cli_auth import build_oci_cli_extra_args, build_oci_cli_env
@@ -74,7 +75,9 @@ class OCIComputeHandler:
         region_override: str | None = None,
     ) -> dict[str, Any]:
         effective_region = region_override or self._region
-        cmd = ["oci", *args, "--region", effective_region]
+        # Windows CreateProcess does not resolve a bare name through PATHEXT
+        # when OCI was installed as an oci.CMD wrapper.
+        cmd = [shutil.which("oci") or "oci", *args, "--region", effective_region]
         cmd.extend(
             build_oci_cli_extra_args(
                 profile=self._profile,
@@ -265,9 +268,9 @@ class OCIComputeHandler:
     async def create_instances(self, operation: ProviderOperation) -> ProviderResult:
         params = operation.parameters or {}
         template_data = (
-            params.get("template")
+            params.get("template_config")
             or params.get("template_data")
-            or params.get("template_config")
+            or params.get("template")
             or params.get("configuration")
         )
         if not isinstance(template_data, dict):
@@ -484,6 +487,30 @@ class OCIComputeHandler:
             {"operation": "terminate_instances", "provider": "oci"},
         )
 
+    def _get_instance_network(self, machine_id: str) -> dict[str, Any]:
+        """Map the primary VNIC into ORB's worker network fields."""
+        response = self._run_oci(
+            ["compute", "instance", "list-vnics", "--instance-id", machine_id, "--all"]
+        )
+        vnics = response.get("data", [])
+        if not isinstance(vnics, list) or not vnics:
+            return {}
+        primary = next((vnic for vnic in vnics if vnic.get("is-primary")), vnics[0])
+        network = {
+            "private_ip": primary.get("private-ip"),
+            "public_ip": primary.get("public-ip"),
+            "subnet_id": primary.get("subnet-id"),
+            "security_group_ids": primary.get("nsg-ids") or [],
+        }
+        if primary.get("hostname-label") and primary.get("subnet-id"):
+            subnet = self._run_oci(
+                ["network", "subnet", "get", "--subnet-id", primary["subnet-id"]]
+            ).get("data", {})
+            domain = subnet.get("subnet-domain-name")
+            if domain:
+                network["private_dns_name"] = f"{primary['hostname-label']}.{domain}"
+        return network
+
     def get_instance_status(self, operation: ProviderOperation) -> ProviderResult:
         params = operation.parameters or {}
         machine_ids = params.get("machine_ids") or params.get("instance_ids") or []
@@ -511,13 +538,18 @@ class OCIComputeHandler:
                         "TERMINATING": "shutting-down",
                         "TERMINATED": "terminated",
                     }.get(state, "unknown")
+                    network = self._get_instance_network(machine_id) if state == "RUNNING" else {}
                     instances.append(
                         {
                             "instance_id": machine_id,
                             "resource_id": machine_id,
                             "status": status,
                             "instance_type": data.get("shape"),
-                            "image_id": data.get("image-id"),
+                            "image_id": data.get("image-id")
+                            or (data.get("source-details") or {}).get("image-id"),
+                            "launch_time": data.get("time-created"),
+                            "tags": data.get("freeform-tags") or {},
+                            **network,
                             "provider_type": "oci",
                             "provider_api": "OCICompute",
                             "provider_data": {"lifecycle_state": state},
@@ -551,9 +583,47 @@ class OCIComputeHandler:
                 "OCI_CLI_UNAVAILABLE",
                 {"operation": "get_instance_status", "provider": "oci"},
             )
+        target = params.get("requested_count")
+        if target is None:
+            target = getattr(params.get("request"), "requested_count", len(machine_ids))
+        running = sum(instance["status"] == "running" for instance in instances)
+        failed = sum(
+            instance["status"] in {"stopped", "terminated", "failed"} for instance in instances
+        )
+        pending = max(int(target) - running - failed, 0)
+        fulfilment_state: FulfilmentState = "in_progress"
+        if running >= target:
+            fulfilment_state = "fulfilled"
+        elif failed and not pending:
+            fulfilment_state = "partial" if running else "failed"
+        fulfilment = ProviderFulfilment(
+            state=fulfilment_state,
+            message=f"OCI: {running}/{target} instances running",
+            target_units=target,
+            fulfilled_units=running,
+            running_count=running,
+            pending_count=pending,
+            failed_count=failed,
+        )
+        request_type = getattr(params.get("request"), "request_type", None)
+        if getattr(request_type, "value", request_type) == "return":
+            terminated = sum(instance["status"] == "terminated" for instance in instances)
+            fulfilment = ProviderFulfilment(
+                state="fulfilled" if terminated >= target else "in_progress",
+                message=f"OCI: {terminated}/{target} instances terminated",
+                target_units=target,
+                fulfilled_units=terminated,
+                running_count=running,
+                pending_count=max(int(target) - terminated, 0),
+                failed_count=0,
+            )
         return ProviderResult.success_result(
             {"instances": instances},
-            {"operation": "get_instance_status", "provider": "oci"},
+            {
+                "operation": "get_instance_status",
+                "provider": "oci",
+                "provider_fulfilment": fulfilment,
+            },
         )
 
     async def describe_resource_instances(self, operation: ProviderOperation) -> ProviderResult:

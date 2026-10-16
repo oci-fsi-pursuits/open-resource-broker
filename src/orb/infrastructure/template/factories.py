@@ -26,6 +26,36 @@ class TemplateDTOFactory(TemplateDTOFactoryPort):
     provider-agnostic.
     """
 
+    def from_config(self, config: dict[str, Any]) -> TemplateDTO:
+        """Build the typed extension before the generic DTO filters unknown fields."""
+        data = dict(config)
+        for canonical, dto_field in {
+            "machine_image": "image_id",
+            "max_machines": "max_instances",
+            "machine_bootstrap": "user_data",
+            "machine_disk_size_gb": "root_device_volume_size",
+            "machine_disk_type": "volume_type",
+            "machine_role": "instance_profile",
+            "machine_ssh_key": "key_name",
+        }.items():
+            if data.get(canonical) is not None:
+                data[dto_field] = data.pop(canonical)
+        provider_type = data.get("provider_type")
+        if provider_type:
+            nested = data.get("provider_config")
+            if isinstance(nested, BaseModel):
+                nested = nested.model_dump()
+            extension_data = {
+                **(nested if isinstance(nested, dict) else {}),
+                **{k: v for k, v in data.items() if v is not None},
+            }
+            extension = TemplateExtensionRegistry.create_extension_config(
+                provider_type, extension_data
+            )
+            if extension is not None:
+                data["provider_config"] = extension
+        return TemplateDTO(**data)
+
     def from_domain(self, template: Any) -> TemplateDTO:
         """Convert a domain template aggregate to a ``TemplateDTO``.
 

@@ -39,13 +39,19 @@ def build_oci_cli_extra_args(
         (credential_source or os.environ.get("ORB_OCI_CREDENTIAL_SOURCE") or "").strip().lower()
     )
     if source in CLI_AUTH_MODES:
-        return ["--auth", source]
+        args = ["--auth", source]
+        if profile and source not in PRINCIPAL_AUTH_MODES:
+            args.extend(["--profile", profile])
+        return args
     if source in PROFILE_AUTH_MODES:
         return ["--profile", profile] if profile else []
 
     cli_auth = os.environ.get("OCI_CLI_AUTH", "").strip().lower()
     if cli_auth in CLI_AUTH_MODES:
-        return ["--auth", cli_auth]
+        args = ["--auth", cli_auth]
+        if profile and cli_auth not in PRINCIPAL_AUTH_MODES:
+            args.extend(["--profile", profile])
+        return args
 
     if profile:
         return ["--profile", profile]

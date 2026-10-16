@@ -84,7 +84,7 @@ def test_init_generate_list_with_oci_defaults(tmp_path, scheduler):
         "machine_image": "ocid1.image.oc1..example",
         "machine_types": {"VM.Standard.E4.Flex": 1},
         "subnet_ids": ["ocid1.subnet.oc1..example"],
-        "compartment_id": "ocid1.compartment.oc1..example",
+        "compartment_id": "ocid1.compartment.oc1..created",
         "shape_config": {"ocpus": 2, "memoryInGBs": 16},
     }
     source = tmp_path / "new-template.json"
@@ -96,3 +96,26 @@ def test_init_generate_list_with_oci_defaults(tmp_path, scheduler):
     shown = run("--config", str(config_path), "templates", "show", "oci-created-test")
     assert "oci-created-test" in shown
     assert "VM.Standard.E4.Flex" in shown
+    if scheduler == "default":
+        assert "ocid1.compartment.oc1..created" in shown
+
+    # Exercise the real provisioning orchestrator, which supplies both a domain
+    # Template object and a serialized template_config to the provider.
+    acquired = json.loads(
+        run(
+            "--config",
+            str(config_path),
+            "machines",
+            "request",
+            "oci-created-test",
+            "1",
+            "--dry-run",
+        )
+    )
+    request_id = acquired.get("request_id") or acquired["requestId"]
+    status = json.loads(run("--config", str(config_path), "requests", "show", request_id))
+    request = status["requests"][0]
+    assert request["status"] in {"complete", "completed"}, request
+    if scheduler == "default":
+        assert request["provider_type"] == "oci"
+        assert request["provider_api"] == "OCICompute"

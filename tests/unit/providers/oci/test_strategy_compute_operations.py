@@ -120,6 +120,30 @@ async def test_create_instances_supports_template_config_payload() -> None:
 
 
 @pytest.mark.asyncio
+async def test_create_uses_serialized_config_when_domain_template_is_also_provided() -> None:
+    """Mirror the actual provisioning orchestrator's combined operation payload."""
+    from orb.providers.oci.domain.template import OCITemplate
+
+    strategy = _make_strategy()
+    template = OCITemplate(
+        template_id="orchestrator-contract",
+        machine_image="image-1",
+        machine_types={"VM.Standard.E5.Flex": 1},
+        subnet_ids=["subnet-1"],
+        compartment_id="compartment-1",
+    )
+    result = await strategy.execute_operation(
+        ProviderOperation(
+            operation_type=ProviderOperationType.CREATE_INSTANCES,
+            parameters={"template": template, "template_config": template.model_dump(), "count": 1},
+            context={"dry_run": True},
+        )
+    )
+    assert result.success, result.error_message
+    assert result.data["launch_requests"][0]["source_details"]["image_id"] == "image-1"
+
+
+@pytest.mark.asyncio
 async def test_create_instances_supports_template_config_with_nested_configuration() -> None:
     strategy = _make_strategy()
     operation = ProviderOperation(

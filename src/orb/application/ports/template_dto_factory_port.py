@@ -20,3 +20,7 @@ class TemplateDTOFactoryPort(ABC):
     @abstractmethod
     def from_domain(self, template: Any) -> TemplateDTO:
         """Convert a domain template aggregate to a TemplateDTO."""
+
+    def from_config(self, config: dict[str, Any]) -> TemplateDTO:
+        """Preserve registered provider fields when authoring a template."""
+        raise NotImplementedError

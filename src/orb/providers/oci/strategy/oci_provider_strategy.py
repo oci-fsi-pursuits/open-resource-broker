@@ -95,9 +95,9 @@ class OCIProviderStrategy(ProviderStrategy):
         if operation.operation_type == ProviderOperationType.VALIDATE_TEMPLATE:
             params = operation.parameters or {}
             template_data = (
-                params.get("template")
+                params.get("template_config")
                 or params.get("template_data")
-                or params.get("template_config")
+                or params.get("template")
                 or params.get("configuration")
                 or params
             )
@@ -191,6 +191,11 @@ class OCIProviderStrategy(ProviderStrategy):
                 "config_delta": {"credential_source": "profile", "profile": "DEFAULT"},
             },
             {
+                "name": "security_token",
+                "description": "OCI browser session (DEFAULT profile; choose your session profile)",
+                "config_delta": {"credential_source": "security_token", "profile": "DEFAULT"},
+            },
+            {
                 "name": "resource_principal",
                 "description": "OCI resource principal",
                 "config_delta": {"credential_source": "resource_principal"},
@@ -204,7 +209,7 @@ class OCIProviderStrategy(ProviderStrategy):
 
     @classmethod
     def test_credentials(cls, credential_source: str | None = None, **kwargs) -> dict:
-        if credential_source == "profile":
+        if credential_source in {"profile", "security_token"}:
             kwargs.setdefault("profile", "DEFAULT")
         config = OCIProviderConfig(**kwargs)
         is_valid, message, missing, resolved_source = config.validate_auth_configuration(
@@ -413,7 +418,7 @@ class OCIProviderStrategy(ProviderStrategy):
         profile: str | None,
         credential_source: str | None,
     ) -> dict[str, Any]:
-        cmd = ["oci", *args, "--region", region, "--all"]
+        cmd = [shutil.which("oci") or "oci", *args, "--region", region, "--all"]
         cmd.extend(build_oci_cli_extra_args(profile=profile, credential_source=credential_source))
         completed = subprocess.run(
             cmd,

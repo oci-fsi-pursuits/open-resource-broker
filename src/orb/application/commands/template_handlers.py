@@ -1,12 +1,14 @@
 """Template command handlers for CQRS pattern."""
 
 import logging
+from typing import Optional
 
 from orb.application.base.handlers import BaseCommandHandler
 
 _logger = logging.getLogger(__name__)
 from orb.application.decorators import command_handler
 from orb.application.dto.template import TemplateDTO
+from orb.application.ports.template_dto_factory_port import TemplateDTOFactoryPort
 from orb.application.template.commands import (
     CreateTemplateCommand,
     DeleteTemplateCommand,
@@ -41,10 +43,12 @@ class CreateTemplateHandler(BaseCommandHandler[CreateTemplateCommand, None]):  #
         logger: LoggingPort,
         event_publisher: EventPublisherPort,
         error_handler: ErrorHandlingPort,
+        template_dto_factory: Optional[TemplateDTOFactoryPort] = None,
     ) -> None:
         """Initialize the instance."""
         super().__init__(logger, event_publisher, error_handler)
         self._template_port = template_port
+        self._template_dto_factory = template_dto_factory
 
     async def validate_command(self, command: CreateTemplateCommand) -> None:
         """Validate create template command."""
@@ -108,7 +112,11 @@ class CreateTemplateHandler(BaseCommandHandler[CreateTemplateCommand, None]):  #
             dto_fields["machine_types"] = {command.instance_type: 1}
         # Remove None values so TemplateDTO defaults apply
         dto_fields = {k: v for k, v in dto_fields.items() if v is not None}
-        dto = TemplateDTO(**dto_fields)
+        dto = (
+            self._template_dto_factory.from_config(dto_fields)
+            if self._template_dto_factory is not None
+            else TemplateDTO(**dto_fields)
+        )
 
         await template_manager.save_template(dto)
         self.logger.info("Template created successfully: %s", command.template_id)
@@ -135,9 +143,11 @@ class UpdateTemplateHandler(BaseCommandHandler[UpdateTemplateCommand, None]):  #
         logger: LoggingPort,
         event_publisher: EventPublisherPort,
         error_handler: ErrorHandlingPort,
+        template_dto_factory: Optional[TemplateDTOFactoryPort] = None,
     ) -> None:
         super().__init__(logger, event_publisher, error_handler)
         self._template_port = template_port
+        self._template_dto_factory = template_dto_factory
 
     async def validate_command(self, command: UpdateTemplateCommand) -> None:
         """Validate update template command."""
@@ -164,7 +174,11 @@ class UpdateTemplateHandler(BaseCommandHandler[UpdateTemplateCommand, None]):  #
         if command.configuration:
             valid_fields = TemplateDTO.model_fields.keys()
             update_fields.update(
-                {k: v for k, v in command.configuration.items() if k in valid_fields}
+                {
+                    k: v
+                    for k, v in command.configuration.items()
+                    if k in valid_fields or self._template_dto_factory is not None
+                }
             )
 
         # Named fields override configuration
@@ -183,7 +197,11 @@ class UpdateTemplateHandler(BaseCommandHandler[UpdateTemplateCommand, None]):  #
             )
             update_fields["machine_types"] = {command.instance_type: 1}
 
-        if update_fields:
+        if self._template_dto_factory is not None:
+            updated = self._template_dto_factory.from_config(
+                {**existing.model_dump(), **update_fields}
+            )
+        elif update_fields:
             updated = existing.model_copy(update=update_fields)
         else:
             updated = existing

@@ -6,6 +6,21 @@ from orb.providers.oci.configuration.config import OCIProviderConfig
 from orb.providers.oci.strategy.oci_provider_strategy import OCIProviderStrategy
 
 
+def test_session_auth_accepts_named_profile_without_api_key_fields() -> None:
+    config = OCIProviderConfig(credential_source="security_token", profile="BENCHMARK")
+    valid, _, missing, source = config.validate_auth_configuration()
+    assert valid
+    assert missing == []
+    assert source == "security_token"
+
+
+def test_session_auth_requires_profile() -> None:
+    config = OCIProviderConfig(credential_source="security_token")
+    valid, _, missing, _ = config.validate_auth_configuration()
+    assert not valid
+    assert missing == ["profile"]
+
+
 def test_config_validation_succeeds_with_profile() -> None:
     config = OCIProviderConfig(region="us-phoenix-1", profile="DEFAULT")
 
