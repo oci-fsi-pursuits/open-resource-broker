@@ -1,11 +1,22 @@
 """OCI-specific HostFactory aliases."""
 
+from typing import Any
+
 
 class OCIFieldMapping:
+    def prepare_output_fields(self, template: dict[str, Any]) -> dict[str, Any]:
+        """Expose persisted OCI extensions without changing other providers."""
+        provider_config = template.get("provider_config")
+        if isinstance(provider_config, dict):
+            return {**provider_config, **template}
+        return template
+
     def get_mappings(self) -> dict[str, str]:
         return {
             "compartmentId": "compartment_id",
             "availabilityDomain": "availability_domain",
+            "computeClusterId": "compute_cluster_id",
+            "agentConfig": "agent_config",
             "shape": "shape",
             "shapeConfig": "shape_config",
             "ocpus": "ocpus",

@@ -9,6 +9,8 @@ class OCITemplateExtensionConfig(ProviderTemplateExtensionBase):
     provider_api: str = "OCICompute"
     compartment_id: str | None = None
     availability_domain: str | None = None
+    compute_cluster_id: str | None = None
+    agent_config: dict[str, Any] | None = None
     shape: str | None = None
     pricing: dict[str, Any] | None = None
     shape_config: dict[str, Any] | None = None

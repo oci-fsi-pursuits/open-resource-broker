@@ -153,6 +153,24 @@ class OCIComputeHandler:
 
         return None
 
+    def _validate_compute_cluster(self, launch_payload: dict[str, Any]) -> None:
+        """Check shared RDMA placement before any nodes in a request are launched."""
+        cluster_id = launch_payload.get("compute_cluster_id")
+        if not cluster_id:
+            return
+        subnet_id = launch_payload.get("create_vnic_details", {}).get("subnet_id")
+        image_id = launch_payload.get("source_details", {}).get("image_id")
+        region = self._infer_region_from_ocid(subnet_id) or self._infer_region_from_ocid(image_id)
+        cluster = self._run_oci(
+            ["compute", "compute-cluster", "get", "--compute-cluster-id", str(cluster_id)],
+            region_override=region,
+        ).get("data", {})
+        if cluster.get("lifecycle-state") != "ACTIVE":
+            raise ValueError("Compute cluster must be ACTIVE before launching RDMA nodes")
+        for field in ("compartment_id", "availability_domain"):
+            if cluster.get(field.replace("_", "-")) != launch_payload.get(field):
+                raise ValueError(f"Compute cluster {field} must match the template")
+
     def _launch_with_cli(
         self, launch_payload: dict[str, Any], force_ondemand: bool = False
     ) -> dict[str, Any]:
@@ -200,6 +218,11 @@ class OCIComputeHandler:
         ]
 
         shape_config = launch_payload.get("shape_config")
+        if launch_payload.get("compute_cluster_id"):
+            args.extend(["--compute-cluster-id", str(launch_payload["compute_cluster_id"])])
+            # Surface placement/capacity errors inside the subprocess deadline.
+            # CLI retries can otherwise outlive the command and hide partial launches.
+            args.extend(["--no-retry", "--connection-timeout", "15", "--read-timeout", "90"])
         if not isinstance(shape_config, dict) and isinstance(shape, str) and "Flex" in shape:
             # Reasonable default for Flex shapes when template omits explicit values.
             shape_config = {"ocpus": 1, "memoryInGBs": 16}
@@ -218,6 +241,9 @@ class OCIComputeHandler:
         if launch_payload.get("display_name"):
             args.extend(["--display-name", str(launch_payload.get("display_name"))])
         metadata = launch_payload.get("metadata")
+        agent_config = launch_payload.get("agent_config")
+        if isinstance(agent_config, dict) and agent_config:
+            args.extend(["--agent-config", json.dumps(agent_config)])
         if isinstance(metadata, dict) and metadata:
             args.extend(["--metadata", json.dumps(metadata)])
         tags = launch_payload.get("freeform_tags")
@@ -255,6 +281,10 @@ class OCIComputeHandler:
         }
         if launch_payload.get("availability_domain"):
             payload["availabilityDomain"] = launch_payload.get("availability_domain")
+        if launch_payload.get("compute_cluster_id"):
+            payload["computeClusterId"] = launch_payload["compute_cluster_id"]
+        if launch_payload.get("agent_config"):
+            payload["agentConfig"] = launch_payload["agent_config"]
         if isinstance(vnic.get("nsg_ids"), list) and vnic.get("nsg_ids"):
             payload["createVnicDetails"]["nsgIds"] = vnic["nsg_ids"]
         if isinstance(launch_payload.get("metadata"), dict) and launch_payload.get("metadata"):
@@ -301,6 +331,9 @@ class OCIComputeHandler:
             )
             for idx in range(requested)
         ]
+        for launch_request in launch_requests:
+            if launch_request.get("compute_cluster_id"):
+                launch_request["freeform_tags"]["orb_request_id"] = request_id
 
         instance_ids: list[str] = []
         instances: list[dict[str, Any]] = []
@@ -308,6 +341,14 @@ class OCIComputeHandler:
         effective_capacity_types: list[str] = []
         fallback_attempted_any = False
         if self._use_live_cli(operation):
+            try:
+                self._validate_compute_cluster(launch_requests[0])
+            except Exception as exc:
+                return ProviderResult.error_result(
+                    f"OCI compute cluster validation failed: {exc}",
+                    "OCI_COMPUTE_CLUSTER_INVALID",
+                    {"compute_cluster_id": normalized_template.get("compute_cluster_id")},
+                )
             try:
                 for launch_request in launch_requests:
                     requested_capacity_type = str(
@@ -354,6 +395,7 @@ class OCIComputeHandler:
                                 "provider_api": "OCICompute",
                                 "compartment_id": normalized_template.get("compartment_id"),
                                 "subnet_id": normalized_template.get("subnet_id"),
+                                "compute_cluster_id": normalized_template.get("compute_cluster_id"),
                                 "capacity_type": effective_capacity_type,
                                 "pricing_estimate": pricing_estimate,
                                 "requested_capacity_type": requested_capacity_type,
@@ -364,6 +406,31 @@ class OCIComputeHandler:
                     )
             except Exception as exc:
                 self._logger.error("OCI live launch failed for template %s: %s", template_id, exc)
+                rollback_ids: list[str] = []
+                rollback_errors: list[dict[str, str]] = []
+                if normalized_template.get("compute_cluster_id"):
+                    for instance_id in instance_ids:
+                        try:
+                            self._run_oci(
+                                [
+                                    "compute",
+                                    "instance",
+                                    "terminate",
+                                    "--instance-id",
+                                    instance_id,
+                                    "--preserve-boot-volume",
+                                    "false",
+                                    "--force",
+                                ]
+                            )
+                            rollback_ids.append(instance_id)
+                        except Exception as rollback_exc:
+                            rollback_errors.append(
+                                {"instance_id": instance_id, "error": str(rollback_exc)}
+                            )
+                            self._logger.error(
+                                "OCI cluster rollback failed for %s: %s", instance_id, rollback_exc
+                            )
                 return ProviderResult.error_result(
                     f"OCI live launch failed: {exc}",
                     "OCI_LAUNCH_FAILED",
@@ -373,6 +440,8 @@ class OCIComputeHandler:
                         "request_id": request_id,
                         "template_id": template_id,
                         "launched_instance_ids": instance_ids,
+                        "rollback_requested_instance_ids": rollback_ids,
+                        "rollback_errors": rollback_errors,
                         "fallback_attempted": fallback_attempted_any,
                     },
                 )
@@ -390,6 +459,7 @@ class OCIComputeHandler:
                         "provider_api": "OCICompute",
                         "compartment_id": normalized_template.get("compartment_id"),
                         "subnet_id": normalized_template.get("subnet_id"),
+                        "compute_cluster_id": normalized_template.get("compute_cluster_id"),
                         "capacity_type": normalized_template.get("capacity_type"),
                         "pricing_estimate": pricing_estimate,
                     },
@@ -539,6 +609,30 @@ class OCIComputeHandler:
                         "TERMINATED": "terminated",
                     }.get(state, "unknown")
                     network = self._get_instance_network(machine_id) if state == "RUNNING" else {}
+                    cluster_id = data.get("compute-cluster-id")
+                    requested_cluster = (data.get("freeform-tags") or {}).get(
+                        "orb_compute_cluster_id"
+                    )
+                    if state == "RUNNING" and requested_cluster and not cluster_id:
+                        # GetInstance does not currently expose computeClusterId.
+                        # Verify membership through the supported ListInstances filter.
+                        members = self._run_oci(
+                            [
+                                "compute",
+                                "instance",
+                                "list",
+                                "--compartment-id",
+                                data["compartment-id"],
+                                "--compute-cluster-id",
+                                requested_cluster,
+                                "--all",
+                            ]
+                        ).get("data", [])
+                        if not any(member.get("id") == machine_id for member in members):
+                            raise RuntimeError(
+                                "Instance is not a member of its requested compute cluster"
+                            )
+                        cluster_id = requested_cluster
                     instances.append(
                         {
                             "instance_id": machine_id,
@@ -552,7 +646,10 @@ class OCIComputeHandler:
                             **network,
                             "provider_type": "oci",
                             "provider_api": "OCICompute",
-                            "provider_data": {"lifecycle_state": state},
+                            "provider_data": {
+                                "lifecycle_state": state,
+                                "compute_cluster_id": cluster_id,
+                            },
                         }
                     )
             except Exception as exc:

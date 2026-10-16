@@ -114,6 +114,11 @@ Recommended:
 
 ## Runtime flow
 
+For `BM.Optimized3.36` workers in an RDMA network group, see
+[Compute Clusters and RDMA](../providers/oci/compute-clusters.md). The
+`oci-bm-optimized3-rdma` example requires its own HPC image, compute cluster OCID,
+and matching availability domain; replace its placeholders before requesting nodes.
+
 After filling the deployment defaults in `config/oci_config.json`, generate and
 list templates. Generation writes the provider-owned catalog into the configured
 template directory; defaults are resolved when those templates are loaded.

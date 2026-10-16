@@ -62,6 +62,15 @@ class HostFactoryFieldMapper(SchedulerFieldMapper):
         self, internal_template: Dict[str, Any], copy_unmapped: bool = False
     ) -> Dict[str, Any]:
         """Map internal format → HostFactory format with transformations."""
+        from orb.infrastructure.scheduler.hostfactory.field_mapping_registry import (
+            FieldMappingRegistry,
+        )
+
+        # Providers opt in when their serialized templates need preparation.
+        adapter = FieldMappingRegistry.get_or_none(self.provider_type or "")
+        prepare_output = getattr(adapter, "prepare_output_fields", None)
+        if prepare_output is not None:
+            internal_template = prepare_output(internal_template)
         # Fold any original (pre-rename) internal names onto the canonical name
         # so DTO-sourced dicts (original names) and domain-sourced dicts (renamed
         # names) both map through the reverse field-mapping identically.

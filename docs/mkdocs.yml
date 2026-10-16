@@ -166,7 +166,9 @@ nav:
       - Deployment Scenarios: hostfactory/deployment_scenarios.md
       - Supported APIs: hostfactory/supported-apis.md
   - Providers:
-    - OCI: deployment/oci-integration.md
+    - OCI:
+      - Overview: deployment/oci-integration.md
+      - Compute Clusters and RDMA: providers/oci/compute-clusters.md
     - AWS:
       - EC2 Instances (RunInstances): providers/aws/run-instances.md
       - Auto Scaling Groups: providers/aws/asg.md

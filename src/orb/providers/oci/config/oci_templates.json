@@ -65,6 +65,34 @@
       "fallback_to_ondemand": true
     },
     {
+      "template_id": "oci-bm-optimized3-rdma",
+      "name": "OCI BM Optimized3 RDMA",
+      "provider_name": "oci-default",
+      "provider_api": "OCICompute",
+      "provider_type": "oci",
+      "form_factor": "BM",
+      "cpu_vendor": "Intel",
+      "generation": "Optimized3",
+      "max_instances": 2,
+      "machine_types": {
+        "BM.Optimized3.36": 1
+      },
+      "compute_cluster_id": "ocid1.computecluster.oc1..<replace-compute-cluster-ocid>",
+      "agent_config": {
+        "areAllPluginsDisabled": false,
+        "isManagementDisabled": false,
+        "pluginsConfig": [
+          {"name": "Compute HPC RDMA Authentication", "desiredState": "ENABLED"},
+          {"name": "Compute HPC RDMA Auto-Configuration", "desiredState": "ENABLED"}
+        ]
+      },
+      "availability_domain": "<replace-availability-domain>",
+      "image_id": "ocid1.image.oc1..<replace-hpc-image-ocid>",
+      "boot_volume_gbs": 200,
+      "capacity_type": "ondemand",
+      "fallback_to_ondemand": false
+    },
+    {
       "template_id": "oci-bm-standard-ondemand",
       "name": "OCI BM Standard On-Demand",
       "provider_name": "oci-default",

@@ -67,7 +67,7 @@ def test_init_generate_list_with_oci_defaults(tmp_path, scheduler):
     run("--config", str(config_path), "templates", "generate")
     output = run("--config", str(config_path), "templates", "list")
     payload = json.loads(output)
-    assert len(payload["templates"]) == 4
+    assert len(payload["templates"]) == 5
     # Both scheduler representations must carry resolved deployment defaults.
     assert "ocid1.image.oc1..example" in output
     if scheduler == "default":
@@ -82,10 +82,15 @@ def test_init_generate_list_with_oci_defaults(tmp_path, scheduler):
         "provider_name": provider["name"],
         "provider_api": "OCICompute",
         "machine_image": "ocid1.image.oc1..example",
-        "machine_types": {"VM.Standard.E4.Flex": 1},
+        "machine_types": {"BM.Optimized3.36": 1},
         "subnet_ids": ["ocid1.subnet.oc1..example"],
         "compartment_id": "ocid1.compartment.oc1..created",
-        "shape_config": {"ocpus": 2, "memoryInGBs": 16},
+        "compute_cluster_id": "ocid1.computecluster.oc1..created",
+        "agent_config": {
+            "pluginsConfig": [
+                {"name": "Compute HPC RDMA Authentication", "desiredState": "ENABLED"}
+            ]
+        },
     }
     source = tmp_path / "new-template.json"
     source.write_text(json.dumps(new_template), encoding="utf-8")
@@ -95,7 +100,9 @@ def test_init_generate_list_with_oci_defaults(tmp_path, scheduler):
     assert created["status"] == "created", created
     shown = run("--config", str(config_path), "templates", "show", "oci-created-test")
     assert "oci-created-test" in shown
-    assert "VM.Standard.E4.Flex" in shown
+    assert "BM.Optimized3.36" in shown
+    assert "ocid1.computecluster.oc1..created" in shown
+    assert "Compute HPC RDMA Authentication" in shown
     if scheduler == "default":
         assert "ocid1.compartment.oc1..created" in shown
 

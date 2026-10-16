@@ -125,6 +125,8 @@ class OCITemplateMapper:
             "subnet_id": _get("subnet_id", "subnetId") or (subnet_ids[0] if subnet_ids else None),
             "compartment_id": _get("compartment_id", "compartmentId"),
             "availability_domain": _get("availability_domain", "availabilityDomain"),
+            "compute_cluster_id": _get("compute_cluster_id", "computeClusterId"),
+            "agent_config": _get("agent_config", "agentConfig"),
             "nsg_ids": security_group_ids,
             "user_data": _get("machine_bootstrap", "user_data", "userData"),
             "ssh_authorized_keys": _get("ssh_authorized_keys", "sshAuthorizedKeys")
@@ -150,6 +152,10 @@ class OCITemplateMapper:
 
         if normalized.get("capacity_type") not in cls.CAPACITY_TYPES:
             missing.append("capacity_type(valid: ondemand|preemptible)")
+        if normalized.get("agent_config") is not None and not isinstance(
+            normalized["agent_config"], dict
+        ):
+            missing.append("agent_config(must be an object)")
 
         shape_form_factor = normalized.get("shape_form_factor")
         requested_form_factor = normalized.get("form_factor")
@@ -168,6 +174,14 @@ class OCITemplateMapper:
             or normalized.get("shape_config")
         ):
             missing.append("bm_shape_does_not_support_flex_sizing")
+
+        if normalized.get("compute_cluster_id"):
+            if not is_bm:
+                missing.append("compute_cluster_requires_bare_metal_shape")
+            if not normalized.get("availability_domain"):
+                missing.append("availability_domain(required for compute_cluster_id)")
+            if normalized.get("capacity_type") != "ondemand":
+                missing.append("compute_cluster_requires_ondemand_capacity")
 
         return missing
 
@@ -207,6 +221,15 @@ class OCITemplateMapper:
                     "type": "TERMINATE",
                     "preserveBootVolume": normalized.get("preemptible_preserve_boot_volume", False),
                 }
+            }
+        if normalized.get("agent_config"):
+            payload["agent_config"] = normalized["agent_config"]
+
+        if normalized.get("compute_cluster_id"):
+            payload["compute_cluster_id"] = normalized["compute_cluster_id"]
+            payload["freeform_tags"] = {
+                **payload["freeform_tags"],
+                "orb_compute_cluster_id": normalized["compute_cluster_id"],
             }
 
         if normalized.get("user_data"):

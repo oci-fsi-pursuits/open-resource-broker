@@ -117,7 +117,7 @@ def test_template_factory_retains_oci_fields_after_early_initialization(plugin):
 def test_example_generation_uses_current_registry(plugin):
     generator = TemplateExampleGeneratorRegistry.get_or_none("oci")
     templates = generator.generate_example_templates("oci-team", "OCICompute")
-    assert len(templates) == 4
+    assert len(templates) == 5
     assert all(t["provider_name"] == "oci-team" for t in templates)
     assert generator.generate_example_templates("oci-team", "NotOCI") == []
 
@@ -236,6 +236,10 @@ def test_launch_passes_network_security_groups_to_cli():
     )
     args = handler._run_oci.call_args.args[0]
     assert json.loads(args[args.index("--nsg-ids") + 1]) == ["nsg-1"]
+    assert "--max-retries" not in args
+    assert "--no-retry" not in args
+    assert "--agent-config" not in args
+    assert "--read-timeout" not in args
 
 
 def test_pre_live_helper_resolves_one_catalog_entry(tmp_path, monkeypatch, plugin):
