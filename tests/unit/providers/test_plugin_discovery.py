@@ -11,12 +11,32 @@ failure paths without installing a real distribution.
 from __future__ import annotations
 
 import importlib.metadata
+import subprocess
+import sys
 from typing import Any
 from unittest.mock import patch
 
 import pytest
 
 from orb.providers.registration import discover_provider_plugins
+
+
+def test_azure_registration_without_optional_http_transport() -> None:
+    """An OCI/core installation can discover Azure without installing its extra."""
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "import sys; sys.modules['httpx'] = None; "
+            "from orb.providers.azure.provider_plugin import AzurePlugin; "
+            "AzurePlugin.register_plugin()",
+        ],
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
 
 
 class _FakeEntryPoint:

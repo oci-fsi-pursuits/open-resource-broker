@@ -645,8 +645,7 @@ class TestSpotPlacementScoreAdapter:
                 return FakeResponse()
 
         monkeypatch.setattr(
-            "orb.providers.azure.infrastructure.services."
-            "spot_placement_score_adapter.httpx.AsyncClient",
+            "httpx.AsyncClient",
             FakeAsyncClient,
         )
         credential = MagicMock()
@@ -732,8 +731,7 @@ class TestSpotPlacementScoreAdapter:
                 return FakeResponse()
 
         monkeypatch.setattr(
-            "orb.providers.azure.infrastructure.services."
-            "spot_placement_score_adapter.httpx.AsyncClient",
+            "httpx.AsyncClient",
             FakeAsyncClient,
         )
         credential = MagicMock()
@@ -811,8 +809,7 @@ class TestSpotPlacementScoreAdapter:
                 return FakeResponse()
 
         monkeypatch.setattr(
-            "orb.providers.azure.infrastructure.services."
-            "spot_placement_score_adapter.httpx.AsyncClient",
+            "httpx.AsyncClient",
             FakeAsyncClient,
         )
         credential = MagicMock()

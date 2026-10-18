@@ -53,10 +53,23 @@ Choose exactly one OCI config baseline:
 
 ```bash
 # Remote/production: ORB runs on OCI Compute with instance principal auth.
-cp config/oci_config.remote.example.json config/oci_config.json
+cp config/oci_config.remote.example.json config/config.json
 
 # Local/dev: ORB runs on a workstation with an OCI CLI profile.
-cp config/oci_config.local.example.json config/oci_config.json
+cp config/oci_config.local.example.json config/config.json
+```
+
+Run these commands from the repository root. Use the standard `config.json`
+filename so early CLI discovery and the application load the same provider
+configuration. A copied file named `oci_config.json` alone can leave early
+discovery using defaults, even when passed with `--config`.
+
+For an existing prepared configuration, copy it into place before running ORB:
+
+```bash
+cp config/oci_config.json config/config.json
+export ORB_CONFIG_DIR="$PWD/config"
+orb --config "$ORB_CONFIG_DIR/config.json" templates list
 ```
 
 Remote instance-principal config uses `credential_source: instance_principal` and must not set `profile`. Local profile config uses `credential_source: profile` and `profile: DEFAULT`; `DEFAULT` is the standard OCI CLI profile name and can be replaced with another `~/.oci/config` profile.
@@ -183,22 +196,26 @@ For `BM.Optimized3.36` workers in an RDMA network group, see
 `oci-bm-optimized3-rdma` example requires its own HPC image, compute cluster OCID,
 and matching availability domain; replace its placeholders before requesting nodes.
 
-After filling the deployment defaults in `config/oci_config.json`, generate and
+After filling the deployment defaults in `config/config.json`, generate and
 list templates. Generation writes the provider-owned catalog into the configured
 template directory; defaults are resolved when those templates are loaded.
 
 ```bash
-orb --config config/oci_config.json templates generate
-orb --config config/oci_config.json templates list
-orb --config config/oci_config.json templates validate oci-vm-flex-ondemand-small
+export ORB_CONFIG_DIR="$PWD/config"
+orb --config "$ORB_CONFIG_DIR/config.json" templates generate
+orb --config "$ORB_CONFIG_DIR/config.json" templates list
+orb --config "$ORB_CONFIG_DIR/config.json" templates validate oci-vm-flex-ondemand-small
 ```
+
+Skip generation if you already copied a prepared `oci_templates.json` catalog;
+generation replaces deployment-specific edits such as a larger boot volume.
 
 The following commands provision and terminate real instances:
 
 ```bash
-orb --config config/oci_config.json machines request oci-vm-flex-ondemand-small 1 --provider-name oci-default
-orb --config config/oci_config.json requests status <request-id>
-orb --config config/oci_config.json machines return <instance-ocid> --provider-name oci-default
+orb --config "$ORB_CONFIG_DIR/config.json" machines request oci-vm-flex-ondemand-small 1 --provider-name oci-default
+orb --config "$ORB_CONFIG_DIR/config.json" requests show --request-id <request-id> --provider-name oci-default
+orb --config "$ORB_CONFIG_DIR/config.json" machines return <instance-ocid> --provider-name oci-default
 ```
 
 `templates create --file` and `templates update --file` accept a single template
