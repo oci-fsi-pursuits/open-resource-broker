@@ -104,6 +104,14 @@ are intentionally incomplete and override a shared x86 image. See
 [catalog examples and configured templates](../providers/oci/templates.md#catalog-examples-and-configured-templates)
 for how to interpret the output and prepare a selected template.
 
+Build release artifacts from a clean checkout. The source distribution and Docker
+build context allow only standard example configs, not local `config.json` or
+`oci_config.json`.
+Keep deployment configs, private keys, OCI session files, logs, and live-canary
+reports outside release inputs. Resolved template output and reports can contain
+resource IDs, network details, and bootstrap data; treat them as deployment
+records rather than portable examples.
+
 ### Broker instance-principal setup
 
 Use Python 3.12 for the broker's virtual environment. The current branch imports
