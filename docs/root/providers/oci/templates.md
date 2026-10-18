@@ -8,6 +8,43 @@ The catalog contains 25 examples covering 23 shapes. Both
 For the full handler contract and acquire/status/return workflow, see
 [OCI Compute Instances](compute.md).
 
+## Catalog examples and configured templates
+
+The shipped catalog is a portable set of shape and sizing examples. It does not
+contain a customer's image, compartment, subnet, NSG, SSH public key, or bootstrap
+script. It requires deployment configuration before use; generating examples
+does not make every shape ready to launch.
+
+| Location | Contents |
+| --- | --- |
+| Packaged `oci_templates.json` | Shape, Flex sizing, capacity type, boot size, and explicit ARM/HPC configuration placeholders |
+| Deployment `config.json` | Your provider credentials/auth mode and deployment defaults: image, compartment, subnet, NSGs, SSH public key, and optional bootstrap/tags |
+| `orb templates list` output | Runtime templates after local defaults have been applied, including the actual resource IDs used for a launch |
+
+Seeing a subnet or image OCID in `templates list` does not mean it is hard coded
+in the shipped catalog. Inspect `config/oci_templates.json` to see the saved
+catalog, and `provider.provider_defaults.oci.template_defaults` in your local
+`config.json` to see shared deployment settings. A saved per-template value
+overrides the shared default. Template create/update operations can also save
+resolved values in your local catalog; keep those deployment files local.
+
+`<replace-...>` values deliberately mark incomplete configuration. ARM templates
+must not inherit a shared x86 image, and RDMA requires its own compatible HPC
+image, cluster, and availability domain. Configure each template you intend to
+use and check image/shape compatibility. A shared image used successfully for
+E5 is not proof that it supports every Intel, DenseIO, or bare metal shape.
+
+`is_active: true` means the template is enabled, not that OCI compatibility or
+capacity has been verified. `created_at` and `updated_at` describe the template
+object, not the image's release date or a successful deployment. The catalog
+limit `max_instances: 1` is an example limit, not the shape's hardware capacity.
+
+Bootstrap (`machine_bootstrap`, also accepted as `user_data`), public keys, and
+environment tags are deployment choices. The example configs do not install a
+canary bootstrap or assume a development/production environment tag. A manual
+test deployment can still have its own `manual-test` tag and test bootstrap;
+these appear in its resolved list output and are not production defaults.
+
 ## Shape coverage
 
 | Processor / family | VM shapes | Bare metal shapes |
@@ -99,10 +136,11 @@ Catalog coverage and offline tests do not establish a live launch on every shape
 After filling deployment defaults and the selected template's image/settings:
 
 ```bash
-orb --config config/oci_config.json templates generate
-orb --config config/oci_config.json templates list
-orb --config config/oci_config.json templates validate oci-vm-standard-e5-ondemand
-orb --config config/oci_config.json machines request oci-vm-standard-e5-ondemand 1 --dry-run
+export ORB_CONFIG_DIR="$PWD/config"
+orb --config "$ORB_CONFIG_DIR/config.json" templates generate
+orb --config "$ORB_CONFIG_DIR/config.json" templates list
+orb --config "$ORB_CONFIG_DIR/config.json" templates validate oci-vm-standard-e5-ondemand
+orb --config "$ORB_CONFIG_DIR/config.json" machines request oci-vm-standard-e5-ondemand 1 --dry-run
 ```
 
 Generation writes examples; edit your generated catalog afterward. Do not

@@ -35,9 +35,7 @@
           ],
           "compartment_id": "ocid1.compartment.oc1..<replace-compartment-ocid>",
           "ssh_authorized_keys": "<replace-with-public-key>",
-          "user_data": "IyEvYmluL2Jhc2gKZWNobyAnb2NpLWNhbmFyeScK",
           "tags": {
-            "env": "dev",
             "managed_by": "orb"
           }
         }

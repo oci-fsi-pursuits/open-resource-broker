@@ -96,6 +96,14 @@ Remote provider block:
 
 OCI templates keep compute-grid choices in `config/oci_templates.json`. Deployment-specific values such as image OCID, subnet OCID, compartment OCID, NSGs, SSH keys, tags, and user data live in `provider_defaults.oci.template_defaults` in the config file.
 
+`orb templates list` displays resolved templates, so it includes values inherited
+from that deployment configuration. These values are not added to the shipped
+catalog. The examples contain no default bootstrap script or environment tag;
+add your own only when required by your deployment. ARM/HPC image placeholders
+are intentionally incomplete and override a shared x86 image. See
+[catalog examples and configured templates](../providers/oci/templates.md#catalog-examples-and-configured-templates)
+for how to interpret the output and prepare a selected template.
+
 ### Broker instance-principal setup
 
 Use Python 3.12 for the broker's virtual environment. The current branch imports
