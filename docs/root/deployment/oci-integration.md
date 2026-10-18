@@ -257,10 +257,17 @@ selects the requested catalog entry and resolves its defaults before calling the
 
 Use an isolated default-scheduler config and generated template catalog. Fill in
 the real image, subnet, compartment, shape, and availability domain first. Run this
-from the repository root, with the built ORB CLI and OCI CLI available on PATH:
+from the repository root, with the ORB virtual environment activated and the
+built ORB CLI and OCI CLI available on PATH. If OCI CLI is installed in a separate
+virtual environment, keep the ORB environment first: prepending the OCI CLI
+environment alone also changes which `python` runs and can cause
+`ModuleNotFoundError: No module named 'orb'`.
 
 ```bash
-python dev-tools/oci/run_pre_live_gate.py --config /path/to/config.json --template-file /path/to/oci_templates.json --provider oci-default --counts 1 --report-file work/oci-canary-report.json
+# Adapt the OCI CLI environment path if needed.
+export PATH="$VIRTUAL_ENV/bin:$HOME/.venvs/orb-oci-cli/bin:$PATH"
+hash -r
+"$VIRTUAL_ENV/bin/python" dev-tools/oci/run_pre_live_gate.py --config /path/to/config.json --template-file /path/to/oci_templates.json --provider oci-default --orb-bin "$VIRTUAL_ENV/bin/orb" --counts 1 --report-file work/oci-canary-report.json
 ```
 
 Replace the provider name with the name from your config. The script updates the
