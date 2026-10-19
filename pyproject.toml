@@ -16,9 +16,13 @@ maintainers = [
 ]
 keywords = [
     "aws",
+    "azure",
+    "gcp",
+    "kubernetes",
     "ec2",
     "hostfactory",
     "symphony",
+    "slurm",
     "hpc",
     "cluster",
     "cloud",
@@ -46,7 +50,8 @@ dependencies = [
     "pydantic>=2.0.0",
     "pydantic-settings>=2.0.0",
     "sqlalchemy>=2.0.0",
-    "urllib3>=2.6.3", # Security: Fix CVE-2025-66471, CVE-2025-66418, CVE-2026-21441
+    "urllib3>=2.8.0", # Security: Fix CVE-2025-66471, CVE-2025-66418, CVE-2026-21441,
+    # CVE-2026-97687, CVE-2026-97688, CVE-2026-97689
     # Security: Fix GHSA-ffc3-869f-jxw9 (critical), GHSA-9j54-fg26-wv3r,
     # GHSA-w2cx-738m-mc7w, GHSA-9v7f-9g4p-ffgj, GHSA-p4g4-x82p-q773,
     # GHSA-r6x4-923q-g947 (high), GHSA-jwrc-g2q2-pq5p, GHSA-8wjv-2p76-3863,
@@ -102,7 +107,7 @@ azure = [
     "azure-mgmt-compute>=37.2.0",
     "azure-mgmt-network>=30.2.0",
     "azure-mgmt-resource>=25.0.0",
-    "azure-mgmt-resource-subscriptions==1.0.0b1",
+    "azure-mgmt-resource-subscriptions>=1.0.0",
     "httpx>=0.27.0",
 ]
 # GCP provider. Install with:
@@ -110,6 +115,10 @@ azure = [
 gcp = [
     "google-cloud-compute>=1.14.0",
     "google-auth>=2.23.0",
+    # Imported directly for exception translation and retry predicates
+    # (compute_client.py, exceptions.py, single_vm_handler.py), not just
+    # pulled in transitively by google-cloud-compute.
+    "google-api-core>=2.17.0",
 ]
 
 # Meta-extra: all currently implemented providers
@@ -165,11 +174,10 @@ api = [
     "jinja2>=3.1.0",
 ]
 
-# Model Context Protocol server. The <2 cap holds to the stable 1.x line; the
-# 2.0 rewrite renames the server class and changes the handler surface, so the
-# upgrade is a deliberate migration rather than an implicit resolve.
+# Model Context Protocol server. The 2.x line registers low-level server
+# handlers through constructor callbacks instead of decorators.
 mcp = [
-    "mcp>=1.28,<2",
+    "mcp>=2.3,<3",
 ]
 
 # OTel API only — for embedders that want instrumentation without the SDK weight.
@@ -227,6 +235,8 @@ test-azure = [
     "azure-core>=1.38.2",
     "azure-identity>=1.25.2",
     "azure-mgmt-compute>=37.2.0",
+    "azure-mgmt-resource>=25.0.0",
+    "azure-mgmt-resource-subscriptions>=1.0.0",
 ]
 
 # GCP provider tests use Compute SDK models and google-api-core exceptions.
@@ -252,7 +262,7 @@ test-k8s = [
 #   1. orb-py[all] — the full runtime surface (providers, api, ui, monitoring,
 #      sql, cli).  pip resolves extras, so runtime deps need NOT be re-listed
 #      here; referencing [all] avoids a hand-maintained mirror of them.
-#   2. The CI/dev TOOLCHAIN (ruff, pytest, mkdocs, bandit, …).  These live only
+#   2. The CI/dev TOOLCHAIN (ruff, pytest, mkdocs, pip-audit, …).  These live only
 #      in [dependency-groups] — which pip cannot read — so they must be mirrored
 #      here until pip gains PEP 735 support.
 #
@@ -285,13 +295,17 @@ dev = [
     "pytest-benchmark>=5.1.0,<6.0.0",
     "coverage>=7.3.2,<8.0.0",
     "httpx>=0.27.0",
+    "httpx2>=2.13,<3",
     "moto[all]>=5.1.19,<6.0.0",
     "responses>=0.24.0,<1.0.0",
     "requests-mock>=1.11.0,<2.0.0",
     "joserfc>=1.6.1",
     "werkzeug>=3.1.6",
-    "nltk>=3.10.2",
-    "gitpython>=3.1.52",
+    # Security: Fix CVE-2026-76217, CVE-2026-76218, CVE-2026-76219,
+    # CVE-2026-76220, CVE-2026-76222, CVE-2026-78675, CVE-2026-78676,
+    # CVE-2026-78677, CVE-2026-78678, CVE-2026-78679, CVE-2026-87817,
+    # CVE-2026-87819, GHSA-jm78-9fvv-mhgr (high), GHSA-59cr-6r3x-644w (medium)
+    "gitpython>=3.1.62",
     "watchdog",
     "tenacity",
     "pg8000",
@@ -306,21 +320,19 @@ dev = [
     "mkdocs-section-index>=0.3.0,<1.0.0",
     "mike>=1.1.0,<3.0.0",
     # --- inlined from dependency-groups.security ---
-    "bandit>=1.7.5,<2.0.0",
-    "bandit-sarif-formatter>=1.1.1,<2.0.0",
-    "safety>=3.7.0,<4.0.0",
     "pip-audit>=2.6.1,<3.0.0",
     "cyclonedx-bom>=4.0.0,<8.0.0",
-    "peewee>=3.18.3",
-    "marshmallow>=4.1.2",
     "lxml>=6.1.0",
     # semgrep is intentionally excluded from this shim (as in the security group):
     # workflows pin and install their own version to avoid version drift.
     # --- inlined from dependency-groups.build ---
     "build>=1.0.3,<2.0.0",
     "wheel>=0.41.3,<1.0.0",
+    "setuptools>=80.9.0",
     # --- dev-only tools (not in any CI group) ---
-    "virtualenv>=20.26.6",
+    # Security: Fix CVE-2024-53899 (command injection), CVE-2026-102925,
+    # CVE-2026-102930, CVE-2026-102937, CVE-2026-102938
+    "virtualenv>=21.7.13",
     "pre-commit>=3.5.0,<5.0.0",
     "bump2version>=1.0.1,<2.0.0",
     "python-semantic-release>=10.0.0,<11.0.0",
@@ -349,7 +361,7 @@ dev = [
 #   arch      — import-linter (arch-validation job; pyyaml via project deps)
 #   test      — pytest stack + all test dependencies (all test legs)
 #   docs      — mkdocs stack (docs job)
-#   security  — bandit/safety/pip-audit/cyclonedx (security-bandit/safety jobs)
+#   security  — pip-audit/cyclonedx (security-pip-audit job)
 #   build     — build + wheel (build-and-package job)
 #
 # Umbrella groups (keep local dev + --all-groups unchanged):
@@ -403,7 +415,8 @@ test = [
     "httpx>=0.27.0",  # Required by FastAPI TestClient
     "jinja2>=3.1.0",
     # MCP server tests exercise the official SDK, so the test surface needs it.
-    "mcp>=1.28,<2",
+    "mcp>=2.3,<3",
+    "httpx2>=2.13,<3",  # HTTP client of the MCP SDK; the transport tests drive it directly
     # AWS Testing
     "moto[all]>=5.1.19,<6.0.0",
     "responses>=0.24.0,<1.0.0",
@@ -411,13 +424,14 @@ test = [
     # Security overrides for vulnerable transitive deps pulled in by test tooling
     "joserfc>=1.6.1",
     "werkzeug>=3.1.6",
-    # Security override for safety's vulnerable and broken nltk versions
-    # (GHSA-7p94-766c-hgjp; 3.10.1 rejects packages in project-local virtualenvs)
-    "nltk>=3.10.2",
     # Security override for python-semantic-release's vulnerable gitpython
     # (GHSA-956x-8gvw-wg5v, GHSA-2f96-g7mh-g2hx, GHSA-v396-v7q4-x2qj argument
     # injection; GHSA-rwj8-pgh3-r573 os.path.expandvars in polish_url)
-    "gitpython>=3.1.52",
+    # Security: Fix CVE-2026-76217, CVE-2026-76218, CVE-2026-76219,
+    # CVE-2026-76220, CVE-2026-76222, CVE-2026-78675, CVE-2026-78676,
+    # CVE-2026-78677, CVE-2026-78678, CVE-2026-78679, CVE-2026-87817,
+    # CVE-2026-87819, GHSA-jm78-9fvv-mhgr (high), GHSA-59cr-6r3x-644w (medium)
+    "gitpython>=3.1.62",
     # k8s-legacy extra deps — required for tests/integration/k8s_legacy/
     "kubernetes",
     "watchdog",
@@ -452,14 +466,8 @@ docs = [
 ]
 
 security = [
-    "bandit>=1.7.5,<2.0.0",
-    "bandit-sarif-formatter>=1.1.1,<2.0.0",
-    "safety>=3.7.0,<4.0.0",
     "pip-audit>=2.6.1,<3.0.0",
     "cyclonedx-bom>=4.0.0,<8.0.0",
-    # Security overrides for safety's vulnerable transitive deps
-    "peewee>=3.18.3",
-    "marshmallow>=4.1.2",
     # Security override for lxml (CVE-2026-41066) — transitive via cyclonedx-bom + pip-audit
     "lxml>=6.1.0",
     # semgrep is intentionally excluded: the workflow pins and installs its own
@@ -469,6 +477,10 @@ security = [
 build = [
     "build>=1.0.3,<2.0.0",
     "wheel>=0.41.3,<1.0.0",
+    # Matches [build-system].requires: python -m build --no-isolation (used
+    # by build.sh) reuses this environment's packages for the build backend
+    # instead of provisioning its own, so setuptools must be present here too.
+    "setuptools>=80.9.0",
 ]
 
 # --- umbrella groups (preserve --all-groups / local dev-install behaviour) ---
@@ -488,7 +500,8 @@ ci = [
 # Dev Dependencies: Additional dev tools (includes all CI deps)
 dev = [
     {include-group = "ci"},
-    "virtualenv>=20.26.6",  # Security: Fix CVE-2024-53899 command injection
+    "virtualenv>=21.7.13",  # Security: Fix CVE-2024-53899, CVE-2026-102925,
+    # CVE-2026-102930, CVE-2026-102937, CVE-2026-102938
     "pre-commit>=3.5.0,<5.0.0",
     "bump2version>=1.0.1,<2.0.0",
     "python-semantic-release>=10.0.0,<11.0.0",
@@ -554,15 +567,17 @@ include-package-data = true
 [tool.setuptools.package-data]
 "*" = ["py.typed"]
 "orb.config" = ["default_config.json"]
+"orb.api.assets" = ["*.png"]
 "orb.providers.aws.config" = ["*.json"]
 "orb.providers.oci.config" = ["*.json"]
 "orb.ui" = ["rxconfig.py", "_static/**/*", "_static/*"]
 "orb.k8s_legacy.alembic" = ["alembic.ini", "script.py.mako"]
 "orb.k8s_legacy.alembic.versions" = ["*.py"]
 "orb.k8s_legacy.tests.resources" = ["*.yml", "*.tpl"]
+"orb.infrastructure.scheduler.slurm.scripts" = ["*.sh", "*.bat"]
 
 [tool.setuptools.data-files]
-"orb_scripts" = ["src/orb/infrastructure/scheduler/hostfactory/scripts/*.sh", "src/orb/infrastructure/scheduler/hostfactory/scripts/*.bat"]  # keep in sync with .project.yml build.package_root
+"orb_scripts" = ["src/orb/infrastructure/scheduler/hostfactory/scripts/*.sh", "src/orb/infrastructure/scheduler/hostfactory/scripts/*.bat", "src/orb/infrastructure/scheduler/slurm/scripts/*.sh", "src/orb/infrastructure/scheduler/slurm/scripts/*.bat"]  # keep in sync with .project.yml build.package_root
 
 
 
@@ -710,12 +725,15 @@ exclude = [
 ]
 
 [tool.ruff.lint]
-# ENFORCED: These rules fail CI (replace black/isort/flake8)
+# ENFORCED: These rules fail CI (replace black/isort/flake8).  S (flake8-bandit)
+# is enforced too — see makefiles/ci.mk's ci-quality-ruff target, which runs it
+# as a separate pass scoped to src/ (not the whole repo).
 select = ["E", "W", "F", "I"]
 # OPTIONAL: These warn but don't fail CI (replace pylint functionality)
-extend-select = ["N", "UP", "B", "PL", "C90", "RUF"]
+extend-select = ["N", "UP", "B", "PL", "C90", "RUF", "S"]
 ignore = [
     "E501",  # Line too long (handled by formatter)
+    "S311",  # Standard pseudo-random generator use - no crypto/token generation uses random in this codebase
     "PLR0913",  # Too many arguments
     "PLR0912",  # Too many branches
     "PLR0915",  # Too many statements
@@ -773,6 +791,8 @@ classmethod-decorators = [
     "PLC0415",  # Allow conditional imports in tests for optional dependencies
     "N803",     # Allow PascalCase argument names (e.g. StateClass helper)
     "N806",     # Allow PascalCase local names for dynamically-constructed test subclasses
+    "S",        # flake8-bandit: assert, dummy credentials/tokens, subprocess and
+                # tmp-file patterns are normal test-harness code, not production risk
 ]
 
 [tool.ruff.format]

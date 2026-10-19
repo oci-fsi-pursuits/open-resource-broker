@@ -142,6 +142,23 @@ class TestAzureTemplateConstruction:
         with pytest.raises(ValueError, match="image source is required"):
             AzureTemplate(**fields)
 
+    def test_rejects_non_base64_custom_data(self):
+        fields = {**_BASE_FIELDS, "custom_data": "not valid base64!!"}
+        with pytest.raises(ValueError, match="custom_data must be valid base64"):
+            AzureTemplate(**fields)
+
+    def test_accepts_valid_base64_custom_data(self):
+        import base64
+
+        encoded = base64.b64encode(b"#!/bin/bash\necho hello\n").decode("ascii")
+        fields = {**_BASE_FIELDS, "custom_data": encoded}
+        t = AzureTemplate(**fields)
+        assert t.custom_data == encoded
+
+    def test_custom_data_defaults_to_none(self):
+        t = AzureTemplate(**_BASE_FIELDS)
+        assert t.custom_data is None
+
     def test_ssh_key_name_accepted(self):
         """ssh_key_name alone (without inline keys) should pass validation."""
         fields = {
@@ -632,13 +649,13 @@ class TestValueObjects:
             "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Compute/diskEncryptionSets/",
             "/subscriptions/sub/providers/Microsoft.Compute/diskEncryptionSets/des-1",
             "/subscriptions/sub/resourceGroups/rg/providers/Contoso/widgets/widget-1/"
-            "providers/Microsoft.Compute/diskEncryptionSets/des-1",
+            + "providers/Microsoft.Compute/diskEncryptionSets/des-1",
             "/subscriptions/sub/resourceGroups/rg/providers/"
-            "Microsoft.Compute/diskEncryptionSets/des-1/children/child-1",
+            + "Microsoft.Compute/diskEncryptionSets/des-1/children/child-1",
             "/subscriptions//resourceGroups/rg/providers/"
-            "Microsoft.Compute/diskEncryptionSets/des-1",
+            + "Microsoft.Compute/diskEncryptionSets/des-1",
             "/subscriptions/sub/resourceGroups//providers/"
-            "Microsoft.Compute/diskEncryptionSets/des-1",
+            + "Microsoft.Compute/diskEncryptionSets/des-1",
         ],
     )
     def test_arm_resource_id_rejects_invalid_structure(self, value):

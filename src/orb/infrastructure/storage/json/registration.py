@@ -82,7 +82,6 @@ def create_json_unit_of_work(config: Any) -> Any:
     # Handle different config types
     if isinstance(config, ConfigurationManager):
         # Try to get scheduler strategy to determine base path
-        base_path = "data"  # Default fallback
         try:
             # Don't try to get container during registration - causes circular dependency
             # Use configuration fallback instead
@@ -159,6 +158,7 @@ def register_json_storage() -> None:
             strategy_factory=create_json_strategy,
             config_factory=create_json_config,
             unit_of_work_factory=unit_of_work_factory,  # Accepts config parameter
+            display_name="JSON",
         )
 
         logger.info("Successfully registered JSON storage type")

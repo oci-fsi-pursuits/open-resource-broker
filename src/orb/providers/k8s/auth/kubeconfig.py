@@ -34,13 +34,14 @@ from __future__ import annotations
 import contextlib
 import os
 import sys
+import threading
 import urllib.parse
 from collections.abc import Iterator
 from typing import TYPE_CHECKING, Any, Optional
 
 from orb.providers.k8s.exceptions.k8s_exceptions import K8sAuthError
 
-if TYPE_CHECKING:  # pragma: no cover — type-checking only
+if TYPE_CHECKING:
     from orb.domain.base.ports import LoggingPort
 
 
@@ -203,7 +204,7 @@ def _install_non_interactive_refresh_hook_on(client_configuration: Optional[obje
 
     try:
         from kubernetes.client import Configuration  # type: ignore[reportAttributeAccessIssue]
-    except ImportError:  # pragma: no cover — kubernetes extra not installed
+    except ImportError:
         return
 
     default = getattr(Configuration, "_default", None)
@@ -233,7 +234,7 @@ def _redact_proxy_url(url: str) -> str:
             parsed = parsed._replace(netloc=redacted_netloc)
             return urllib.parse.urlunparse(parsed)
         return _redact_schemeless_userinfo(url)
-    except Exception:  # pragma: no cover — malformed URLs passed through
+    except Exception:  # noqa: S110  # pragma: no cover — malformed URLs passed through unredacted
         pass
     return url
 
@@ -332,7 +333,7 @@ def _apply_proxy_to_default_configuration(
     """
     try:
         from kubernetes.client import Configuration  # type: ignore[reportAttributeAccessIssue]
-    except ImportError:  # pragma: no cover — kubernetes extra not installed
+    except ImportError:
         return
 
     proxy_url = _resolve_proxy_url(config_proxy_url)
@@ -424,7 +425,7 @@ def _check_exec_plugins(
 
     try:
         import yaml
-    except ImportError:  # pragma: no cover — yaml not installed
+    except ImportError:
         return
 
     try:
@@ -592,3 +593,108 @@ def load_kubeconfig(
     # does not clear it).
     if client_configuration is None:
         _apply_proxy_to_default_configuration(logger, proxy_url, no_proxy)
+
+
+# ---------------------------------------------------------------------------
+# Init-scoped reuse of kubeconfig loads, ApiClients and context listings
+# ---------------------------------------------------------------------------
+
+# ``orb init`` probes credentials, lists contexts and discovers infrastructure
+# in separate steps.  These caches let those steps share one kubeconfig load and
+# one ApiClient per distinct source, and one parse per kubeconfig file.  Only
+# successful results are stored; ``clear_shared_kube_state`` drops everything
+# when the init run ends.
+_IN_CLUSTER_KEY = ("in_cluster",)
+_AUTO_KEY = ("auto",)
+
+_shared_lock = threading.RLock()
+_shared_api_clients: dict[tuple[Optional[str], ...], Any] = {}
+_shared_contexts: dict[Optional[str], tuple[Any, Any]] = {}
+
+
+def _client_key(
+    in_cluster: bool, auto_detect: bool, config_file: Optional[str], context: Optional[str]
+) -> tuple[Optional[str], ...]:
+    if in_cluster:
+        return _IN_CLUSTER_KEY
+    if auto_detect:
+        return _AUTO_KEY
+    return ("kubeconfig", config_file, context)
+
+
+def get_shared_api_client(
+    *,
+    in_cluster: bool = False,
+    auto_detect: bool = False,
+    config_file: Optional[str] = None,
+    context: Optional[str] = None,
+) -> Any:
+    """Return the ApiClient for the given credential source, loading it on first use.
+
+    Exactly one source applies: the in-cluster ServiceAccount, SDK auto-detection
+    (``load_config``), or an explicit kubeconfig ``config_file``/``context``.  A
+    failed load propagates and leaves nothing cached.
+    """
+    key = _client_key(in_cluster, auto_detect, config_file, context)
+
+    with _shared_lock:
+        client = _shared_api_clients.get(key)
+        if client is not None:
+            return client
+
+        import kubernetes.config as _k8s_config
+        from kubernetes.client.api_client import ApiClient
+
+        # ``load_kube_config`` / ``load_config`` run the exec credential plugin
+        # to mint the token; the guard forces its non-interactive branch so a
+        # TTY-attached ``orb init`` still attaches the token, and the lazy
+        # re-mint hook is wrapped afterwards so later calls stay non-interactive.
+        if in_cluster:
+            _k8s_config.load_incluster_config()
+        elif auto_detect:
+            with _force_non_interactive_exec():
+                _k8s_config.load_config()
+            _install_non_interactive_refresh_hook_on(None)
+        else:
+            with _force_non_interactive_exec():
+                if config_file is not None:
+                    _k8s_config.load_kube_config(config_file=config_file, context=context)
+                else:
+                    _k8s_config.load_kube_config(context=context)
+            _install_non_interactive_refresh_hook_on(None)
+        client = ApiClient()
+        _shared_api_clients[key] = client
+        return client
+
+
+def discard_shared_api_client(
+    *,
+    in_cluster: bool = False,
+    auto_detect: bool = False,
+    config_file: Optional[str] = None,
+    context: Optional[str] = None,
+) -> None:
+    """Forget the cached ApiClient for a source whose credentials failed verification."""
+    with _shared_lock:
+        _shared_api_clients.pop(_client_key(in_cluster, auto_detect, config_file, context), None)
+
+
+def list_shared_kube_config_contexts(config_file: Optional[str] = None) -> tuple[Any, Any]:
+    """Return ``(contexts, current_context)`` for ``config_file``, parsing it once."""
+    with _shared_lock:
+        cached = _shared_contexts.get(config_file)
+        if cached is not None:
+            return cached
+
+        import kubernetes.config as _k8s_config
+
+        result = _k8s_config.list_kube_config_contexts(config_file=config_file)
+        _shared_contexts[config_file] = result
+        return result
+
+
+def clear_shared_kube_state() -> None:
+    """Drop every cached ApiClient and context listing."""
+    with _shared_lock:
+        _shared_api_clients.clear()
+        _shared_contexts.clear()

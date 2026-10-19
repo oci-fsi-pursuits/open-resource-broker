@@ -31,19 +31,23 @@
 
 ---
 
-Open Resource Broker (ORB) is a unified API for orchestrating and provisioning compute capacity programmatically. Define what you need in a template, request it, track it, return it — through a CLI, REST API, MCP server, or native SDKs in six languages (Python, Go, TypeScript, Java, Kotlin, .NET).
+Open Resource Broker (ORB) is a unified API for orchestrating and provisioning compute capacity programmatically. Define what you need in a template, request it, track it, return it — through a CLI, REST API, MCP server, or native SDKs for Python, Go, TypeScript, Java, Kotlin, and .NET.
 
-Built for AWS today (EC2, Auto Scaling Groups, SpotFleet, EC2Fleet, Lambda MicroVMs), with an extensible provider system for adding new cloud backends.
+ORB includes provider backends for AWS, Azure, Google Cloud, and Kubernetes, plus an extensible provider system for adding new backends.
 
 **Provider support:**
-- **AWS** — EC2 RunInstances, EC2Fleet, SpotFleet, Auto Scaling Groups, Lambda MicroVMs
+- **AWS** — EC2 RunInstances, EC2Fleet, SpotFleet, Auto Scaling Groups, Lambda MicroVMs (built in; see [AWS Provider Setup](#setup) below)
+- **Azure** — VM Scale Sets, single VMs, CycleCloud cluster nodes (`pip install "orb-py[azure]"`; see [Azure Provider Guide](docs/root/providers/azure/index.md))
+- **Google Cloud** — Managed Instance Groups, single Compute Engine VMs (`pip install "orb-py[gcp]"`; see [Google Cloud Provider Guide](docs/root/providers/gcp/index.md))
 - **Kubernetes** — Pod, Deployment, StatefulSet, Job (`pip install "orb-py[k8s]"`; see [Kubernetes provider docs](docs/root/providers/k8s/index.md))
 - **OCI** - Compute instances, Flex and bare-metal shapes, preemptible capacity, and instance-principal authentication ([setup guide](docs/root/deployment/oci-integration.md))
 - **Custom** — extensible via [provider registry](docs/root/developer_guide/architecture.md) and the [`orb.providers` entry-point group](docs/root/providers/k8s/plugin-authoring.md)
 
 **Scheduler support:**
-- **HostFactory** — runs as an [IBM Spectrum Symphony provider plugin](#hostfactory-integration)
-- **Standalone** — direct usage without an external scheduler
+- **Default** — direct usage without an external scheduler, via ORB's native request/machine API
+- **IBM Spectrum Symphony (HostFactory)** — see [HostFactory Integration](#hostfactory-integration)
+- **Slurm Workload Manager by SchedMD** — integrates via ResumeProgram/SuspendProgram power hooks; see [Slurm Integration Guide](docs/root/slurm/integration_guide.md)
+- **HTC-Grid** and **OpenGRIS Scaler** — these grid schedulers consume ORB through the default scheduler's native API rather than a dedicated ORB scheduler strategy; see [HTC-Grid](https://github.com/finos/htc-grid) and [OpenGRIS Scaler](https://github.com/finos/opengris-scaler)
 
 ![ORB](./ORB.gif)
 
@@ -94,19 +98,22 @@ Get ORB installed and configured for your environment.
 <details>
 <summary>Installation</summary>
 
-### Standard install (core only — no provider)
+### Standard install (core + AWS provider)
 
 ```bash
 pip install orb-py
 ```
 
-ORB boots cleanly with no provider registered.  Any command that needs a provider
-will return a clear "no provider configured" error rather than an ImportError.
+`boto3`/`botocore` are core dependencies, so the base install already includes the AWS provider. `pip install "orb-py[aws]"` installs the same packages — it is an explicit, forward-compatible alias for operators who prefer to name providers by extra. Azure, Google Cloud, and Kubernetes each need their own extra below.
+
+ORB still boots cleanly when no provider is configured in `config.json`: commands that need a provider return a clear "no providers configured" error rather than an ImportError.
 
 ### Per-provider install
 
 ```bash
-pip install "orb-py[aws]"          # AWS provider (boto3 + botocore)
+pip install "orb-py[aws]"          # AWS provider — same deps as the base install, explicit opt-in
+pip install "orb-py[azure]"        # Azure provider (azure-identity, azure-mgmt-compute, ...)
+pip install "orb-py[gcp]"          # Google Cloud provider (google-cloud-compute)
 pip install "orb-py[k8s]"   # Kubernetes provider (kubernetes SDK)
 pip install "orb-py[aws,cli]"      # AWS provider + colored CLI output
 pip install "orb-py[aws,api]"      # AWS provider + REST API server
@@ -118,8 +125,10 @@ pip install "orb-py[all]"          # All providers + all features
 
 | Use case | Install command |
 |----------|----------------|
-| Core only (no provider) | `pip install orb-py` |
-| AWS operator | `pip install "orb-py[aws]"` |
+| Core (includes AWS provider) | `pip install orb-py` |
+| AWS operator (explicit extra) | `pip install "orb-py[aws]"` |
+| Azure operator | `pip install "orb-py[azure]"` |
+| Google Cloud operator | `pip install "orb-py[gcp]"` |
 | Kubernetes operator | `pip install "orb-py[k8s]"` |
 | AWS + Kubernetes | `pip install "orb-py[aws,k8s]"` |
 | AWS + colored CLI | `pip install "orb-py[aws,cli]"` |
@@ -204,6 +213,34 @@ See the [AWS Provider Guide](docs/root/user_guide/configuration.md) for required
 </details>
 
 <details>
+<summary>Azure Provider Setup</summary>
+
+ORB uses Azure's `DefaultAzureCredential` chain — any method that works with the Azure CLI works with ORB.
+
+```bash
+# Verify your credentials are active
+az account show
+```
+
+Install with `pip install "orb-py[azure]"`, then run `orb init --provider-type azure`. See the [Azure Provider Guide](docs/root/providers/azure/index.md) for supported resource types, credential methods, and the configuration reference.
+
+</details>
+
+<details>
+<summary>Google Cloud Provider Setup</summary>
+
+ORB uses Google's Application Default Credentials (ADC) — any method that works with `gcloud` works with ORB.
+
+```bash
+# Verify your credentials are active
+gcloud auth application-default print-access-token
+```
+
+Install with `pip install "orb-py[gcp]"`, then run `orb init --provider-type gcp`. See the [Google Cloud Provider Guide](docs/root/providers/gcp/index.md) for supported resource types, credential methods, and the configuration reference.
+
+</details>
+
+<details>
 <summary>Kubernetes Provider Setup</summary>
 
 ORB uses the standard Kubernetes client credential chain — any context that works with `kubectl` works with ORB. Running in-cluster, it auto-detects the mounted service account; running outside, it reads your `KUBECONFIG` and current context.
@@ -230,7 +267,7 @@ Install with `pip install "orb-py[k8s]"`. Minimum RBAC is in [`docs/root/provide
 
 ## Interfaces
 
-ORB provides multiple ways to interact with your infrastructure — a CLI, a REST API, an MCP server, and native SDKs in six languages.
+ORB provides multiple ways to interact with your infrastructure — a CLI, a REST API, an MCP server, and native SDKs for Python, Go, TypeScript, Java, Kotlin, and .NET.
 
 <details>
 <summary>CLI Reference</summary>
@@ -289,7 +326,7 @@ curl -X GET "http://localhost:8000/api/v1/requests/req-12345"
 <details>
 <summary>SDKs (Python, Go, TypeScript, Java, Kotlin, .NET)</summary>
 
-Native client libraries in six languages. Python is async-first and in-process; the other five drive a managed `orb` server over a local socket, so they share one OpenAPI contract and behave identically.
+Native client libraries for Python, Go, TypeScript, Java, Kotlin, and .NET. Python is async-first and in-process; the others drive a managed `orb` server over a local socket, so they share one OpenAPI contract and behave identically.
 
 | Language | Install | Entry point |
 |---|---|---|
@@ -418,9 +455,9 @@ curl http://localhost:8000/health
 </details>
 
 <details>
-<summary>Symphony HostFactory on Kubernetes (legacy)</summary>
+<summary>Spectrum Symphony HostFactory on Kubernetes (legacy)</summary>
 
-The `k8s-legacy` module is a Symphony HostFactory custom provider plugin for Kubernetes, predating the modern multi-cloud ORB architecture.  It is now bundled with `orb-py` as an optional install extra rather than as a separate PyPI package.
+The `k8s-legacy` module is a Spectrum Symphony HostFactory custom provider plugin for Kubernetes, predating the modern multi-cloud ORB architecture.  It is now bundled with `orb-py` as an optional install extra rather than as a separate PyPI package.
 
 Install with:
 
@@ -437,7 +474,7 @@ orb k8s-legacy get-available-templates
 The plugin is in maintenance mode.  A modern Kubernetes provider with native ORB integration is in development; existing deployments remain fully supported.
 
 - **Upgrading from `open-resource-broker`?** See the [migration guide](docs/root/operational/from-open-resource-broker.md).
-- **Deploying the Symphony HF plugin?** See the [k8s-legacy deployment guide](k8s-legacy/README.md).
+- **Deploying the Spectrum Symphony HF plugin?** See the [k8s-legacy deployment guide](k8s-legacy/README.md).
 
 </details>
 

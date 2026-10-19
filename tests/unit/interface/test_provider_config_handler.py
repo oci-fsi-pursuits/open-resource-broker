@@ -8,7 +8,7 @@ reflect current behaviour and include TODO markers where the violation exists.
 import argparse
 import json
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -89,6 +89,37 @@ class TestHandleProviderAdd:
             result = await handle_provider_add(args)
 
         assert result.get("error") is True and result.get("exit_code") == 1
+
+    @pytest.mark.asyncio
+    async def test_releases_provider_resources_after_the_command(self, tmp_path):
+        from orb.interface.provider_config_handler import handle_provider_add
+
+        _write_config(tmp_path, _base_config())
+        with (
+            patch(
+                "orb.interface.provider_config_handler.get_config_location",
+                return_value=tmp_path,
+            ),
+            patch(
+                "orb.interface.provider_config_handler._test_provider_credentials",
+                return_value=(False, "denied"),
+            ),
+            patch(
+                "orb.interface.provider_config_handler.release_provider_init_resources"
+            ) as release,
+        ):
+            args = _ns(
+                provider_type="aws",
+                aws_profile="default",
+                aws_region="us-east-1",
+                name=None,
+                discover=False,
+                _container=MagicMock(),
+            )
+            result = await handle_provider_add(args)
+
+        assert result.get("error") is True
+        release.assert_called_once_with(args._container, {"aws"})
 
     @pytest.mark.asyncio
     async def test_missing_aws_profile_returns_1(self, tmp_path):

@@ -101,7 +101,7 @@ class TestLeafMethodContracts:
     def test_discover_cluster_endpoint_returns_string(self) -> None:
         svc = _make_service()
         with patch(
-            "kubernetes.config.new_client_from_config",
+            "kubernetes.config.load_kube_config",
             side_effect=Exception("no config"),
         ):
             result = svc.discover_cluster_endpoint()
@@ -111,7 +111,7 @@ class TestLeafMethodContracts:
     def test_discover_cluster_endpoint_with_context_returns_string(self) -> None:
         svc = _make_service()
         with patch(
-            "kubernetes.config.new_client_from_config",
+            "kubernetes.config.load_kube_config",
             side_effect=Exception("no config"),
         ):
             result = svc.discover_cluster_endpoint(context="prod")

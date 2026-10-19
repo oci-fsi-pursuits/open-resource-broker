@@ -1,6 +1,7 @@
 """OCI integration through ORB's provider plugin contract."""
 
 from typing import Any
+
 from orb.providers.base.provider_plugin import ProviderPlugin
 
 

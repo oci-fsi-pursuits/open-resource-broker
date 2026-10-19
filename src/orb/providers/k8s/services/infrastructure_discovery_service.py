@@ -73,7 +73,7 @@ def _is_forbidden(exc: BaseException) -> bool:
     """Return ``True`` when ``exc`` is a 403 ``ApiException``."""
     try:
         from kubernetes.client.exceptions import ApiException
-    except ImportError:  # pragma: no cover — extra not installed
+    except ImportError:
         return False
     return isinstance(exc, ApiException) and getattr(exc, "status", None) == 403
 
@@ -82,7 +82,7 @@ def _is_not_found(exc: BaseException) -> bool:
     """Return ``True`` when ``exc`` is a 404 ``ApiException``."""
     try:
         from kubernetes.client.exceptions import ApiException
-    except ImportError:  # pragma: no cover — extra not installed
+    except ImportError:
         return False
     return isinstance(exc, ApiException) and getattr(exc, "status", None) == 404
 
@@ -111,6 +111,7 @@ class K8sInfrastructureDiscoveryService:
         self._config = config
         self._logger = logger
         self._api_client = api_client
+        self._client_injected = api_client is not None
         if console is None:
             from orb.infrastructure.adapters.null_console_adapter import (
                 NullConsoleAdapter,
@@ -128,36 +129,36 @@ class K8sInfrastructureDiscoveryService:
         """Return the kubernetes ``ApiClient``, building one on demand from kubeconfig."""
         if self._api_client is not None:
             return self._api_client
+        from orb.providers.k8s.auth.kubeconfig import get_shared_api_client
+
+        # The client is shared with the credential probe and endpoint lookup for
+        # the same source, so one init run loads the kubeconfig once.
         try:
-            from kubernetes import config as _k8s_config
-            from kubernetes.client.api_client import ApiClient
+            self._api_client = get_shared_api_client(**self._shared_source())
         except ImportError as exc:
             raise K8sError(
                 "kubernetes SDK is not installed; install with `pip install orb-py[k8s]`"
             ) from exc
-        from orb.providers.k8s.auth.kubeconfig import (
-            _force_non_interactive_exec,
-            _install_non_interactive_refresh_hook_on,
-        )
+        return self._api_client
 
+    def _shared_source(self) -> dict[str, Any]:
+        """Return the shared-client credential source this service resolves."""
         if is_in_cluster():
-            _k8s_config.load_incluster_config()
-            client = ApiClient()
-        else:
-            # ``load_kube_config`` runs the exec credential plugin to mint the
-            # initial bearer token; the guard forces its non-interactive branch
-            # so a TTY-attached ``orb init`` still attaches the token.  The
-            # subsequent lazy re-mint hook is wrapped on the loaded configuration
-            # so any expiry-driven re-exec during discovery calls stays
-            # non-interactive too.
-            with _force_non_interactive_exec():
-                _k8s_config.load_kube_config(
-                    config_file=self._config.kubeconfig_path,
-                    context=self._config.context,
-                )
-            _install_non_interactive_refresh_hook_on(None)
-            client = ApiClient()
-        return client
+            return {"in_cluster": True}
+        return {"config_file": self._config.kubeconfig_path, "context": self._config.context}
+
+    def _evict_on_unauthorized(self, exc: BaseException) -> None:
+        """Drop the cached client after a 401 so the next step reloads credentials."""
+        if self._client_injected:
+            return
+        from kubernetes.client.exceptions import ApiException
+
+        if not isinstance(exc, ApiException) or exc.status != 401:
+            return
+        from orb.providers.k8s.auth.kubeconfig import discard_shared_api_client
+
+        discard_shared_api_client(**self._shared_source())
+        self._api_client = None
 
     def _core_v1(self) -> Any:
         """Return a ``CoreV1Api`` instance backed by this service's client."""
@@ -219,18 +220,15 @@ class K8sInfrastructureDiscoveryService:
         Raises:
             K8sDiscoveryError: When the kubernetes SDK is not installed.
         """
+        from orb.providers.k8s.auth.kubeconfig import list_shared_kube_config_contexts
+
+        config_file = str(kubeconfig_path) if kubeconfig_path is not None else None
         try:
-            from kubernetes import config as _k8s_config
+            raw_contexts, raw_current = list_shared_kube_config_contexts(config_file)
         except ImportError as exc:
             raise K8sDiscoveryError(
                 "kubernetes SDK is not installed; install with `pip install orb-py[k8s]`"
             ) from exc
-
-        config_file = str(kubeconfig_path) if kubeconfig_path is not None else None
-        try:
-            raw_contexts, raw_current = _k8s_config.list_kube_config_contexts(
-                config_file=config_file
-            )
         except Exception as exc:
             self._logger.warning(
                 "discover_contexts: failed to parse kubeconfig (%s=%r): %s",
@@ -279,24 +277,19 @@ class K8sInfrastructureDiscoveryService:
             The apiserver URL (e.g. ``"https://1.2.3.4:6443"``).  Falls back
             to ``"unknown"`` when the URL cannot be resolved.
         """
-        try:
-            from kubernetes import config as _k8s_config
-        except ImportError:
-            self._logger.warning("discover_cluster_endpoint: kubernetes SDK not installed.")
-            return "unknown"
-
-        from orb.providers.k8s.auth.kubeconfig import _force_non_interactive_exec
+        from orb.providers.k8s.auth.kubeconfig import get_shared_api_client
 
         try:
-            # ``new_client_from_config`` runs the exec credential plugin to mint
-            # the token; force its non-interactive branch so a TTY-attached
-            # ``orb init`` resolves the endpoint instead of hanging/failing.
-            with _force_non_interactive_exec():
-                client = _k8s_config.new_client_from_config(context=context)
+            # Shares the client built for this context by the credential probe
+            # and discovery steps, so the exec credential plugin is not re-run.
+            client = get_shared_api_client(context=context)
             # kubernetes-stubs-elephant-fork omits the `configuration`
             # attribute from ApiClient; it exists at runtime.
             host: str = client.configuration.host or "unknown"  # type: ignore[attr-defined]
             return host
+        except ImportError:
+            self._logger.warning("discover_cluster_endpoint: kubernetes SDK not installed.")
+            return "unknown"
         except Exception as exc:
             self._logger.warning(
                 "discover_cluster_endpoint: could not resolve endpoint for context=%r: %s",
@@ -330,6 +323,7 @@ class K8sInfrastructureDiscoveryService:
         except K8sError:
             raise
         except Exception as exc:
+            self._evict_on_unauthorized(exc)
             if _is_forbidden(exc):
                 return self._fallback_namespaces_from_sa_file()
             raise K8sDiscoveryError(f"Failed to list namespaces: {exc}") from exc
@@ -394,6 +388,7 @@ class K8sInfrastructureDiscoveryService:
         except K8sError:
             raise
         except Exception as exc:
+            self._evict_on_unauthorized(exc)
             if _is_forbidden(exc):
                 self._logger.warning(
                     "discover_service_accounts: 403 from namespace=%r; "
@@ -449,6 +444,7 @@ class K8sInfrastructureDiscoveryService:
         except K8sError:
             raise
         except Exception as exc:
+            self._evict_on_unauthorized(exc)
             if _is_forbidden(exc):
                 self._logger.warning(
                     "discover_image_pull_secrets: 403 from namespace=%r; "
@@ -516,6 +512,7 @@ class K8sInfrastructureDiscoveryService:
                 resp_status = getattr(response, "status", None)
                 allowed: bool = bool(getattr(resp_status, "allowed", False))
             except Exception as exc:
+                self._evict_on_unauthorized(exc)
                 raise K8sDiscoveryError(
                     f"SelfSubjectAccessReview for verb={verb!r} in namespace={namespace!r} "
                     f"failed: {exc}"

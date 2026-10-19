@@ -1,7 +1,9 @@
 """OCI template with provider-specific launch configuration."""
 
 from typing import Any
+
 from pydantic import model_validator
+
 from orb.domain.template.template_aggregate import Template
 from orb.providers.oci.configuration.template_extension import OCITemplateExtensionConfig
 

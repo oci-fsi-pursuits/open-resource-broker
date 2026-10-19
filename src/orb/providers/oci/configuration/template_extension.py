@@ -1,7 +1,9 @@
 """OCI fields preserved through template defaults and serialization."""
 
 from typing import Any, Literal
+
 from pydantic import Field
+
 from orb.providers.base.template_extension import ProviderTemplateExtensionBase
 
 

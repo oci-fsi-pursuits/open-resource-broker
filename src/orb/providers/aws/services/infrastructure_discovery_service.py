@@ -68,21 +68,30 @@ class AWSInfrastructureDiscoveryService:
         profile: Optional[str],
         logger: Optional[LoggingPort] = None,
         console: Optional[ConsolePort] = None,
+        use_shared_session: bool = False,
     ):
         self.region = region
         self.profile = profile
         self._logger = logger or get_logger(__name__)
         self._console = console or NullConsoleAdapter()
+        self._use_shared_session = use_shared_session
 
         # Create AWS session and clients
-        from orb.providers.aws.session_factory import AWSSessionFactory
+        from orb.providers.aws.session_factory import AWSSessionFactory, get_shared_session
         from orb.providers.aws.utilities.boto_config import get_boto3_config
 
         _config = get_boto3_config()
-        session = AWSSessionFactory.create_session(profile=profile, region=region)
-        self.ec2_client = session.client("ec2", config=_config)
-        self.iam_client = session.client("iam", config=_config)
-        self.sts_client = session.client("sts", config=_config)
+        if use_shared_session:
+            # Init flow: reuse the session already resolved for this profile and
+            # fetch the caller identity through the shared cache.
+            session = get_shared_session(profile)
+            self.ec2_client = session.client("ec2", region_name=region, config=_config)
+            self.iam_client = session.client("iam", region_name=region, config=_config)
+        else:
+            session = AWSSessionFactory.create_session(profile=profile, region=region)
+            self.ec2_client = session.client("ec2", config=_config)
+            self.iam_client = session.client("iam", config=_config)
+            self.sts_client = session.client("sts", config=_config)
 
     def discover_vpcs(self, raise_on_error: bool = False) -> list[VPCInfo]:
         """Discover VPCs with name tags and CIDR blocks.
@@ -291,7 +300,12 @@ class AWSInfrastructureDiscoveryService:
         the deterministic ARN for the AWS-managed service-linked role.
         """
         try:
-            account_id = self.sts_client.get_caller_identity()["Account"]
+            if self._use_shared_session:
+                from orb.providers.aws.session_factory import get_caller_identity
+
+                account_id = get_caller_identity(self.profile)["Account"]
+            else:
+                account_id = self.sts_client.get_caller_identity()["Account"]
             arn = (
                 f"arn:aws:iam::{account_id}:role/aws-service-role"
                 f"/spotfleet.amazonaws.com/AWSServiceRoleForEC2SpotFleet"

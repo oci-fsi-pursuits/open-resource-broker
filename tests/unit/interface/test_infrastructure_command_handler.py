@@ -97,6 +97,32 @@ class TestHandleInfrastructureDiscover:
         assert "providers" in result
 
     @pytest.mark.asyncio
+    async def test_releases_provider_resources_afterwards(self, tmp_path):
+        from orb.interface.infrastructure_command_handler import (
+            handle_infrastructure_discover,
+            handle_infrastructure_validate,
+        )
+
+        _two_provider_config(tmp_path)
+        mock_container = _mock_container_with_provider_port()
+
+        with (
+            patch(
+                "orb.interface.infrastructure_command_handler.get_config_location",
+                return_value=tmp_path,
+            ),
+            patch(
+                "orb.interface.infrastructure_command_handler.release_provider_init_resources"
+            ) as release,
+        ):
+            args = _ns(provider_name=None, _container=mock_container)
+            await handle_infrastructure_discover(args)
+            await handle_infrastructure_validate(args)
+
+        assert release.call_count == 2
+        release.assert_called_with(mock_container, {"aws"})
+
+    @pytest.mark.asyncio
     async def test_all_providers_returns_success(self, tmp_path):
         # TODO: CQRS violation — reads config.json and uses service-locator get_container()
         from orb.interface.infrastructure_command_handler import handle_infrastructure_discover
@@ -419,4 +445,4 @@ class TestShowProviderInfrastructure:
             _show_provider_infrastructure(provider, mock_container)
 
         info_calls = [call.args[0] for call in mock_console.info.call_args_list]
-        assert any("https://example.com" in c for c in info_calls)
+        assert "Endpoint: https://example.com" in info_calls

@@ -488,8 +488,27 @@ class TestPromptOperationalParams:
         }
         del strategy_class.get_operational_param_choices
         del strategy_class.get_operational_param_default
+        del strategy_class.validate_operational_param
 
         with patch("builtins.input", return_value="us-east-1"):
             result = _mod._prompt_operational_params(strategy_class, container=container)
 
         assert result["region"] == "us-east-1"
+
+    def test_provider_without_validator_keeps_existing_menu_fallback(self):
+        strategy_class = MagicMock()
+        strategy_class.get_operational_requirements.return_value = {
+            "region": {"required": True, "description": "Region"}
+        }
+        strategy_class.get_operational_param_choices.return_value = [
+            ("us-east-1", "N. Virginia"),
+            ("us-west-2", "Oregon"),
+        ]
+        strategy_class.get_operational_param_default.return_value = "us-east-1"
+        del strategy_class.validate_operational_param
+
+        with patch("builtins.input", return_value="99") as prompt:
+            result = _mod._prompt_operational_params(strategy_class, container=MagicMock())
+
+        assert result == {"region": "us-east-1"}
+        prompt.assert_called_once_with("  Select (1): ")

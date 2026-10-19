@@ -55,7 +55,7 @@ class TestAWSProviderEnvironmentVariables:
             # Test access key authentication
             with patch.dict(
                 os.environ,
-                {"ORB_AWS_ACCESS_KEY_ID": "AKIATEST123", "ORB_AWS_SECRET_ACCESS_KEY": "secret123"},  # nosec B105
+                {"ORB_AWS_ACCESS_KEY_ID": "AKIATEST123", "ORB_AWS_SECRET_ACCESS_KEY": "secret123"},
             ):
                 config = AWSProviderConfig()  # type: ignore[call-arg]  # type: ignore[call-arg]
                 assert config.access_key_id is not None
@@ -686,13 +686,13 @@ class TestProviderStrategyPatternsComprehensive:
                             if inspect.iscoroutinefunction(method):
                                 try:
                                     await method(Mock())
-                                except Exception:  # nosec B110
+                                except Exception:
                                     # Method might require specific parameters
                                     pass
                             else:
                                 try:
                                     method(Mock())
-                                except Exception:  # nosec B110
+                                except Exception:
                                     # Method might require specific parameters
                                     pass
 
@@ -750,7 +750,7 @@ class TestAWSAuthenticationComprehensive:
             strategy = CognitoAuthStrategy(Mock(), "us-east-1_test", "test_client_id")
             assert strategy is not None
         except ImportError:
-            pass
+            pass  # Optional auth strategy module not installed in this test environment
 
         # IAMAuthStrategy requires (logger,)
         try:
@@ -759,7 +759,7 @@ class TestAWSAuthenticationComprehensive:
             strategy = IAMAuthStrategy(Mock())
             assert strategy is not None
         except ImportError:
-            pass
+            pass  # Optional auth strategy module not installed in this test environment
 
 
 @pytest.mark.unit

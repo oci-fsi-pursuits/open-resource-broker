@@ -47,9 +47,25 @@ RUN groupadd -r "${PACKAGE_NAME_SHORT:-orb}" \
 WORKDIR /app
 RUN mkdir -p /app/logs /app/data /app/tmp
 
-# Install UV and create virtual environment in single layer
-RUN pip install --no-cache-dir uv==0.8.12 \
-    && uv venv /opt/venv
+# Install UV and create virtual environment in single layer.
+#
+# The application runs from /opt/venv (built and populated via uv below), so
+# the system interpreter's own pip/setuptools/wheel — only needed transiently
+# to install uv itself — are removed in this same layer once uv exists.
+# pip vendors its own private copies of several libraries (setuptools,
+# urllib3, msgpack); those copies are not reachable at runtime but still
+# show up as vulnerable packages in image scans, so dropping pip removes
+# them entirely instead of just patching the top-level entries.
+RUN pip install --no-cache-dir uv==0.12.23 \
+    && uv venv /opt/venv \
+    && rm -rf /usr/local/lib/python*/ensurepip \
+        /usr/local/lib/python*/site-packages/pip \
+        /usr/local/lib/python*/site-packages/pip-*.dist-info \
+        /usr/local/lib/python*/site-packages/setuptools \
+        /usr/local/lib/python*/site-packages/setuptools-*.dist-info \
+        /usr/local/lib/python*/site-packages/wheel \
+        /usr/local/lib/python*/site-packages/wheel-*.dist-info \
+    && find /usr/local/bin -name "pip*" -delete
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy pre-built wheel and install with all runtime extras.
@@ -103,6 +119,9 @@ ENV HF_AUTH_ENABLED=false \
 # In embedded mode (default, UIConfig.mode="embedded") the Reflex backend mounts
 # ORB's FastAPI at /orb, so the health endpoint is /orb/health — NOT /health.
 # /health (no prefix) is only reachable in api-only / split mode.
+# Shell form is required here to interpolate HF_SERVER_PORT, which deployments
+# (docker-compose, test tooling) override at runtime.
+# hadolint ignore=DL3025
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import requests; requests.get('http://localhost:${HF_SERVER_PORT}/orb/health', timeout=5).raise_for_status()" || exit 1
 

@@ -1,14 +1,14 @@
 """RDMA placement must survive persistence and be verified before any live launch."""
 
-from unittest.mock import MagicMock
 from importlib import import_module
+from unittest.mock import MagicMock
 
 import pytest
 
-from orb.infrastructure.template.factories import TemplateDTOFactory
 from orb.infrastructure.mocking.dry_run_context import dry_run_context
 from orb.infrastructure.scheduler.hostfactory.field_mapper import HostFactoryFieldMapper
 from orb.infrastructure.scheduler.hostfactory.field_mapping_registry import FieldMappingRegistry
+from orb.infrastructure.template.factories import TemplateDTOFactory
 from orb.providers.base.strategy import ProviderOperation, ProviderOperationType
 from orb.providers.oci.domain.template import OCITemplate
 from orb.providers.oci.handlers.oci_compute_handler import OCIComputeHandler

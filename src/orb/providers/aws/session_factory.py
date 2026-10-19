@@ -1,6 +1,7 @@
 """AWS Session Factory - Centralized boto3 session creation."""
 
-from typing import Optional
+import threading
+from typing import Any, Optional
 
 import boto3
 
@@ -8,6 +9,48 @@ from orb.providers.aws.utilities.boto_config import get_boto3_config
 
 # Default timeout config for one-off clients created outside of AWSClient
 _DEFAULT_CONFIG = get_boto3_config()
+
+# Init-scoped caches keyed by profile name (``None`` = default credential chain).
+# Only successful results are stored; they are dropped by ``clear_shared_sessions``
+# when the init run ends.
+_shared_lock = threading.Lock()
+_shared_sessions: dict[Optional[str], boto3.Session] = {}
+_shared_identities: dict[Optional[str], dict[str, Any]] = {}
+
+
+def get_shared_session(profile: Optional[str] = None) -> boto3.Session:
+    """Return the cached session for ``profile``, creating it on first use."""
+    profile = profile or None
+    with _shared_lock:
+        session = _shared_sessions.get(profile)
+        if session is None:
+            session = boto3.Session(profile_name=profile) if profile else boto3.Session()
+            _shared_sessions[profile] = session
+        return session
+
+
+def get_caller_identity(profile: Optional[str] = None) -> dict[str, Any]:
+    """Return the cached STS caller identity for ``profile``, resolving it on first use.
+
+    Lookup failures propagate and are not cached, so the next caller retries.
+    """
+    profile = profile or None
+    with _shared_lock:
+        identity = _shared_identities.get(profile)
+    if identity is not None:
+        return identity
+    session = get_shared_session(profile)
+    identity = session.client("sts", config=_DEFAULT_CONFIG).get_caller_identity()
+    with _shared_lock:
+        _shared_identities[profile] = identity
+    return identity
+
+
+def clear_shared_sessions() -> None:
+    """Drop every cached session and identity."""
+    with _shared_lock:
+        _shared_sessions.clear()
+        _shared_identities.clear()
 
 
 class AWSSessionFactory:
@@ -68,8 +111,12 @@ class AWSSessionFactory:
             Dict with success status and credential metadata
         """
         try:
-            session = AWSSessionFactory.create_session(profile, region)
-            identity = session.client("sts", config=_DEFAULT_CONFIG).get_caller_identity()
+            if region:
+                session = AWSSessionFactory.create_session(profile, region)
+                identity = session.client("sts", config=_DEFAULT_CONFIG).get_caller_identity()
+            else:
+                identity = get_caller_identity(profile)
+                session = get_shared_session(profile)
             return {
                 "success": True,
                 "profile": profile,

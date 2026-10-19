@@ -14,6 +14,11 @@ on:
       - 'pyproject.toml'
       - 'deployment/docker/**'
       - 'dev-tools/container/container_build.sh'
+      - 'dev-tools/package/**'
+      - 'makefiles/deploy.mk'
+      - 'makefiles/dev.mk'
+      - 'Makefile'
+      - 'setup.py'
       - '.github/workflows/dev-containers.yml'
   workflow_run:
     workflows: ["Unit Tests"]
@@ -27,6 +32,11 @@ on:
       - 'pyproject.toml'
       - 'deployment/docker/**'
       - 'dev-tools/container/container_build.sh'
+      - 'dev-tools/package/**'
+      - 'makefiles/deploy.mk'
+      - 'makefiles/dev.mk'
+      - 'Makefile'
+      - 'setup.py'
       - '.github/workflows/dev-containers.yml'
   workflow_dispatch:
     inputs:
@@ -48,6 +58,41 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Resolves the commit to build without ever placing the workflow_run event's
+  # head_sha directly into a checkout `ref:`. workflow_run runs with this
+  # repository's permissions/secrets regardless of which repository or branch
+  # originally triggered the upstream "Unit Tests" run, so before trusting
+  # that commit we confirm the run that completed was itself a push to this
+  # repository (not a pull_request from a fork, which could otherwise smuggle
+  # a branch named "main" past the branches: [main] trigger filter above).
+  resolve-commit:
+    name: Resolve Trusted Commit
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    permissions:
+      contents: read
+    outputs:
+      sha: ${{ steps.resolve.outputs.sha }}
+    steps:
+    - name: Resolve commit SHA
+      id: resolve
+      env:
+        WORKFLOW_RUN_EVENT: ${{ github.event.workflow_run.event }}
+        WORKFLOW_RUN_REPO: ${{ github.event.workflow_run.head_repository.full_name }}
+        WORKFLOW_RUN_SHA: ${{ github.event.workflow_run.head_sha }}
+        CURRENT_SHA: ${{ github.sha }}
+      run: |
+        if [[ "$GITHUB_EVENT_NAME" == "workflow_run" ]]; then
+          if [[ "$WORKFLOW_RUN_EVENT" != "push" || "$WORKFLOW_RUN_REPO" != "$GITHUB_REPOSITORY" ]]; then
+            echo "::error::workflow_run did not originate from a push to this repository; refusing to build its commit" >&2
+            exit 1
+          fi
+          echo "sha=${WORKFLOW_RUN_SHA}" >> "$GITHUB_OUTPUT"
+        else
+          echo "sha=${CURRENT_SHA}" >> "$GITHUB_OUTPUT"
+        fi
+
   config:
     name: Configuration
     uses: ./.github/workflows/shared-config.yml
@@ -57,7 +102,7 @@ jobs:
     name: Calculate Container Tags
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: config
+    needs: [config, resolve-commit]
     permissions:
       contents: read
     outputs:
@@ -67,8 +112,9 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
       with:
-        # Pin to the exact commit Unit Tests validated, not the default branch's current HEAD.
-        ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+        # Pin to the exact commit Unit Tests validated, resolved and
+        # trust-checked by the resolve-commit job above.
+        ref: ${{ needs.resolve-commit.outputs.sha }}
 
     - name: Calculate container tags
       id: tags
@@ -85,7 +131,7 @@ jobs:
     name: Build Container Wheel
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: config
+    needs: [config, resolve-commit]
     permissions:
       contents: read
 
@@ -93,8 +139,9 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
       with:
-        # Pin to the exact commit Unit Tests validated, not the default branch's current HEAD.
-        ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+        # Pin to the exact commit Unit Tests validated, resolved and
+        # trust-checked by the resolve-commit job above.
+        ref: ${{ needs.resolve-commit.outputs.sha }}
 
     - name: Setup Python and UV
       uses: ./.github/actions/setup-uv-cached
@@ -111,14 +158,45 @@ jobs:
       with:
         bun-version: "1.4.0"  # pinned; update intentionally to avoid surprise breakage
 
+    # Restores the SPA's installed frontend packages (and reflex's own install
+    # fingerprint) so reflex's internal `bun install` can skip straight to its
+    # build step instead of redownloading ~280 packages every run. Keyed on
+    # the lockfile/manifest reflex installs from plus uv.lock (which pins the
+    # reflex version); never on build output, which is excluded before saving
+    # below and always regenerated fresh regardless of cache state.
+    - name: Restore SPA frontend dependencies cache
+      id: spa-web-cache
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v5
+      with:
+        path: src/orb/ui/.web
+        key: spa-web-${{ runner.os }}-bun1.4.0-${{ hashFiles('src/orb/ui/reflex.lock/bun.lock', 'src/orb/ui/reflex.lock/package.json', 'uv.lock') }}
+
     - name: Build package wheel
-      # SPA bundle is compiled by the setuptools build hook during `make build`
-      # now that Bun is on PATH.  ORB_SKIP_UI_BUILD is NOT set so the wheel
-      # ships the _static/ directory — identical to the prod-release.yml wheel.
+      # The SPA bundle is built by build.sh's explicit step (python -m build
+      # no longer triggers it via the editable-install hook). ORB_SKIP_UI_BUILD
+      # is NOT set so the wheel ships the _static/ directory — identical to
+      # the prod-release.yml wheel.
       run: make build
 
+    - name: Save SPA frontend dependencies cache
+      # Drop build output before saving -- it is never meant to be cached and
+      # is always regenerated from scratch next run regardless.
+      if: steps.spa-web-cache.outputs.cache-hit != 'true'
+      run: rm -rf src/orb/ui/.web/build
+
+    - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v5
+      if: steps.spa-web-cache.outputs.cache-hit != 'true'
+      with:
+        path: src/orb/ui/.web
+        # Reuse the restore step's own resolved key rather than
+        # re-evaluating hashFiles() here -- the build in between rewrites
+        # src/orb/ui/reflex.lock/bun.lock and package.json in place (reflex
+        # syncs its resolved lockfile back to them), so re-hashing now would
+        # save under a key no future restore step would ever request.
+        key: ${{ steps.spa-web-cache.outputs.cache-primary-key }}
+
     - name: Upload wheel artifact
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7
       with:
         name: container-wheel-${{ github.run_id }}
         path: dist/*.whl
@@ -128,7 +206,7 @@ jobs:
     name: Build and Scan Container Images
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    needs: [config, calculate-tags, build-wheel]
+    needs: [config, calculate-tags, build-wheel, resolve-commit]
 
     strategy:
       matrix:
@@ -151,8 +229,9 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
       with:
-        # Pin to the exact commit Unit Tests validated, not the default branch's current HEAD.
-        ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+        # Pin to the exact commit Unit Tests validated, resolved and
+        # trust-checked by the resolve-commit job above.
+        ref: ${{ needs.resolve-commit.outputs.sha }}
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069  # v4
@@ -167,7 +246,7 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Download wheel artifact
-      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8
       with:
         name: container-wheel-${{ github.run_id }}
         path: dist/
@@ -280,7 +359,7 @@ jobs:
         trivyignores: .trivyignore.yaml
 
     - name: Upload Trivy scan results
-      uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2  # v4.38.2
+      uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d  # v4.38.3
       if: always()
       with:
         sarif_file: 'trivy-results-py${{ matrix.python-version }}.sarif'
@@ -296,7 +375,7 @@ jobs:
 
     - name: Upload Hadolint scan results
       if: matrix.python-version == needs.config.outputs.default-python-version
-      uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2  # v4.38.2
+      uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d  # v4.38.3
       with:
         sarif_file: hadolint-dockerfile.sarif
 

@@ -26,6 +26,16 @@ import pytest
 
 
 @pytest.fixture(autouse=True)
+def _clear_shared_kube_clients():
+    """Drop init-scoped kubeconfig/ApiClient caches so tests never see each other's clients."""
+    from orb.providers.k8s.auth.kubeconfig import clear_shared_kube_state
+
+    clear_shared_kube_state()
+    yield
+    clear_shared_kube_state()
+
+
+@pytest.fixture(autouse=True)
 def _register_k8s_retry_classifier():
     """Register K8sRetryClassifier for each k8s test (mirrors provider bootstrap)."""
     from orb.infrastructure.resilience.retry_classifier_registry import (

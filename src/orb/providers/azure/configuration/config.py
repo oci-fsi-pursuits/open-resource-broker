@@ -148,6 +148,18 @@ class AzureProviderConfig(BaseSettings, BaseProviderConfig):  # type: ignore[mis
 
         return data
 
+    @field_validator("region")
+    @classmethod
+    def validate_region(cls, v: str) -> str:
+        """Normalise the location to its lowercase slug and reject display names."""
+        slug = v.strip().lower()
+        if not re.match(r"^[a-z][a-z0-9]+$", slug):
+            raise ValueError(
+                f"Azure region/location {v!r} must be a location name made of letters and "
+                "digits with no spaces, such as 'eastus2'"
+            )
+        return slug
+
     @field_validator("resource_group")
     @classmethod
     def validate_resource_group(cls, v: Optional[str]) -> Optional[str]:

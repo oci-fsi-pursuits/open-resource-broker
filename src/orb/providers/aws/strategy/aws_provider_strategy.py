@@ -420,10 +420,29 @@ class AWSProviderStrategy(ProviderStrategy):
             return self._get_instance_service().cleanup_machine_resources(operation)
         elif operation.operation_type == ProviderOperationType.GET_MACHINE_HEALTH:
             return self._get_instance_service().get_machine_health(operation)
+        elif operation.operation_type == ProviderOperationType.TAG_INSTANCES:
+            return await self._tag_instances(operation)
         else:
             return ProviderResult.error_result(
                 f"Unsupported operation: {operation.operation_type}", "UNSUPPORTED_OPERATION"
             )
+
+    async def _tag_instances(self, operation: ProviderOperation) -> ProviderResult:
+        """Apply per-instance tags via EC2 CreateTags (batched, fire-and-forget)."""
+        instance_tags: dict[str, dict[str, str]] = operation.parameters.get("instance_tags", {})
+        if not instance_tags:
+            return ProviderResult.success_result({})
+        try:
+            ec2 = self.aws_client.ec2_client if self.aws_client else None
+            if ec2 is None:
+                return ProviderResult.success_result({"tagged_count": 0})
+            for instance_id, tags in instance_tags.items():
+                aws_tags = [{"Key": k, "Value": v} for k, v in tags.items()]
+                ec2.create_tags(Resources=[instance_id], Tags=aws_tags)
+            return ProviderResult.success_result({"tagged_count": len(instance_tags)})
+        except Exception as e:
+            self._logger.error("Failed to apply per-instance tags: %s", e, exc_info=True)
+            return ProviderResult.error_result(f"TAG_INSTANCES failed: {e}", "TAG_OPERATION_FAILED")
 
     def get_capabilities(self) -> ProviderCapabilities:
         """Get AWS provider capabilities."""
@@ -699,7 +718,11 @@ class AWSProviderStrategy(ProviderStrategy):
         profile = config.get("profile", self._aws_config.profile)
 
         infrastructure_service = AWSInfrastructureDiscoveryService(
-            region=region, profile=profile, logger=self._logger, console=self._console
+            region=region,
+            profile=profile,
+            logger=self._logger,
+            console=self._console,
+            use_shared_session=True,
         )
         return infrastructure_service.discover_infrastructure_interactive(provider_config)
 
@@ -734,6 +757,29 @@ class AWSProviderStrategy(ProviderStrategy):
 
         region = kwargs.get("region")
         return AWSSessionFactory.discover_credentials(credential_source, region)
+
+    @classmethod
+    async def test_credentials_async(
+        cls, credential_source: Optional[str] = None, **kwargs
+    ) -> dict:
+        """Test AWS credentials off the event loop.
+
+        boto3 has no native async STS client, so the blocking credential
+        discovery call runs in a worker thread instead of the event loop.
+        """
+        from orb.providers.aws.session_factory import AWSSessionFactory
+
+        region = kwargs.get("region")
+        return await asyncio.to_thread(
+            AWSSessionFactory.discover_credentials, credential_source, region
+        )
+
+    @classmethod
+    def release_init_resources(cls) -> None:
+        """Drop the sessions and identities cached for the init run."""
+        from orb.providers.aws.session_factory import clear_shared_sessions
+
+        clear_shared_sessions()
 
     @classmethod
     def get_credential_requirements(cls) -> dict:
@@ -855,9 +901,9 @@ class AWSProviderStrategy(ProviderStrategy):
         caller today, but the gate is applied here so a future re-wire cannot
         silently reintroduce secondary-provider status drag.
         """
-        if self.aws_client is None:
+        if self._aws_client is None and not (self._aws_client_resolver or self._config_port):
             return
-        from orb.providers.aws.health import register_aws_health_checks
+        from orb.providers.aws.health import lazy_aws_client_getter, register_aws_health_checks
         from orb.providers.health_scoping import (
             connectivity_check_kind,
             is_default_provider_instance,
@@ -884,7 +930,7 @@ class AWSProviderStrategy(ProviderStrategy):
 
         register_aws_health_checks(
             health_check,
-            self.aws_client,
+            lazy_aws_client_getter(lambda: self.aws_client),
             storage_strategy,
             kind=connectivity_check_kind(provider_cfg),
         )
@@ -922,7 +968,7 @@ class AWSProviderStrategy(ProviderStrategy):
             if needs_resolution:
                 service = self._create_image_resolution_service()
                 for spec in needs_resolution:
-                    resolved_images[spec] = service.resolve_image_id(spec)
+                    resolved_images[spec] = await asyncio.to_thread(service.resolve_image_id, spec)
 
             return ProviderResult.success_result({"resolved_images": resolved_images})
 

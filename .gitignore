@@ -16,6 +16,10 @@ requirements-dev.txt
 # Keep the lock file (source of truth)
 !uv.lock
 
+# visualise/ is a standalone, unwired tool with its own hand-written
+# dependency list, not generated from uv.lock
+!dev-tools/analysis/visualise/requirements.txt
+
 # Working directories
 work/
 
@@ -35,9 +39,6 @@ scorecard.png
 *-results.sarif
 *-report.json
 *-report.sarif
-bandit-report.json
-bandit-report.sarif
-bandit-results.sarif
 hadolint-results.sarif
 trivy-results.json
 trivy-results.sarif
@@ -50,6 +51,7 @@ vulnerability-reports/
 safety-report.json
 security-report.json
 security-report.md
+*-sbom.json
 *-sbom-*.json
 *-sbom-*.spdx
 *-sbom-*.cyclonedx
@@ -148,7 +150,6 @@ htmlcov/
 .tox/
 nosetests.xml
 coverage/
-bandit-*
 
 # Logs
 logs/
@@ -183,6 +184,7 @@ terraform.rc
 
 # Application specific
 config/config.json
+config/cyclecloud-credentials.json
 # Runtime-generated per-provider-instance template files (e.g.
 # config/aws_<instance>_templates.json, config/k8s_<instance>_templates.json).
 # The canonical example files config/aws_templates.json and
@@ -195,11 +197,6 @@ config/*_*_templates.json
 data/
 monitoring/grafana/data/
 monitoring/prometheus/data/
-# AWS CP Instance runtime and local config
-awscpinst/logs/
-awscpinst/workdir/
-awscpinst/config/awsprov_config.json
-awscpinst/config/config.json*
 .aider*
 
 # OS
@@ -267,7 +264,6 @@ instance/
 .webassets-cache
 
 # Security scan results
-bandit-results*.json
 trivy-*.sarif
 semgrep-results.json
 safety-results.json
@@ -285,8 +281,8 @@ metrics.prom
 !tests/unit/providers/base/metrics
 
 # Visualise directories
-visualise/test/
-visualise/res/
+dev-tools/analysis/visualise/test/
+dev-tools/analysis/visualise/res/
 
 # Generated files - always regenerated from templates
 # pyproject.toml is now tracked - selective templating only

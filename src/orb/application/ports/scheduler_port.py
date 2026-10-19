@@ -160,6 +160,16 @@ class SchedulerRequestParsingPort(ABC):
     def format_request_response(self, request_data: dict[str, Any]) -> dict[str, Any]:
         """Format request creation response to scheduler format."""
 
+    def expand_node_range(self, node_spec: str) -> list[str]:
+        """Expand a scheduler-specific node-range/hostlist expression to individual node names.
+
+        Default implementation treats the input as whitespace-separated literal
+        node names (no range syntax). Schedulers with their own hostlist syntax
+        (e.g. SLURM's "compute-[001-003]" bracket notation) should override this
+        instead of callers reaching into scheduler-specific infrastructure classes.
+        """
+        return node_spec.split()
+
 
 class SchedulerPort(
     SchedulerFormattingPort,
@@ -177,3 +187,14 @@ class SchedulerPort(
     @classmethod
     def get_defaults_config(cls) -> dict:
         return {}
+
+    def generate_scheduler_templates(self, **kwargs: Any) -> list[dict[str, Any]] | None:
+        """Generate templates from scheduler config (e.g. slurm.conf partitions).
+
+        Args:
+            **kwargs: Scheduler-specific options (e.g. slurm_conf="/path/to/slurm.conf")
+
+        Returns a list of template dicts if the scheduler can generate templates
+        from its own configuration, or None to fall back to provider example templates.
+        """
+        return None

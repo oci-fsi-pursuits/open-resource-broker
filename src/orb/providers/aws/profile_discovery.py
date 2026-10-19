@@ -8,6 +8,12 @@ from typing import Dict, List, Optional
 def probe_instance_profile_credentials(region: Optional[str] = None) -> bool:
     """Check if credentials are available via the default chain (env vars, instance profile, etc.)."""
     try:
+        if region is None:
+            from orb.providers.aws.session_factory import get_caller_identity
+
+            get_caller_identity(None)
+            return True
+
         import boto3
 
         session = boto3.Session(region_name=region)

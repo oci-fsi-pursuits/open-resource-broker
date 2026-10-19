@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+import contextlib
+import logging
+import threading
+from collections.abc import Iterator
 from typing import Any, Optional, Protocol
 
 from orb.domain.base.ports import LoggingPort
@@ -12,11 +16,11 @@ class AzureCredentialProtocol(Protocol):
 
     def get_token(self, *scopes: str, **kwargs: Any) -> Any:
         """Request an access token for the given scopes."""
-        ...
+        pass
 
     def close(self) -> None:
         """Release any resources held by this credential."""
-        ...
+        pass
 
 
 class AsyncAzureCredentialProtocol(Protocol):
@@ -24,35 +28,35 @@ class AsyncAzureCredentialProtocol(Protocol):
 
     async def get_token(self, *scopes: str, **kwargs: Any) -> Any:
         """Asynchronously request an access token for the given scopes."""
-        ...
+        pass
 
     async def close(self) -> None:
         """Release any resources held by this async credential."""
-        ...
+        pass
 
 
 class AzureAccessTokenProviderProtocol(Protocol):
     """Short-lived Azure token provider used by auth flows."""
 
-    def get_access_token(self, scope: str) -> str:
+    def get_access_token(self, scope: str) -> str:  # type: ignore[return]
         """Return a raw access-token string for the given scope."""
-        ...
+        pass
 
-    def get_auth_error_types(self) -> tuple[type[Exception], ...]:
+    def get_auth_error_types(self) -> tuple[type[Exception], ...]:  # type: ignore[return]
         """Return exception types that signal authentication failures."""
-        ...
+        pass
 
 
 class AsyncAzureAccessTokenProviderProtocol(Protocol):
     """Async short-lived Azure token provider used by native async auth flows."""
 
-    async def get_access_token(self, scope: str) -> str:
+    async def get_access_token(self, scope: str) -> str:  # type: ignore[return]
         """Return a raw access-token string for the given scope."""
-        ...
+        pass
 
-    def get_auth_error_types(self) -> tuple[type[Exception], ...]:
+    def get_auth_error_types(self) -> tuple[type[Exception], ...]:  # type: ignore[return]
         """Return exception types that signal authentication failures."""
-        ...
+        pass
 
 
 class AzureCredentialAccessTokenProvider(AzureAccessTokenProviderProtocol):
@@ -135,6 +139,72 @@ def create_default_azure_credential(
         raise
     logger.debug("Azure DefaultAzureCredential initialised")
     return credential
+
+
+# Init-scoped credentials keyed by managed-identity client ID (``None`` = no
+# explicit identity).  One ``orb init`` run resolves each identity once and
+# ``close_shared_credentials`` releases them when the run ends.  Management
+# clients built on a shared credential must not close it: the credential
+# outlives every client created from it.
+_shared_lock = threading.Lock()
+_shared_credentials: dict[Optional[str], AzureCredentialProtocol] = {}
+
+
+def get_shared_default_azure_credential(
+    client_id: Optional[str], logger: Optional[LoggingPort] = None
+) -> AzureCredentialProtocol:
+    """Return the shared DefaultAzureCredential for ``client_id``, creating it on first use."""
+    with _shared_lock:
+        credential = _shared_credentials.get(client_id)
+        if credential is None:
+            if logger is None:
+                from orb.infrastructure.adapters.logging_adapter import LoggingAdapter
+
+                logger = LoggingAdapter()
+            credential = create_default_azure_credential(client_id=client_id, logger=logger)
+            _shared_credentials[client_id] = credential
+        return credential
+
+
+def close_shared_credentials() -> None:
+    """Close every shared credential once and forget them."""
+    with _shared_lock:
+        credentials = list(_shared_credentials.values())
+        _shared_credentials.clear()
+    for credential in credentials:
+        with contextlib.suppress(Exception):
+            credential.close()
+
+
+_suppress_lock = threading.Lock()
+_suppress_depth = 0
+_suppress_saved_level = logging.NOTSET
+
+
+@contextlib.contextmanager
+def suppress_azure_identity_warnings() -> Iterator[None]:
+    """Hide ``azure.identity`` credential-chain warnings for the duration of the block.
+
+    The chain logs a multi-line warning for every credential it tries before the
+    one that works; init reports a short one-line error instead.  The level is
+    raised by the first active block and restored by the last, so overlapping
+    blocks on different threads never leave it raised.  A logger-level filter
+    cannot do this: the warnings come from child loggers, which bypass it.
+    """
+    global _suppress_depth, _suppress_saved_level
+    identity_logger = logging.getLogger("azure.identity")
+    with _suppress_lock:
+        if _suppress_depth == 0:
+            _suppress_saved_level = identity_logger.level
+            identity_logger.setLevel(logging.ERROR)
+        _suppress_depth += 1
+    try:
+        yield
+    finally:
+        with _suppress_lock:
+            _suppress_depth -= 1
+            if _suppress_depth == 0:
+                identity_logger.setLevel(_suppress_saved_level)
 
 
 def create_default_azure_credential_async(

@@ -8,6 +8,7 @@ from orb.config.platform_dirs import get_config_location
 from orb.infrastructure.error.decorators import handle_interface_exceptions
 from orb.infrastructure.logging.logger import get_logger
 from orb.infrastructure.registry.cli_spec_registry import CLISpecRegistry
+from orb.interface.provider_resource_release import release_provider_init_resources
 from orb.interface.response_formatting_service import ResponseFormattingService
 
 logger = get_logger(__name__)
@@ -16,6 +17,7 @@ logger = get_logger(__name__)
 @handle_interface_exceptions(context="provider_add", interface_type="cli")
 async def handle_provider_add(args) -> dict[str, Any]:
     """Handle orb providers add command."""
+    provider_type = None
     try:
         config_file = get_config_location() / "config.json"
         if not config_file.exists():
@@ -53,7 +55,7 @@ async def handle_provider_add(args) -> dict[str, Any]:
         container = args._container
 
         # Test credentials
-        success, error = _test_provider_credentials(provider_type, provider_config, container)
+        success, error = await _test_provider_credentials(provider_type, provider_config, container)
         if not success:
             return {"error": True, "message": f"Credential test failed: {error}", "exit_code": 1}
 
@@ -97,6 +99,9 @@ async def handle_provider_add(args) -> dict[str, Any]:
     except Exception as e:
         logger.error("Failed to add provider: %s", e, exc_info=True)
         return {"error": True, "message": f"Failed to add provider: {e}", "exit_code": 1}
+    finally:
+        if provider_type:
+            release_provider_init_resources(getattr(args, "_container", None), {provider_type})
 
 
 @handle_interface_exceptions(context="provider_remove", interface_type="cli")
@@ -138,6 +143,7 @@ async def handle_provider_remove(args) -> dict[str, Any]:
 @handle_interface_exceptions(context="provider_update", interface_type="cli")
 async def handle_provider_update(args) -> dict[str, Any]:
     """Handle orb providers update command."""
+    provider_type = ""
     try:
         config_file = get_config_location() / "config.json"
         if not config_file.exists():
@@ -178,7 +184,9 @@ async def handle_provider_update(args) -> dict[str, Any]:
         provider_config.update(partial)
 
         # Test updated credentials
-        success, error = _test_provider_credentials(provider_type, provider_config, args._container)
+        success, error = await _test_provider_credentials(
+            provider_type, provider_config, args._container
+        )
         if not success:
             return {"error": True, "message": f"Credential test failed: {error}", "exit_code": 1}
 
@@ -190,6 +198,9 @@ async def handle_provider_update(args) -> dict[str, Any]:
     except Exception as e:
         logger.error("Failed to update provider: %s", e, exc_info=True)
         return {"error": True, "message": f"Failed to update provider: {e}", "exit_code": 1}
+    finally:
+        if provider_type:
+            release_provider_init_resources(getattr(args, "_container", None), {provider_type})
 
 
 @handle_interface_exceptions(context="provider_set_default", interface_type="cli")
@@ -332,10 +343,15 @@ async def handle_provider_show(args) -> dict[str, Any] | InterfaceResponse:
         return formatter.format_error(f"Failed to show provider: {e}")
 
 
-def _test_provider_credentials(
+async def _test_provider_credentials(
     provider_type: str, credential_config: dict, container: Any
 ) -> tuple[bool, str]:
-    """Test provider credentials via the provider strategy."""
+    """Test provider credentials via the provider strategy.
+
+    Prefers an async ``test_credentials_async`` when the strategy provides
+    one (Azure, AWS) so the real credential I/O never blocks this handler's
+    event loop; falls back to the sync ``test_credentials`` otherwise.
+    """
     try:
         from orb.application.services.provider_registry_service import ProviderRegistryService
 
@@ -349,7 +365,11 @@ def _test_provider_credentials(
         if strategy is None:
             return False, f"Failed to create strategy for provider type: {provider_type}"
 
-        result = strategy.test_credentials()
+        test_credentials_async = getattr(strategy, "test_credentials_async", None)
+        if test_credentials_async is not None:
+            result = await test_credentials_async()
+        else:
+            result = strategy.test_credentials()
         if result.get("success", False):
             return True, ""
         return False, result.get("error", "Unknown error")

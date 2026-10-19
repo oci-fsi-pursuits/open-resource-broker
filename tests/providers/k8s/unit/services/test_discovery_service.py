@@ -225,14 +225,17 @@ class TestDiscoverClusterEndpoint:
     def test_happy_path_returns_host(self) -> None:
         svc = _make_service()
         fake_client = SimpleNamespace(configuration=SimpleNamespace(host="https://1.2.3.4:6443"))
-        with patch("kubernetes.config.new_client_from_config", return_value=fake_client):
+        with (
+            patch("kubernetes.config.load_kube_config"),
+            patch("kubernetes.client.api_client.ApiClient", return_value=fake_client),
+        ):
             result = svc.discover_cluster_endpoint(context="prod")
         assert result == "https://1.2.3.4:6443"
 
     def test_config_exception_returns_unknown(self) -> None:
         svc = _make_service()
         with patch(
-            "kubernetes.config.new_client_from_config",
+            "kubernetes.config.load_kube_config",
             side_effect=Exception("context not found"),
         ):
             result = svc.discover_cluster_endpoint(context="bad-context")
@@ -247,7 +250,10 @@ class TestDiscoverClusterEndpoint:
     def test_none_context_uses_active(self) -> None:
         svc = _make_service()
         fake_client = SimpleNamespace(configuration=SimpleNamespace(host="https://9.9.9.9:443"))
-        with patch("kubernetes.config.new_client_from_config", return_value=fake_client) as mock_fn:
+        with (
+            patch("kubernetes.config.load_kube_config") as mock_fn,
+            patch("kubernetes.client.api_client.ApiClient", return_value=fake_client),
+        ):
             svc.discover_cluster_endpoint(context=None)
         mock_fn.assert_called_once_with(context=None)
 

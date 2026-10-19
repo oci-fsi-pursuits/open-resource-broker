@@ -139,7 +139,7 @@ class TestCommandHandlersComprehensive:
                                     mock_command = Mock()
                                     await handle_method(mock_command)
 
-                                except Exception:  # nosec B110
+                                except Exception:
                                     # Handler might require specific command type
                                     pass
 
@@ -238,7 +238,7 @@ class TestQueryHandlersComprehensive:
                                     result = await handle_method(mock_query)
                                     assert result is not None or result == []
 
-                                except Exception:  # nosec B110
+                                except Exception:
                                     # Handler might require specific query type
                                     pass
 
@@ -435,7 +435,7 @@ class TestApplicationEventsComprehensive:
             module = importlib.import_module("orb.application.events.base.event_handler")
             event_modules.append(("base.event_handler", module))
         except ImportError:
-            pass
+            pass  # Module optional; absence is covered by the modules actually collected
 
         # Check event handlers
         handler_files = [

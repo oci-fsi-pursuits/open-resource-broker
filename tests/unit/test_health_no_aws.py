@@ -52,7 +52,7 @@ def test_register_aws_health_checks_always_registers_aws_and_ec2():
     health_check = MagicMock()
     aws_client = MagicMock()
 
-    register_aws_health_checks(health_check, aws_client, storage_strategy="json")
+    register_aws_health_checks(health_check, lambda: aws_client, storage_strategy="json")
 
     registered_names = {call.args[0] for call in health_check.register_check.call_args_list}
     assert "aws" in registered_names
@@ -74,7 +74,7 @@ def test_register_aws_health_checks_does_not_register_dynamodb_anymore():
     health_check = MagicMock()
     aws_client = MagicMock()
 
-    register_aws_health_checks(health_check, aws_client, storage_strategy="dynamodb")
+    register_aws_health_checks(health_check, lambda: aws_client, storage_strategy="dynamodb")
 
     registered_names = {call.args[0] for call in health_check.register_check.call_args_list}
     assert "aws" in registered_names
@@ -93,7 +93,7 @@ def test_register_aws_health_checks_skips_dynamodb_for_sql_storage():
     health_check = MagicMock()
     aws_client = MagicMock()
 
-    register_aws_health_checks(health_check, aws_client, storage_strategy="sql")
+    register_aws_health_checks(health_check, lambda: aws_client, storage_strategy="sql")
 
     registered_names = {call.args[0] for call in health_check.register_check.call_args_list}
     assert "dynamodb" not in registered_names

@@ -18,18 +18,16 @@ on:
       - 'Dockerfile*'
       - 'deployment/docker/**'
       - 'dev-tools/container/container_build.sh'
+      - 'dev-tools/package/**'
+      - 'makefiles/deploy.mk'
+      - 'makefiles/dev.mk'
+      - 'Makefile'
+      - 'setup.py'
       - '.github/workflows/dev-containers.yml'
+  # No paths filter on pull_request: this check acts as the merge gate, so
+  # it runs on every PR (including docs-only changes). push keeps its paths filter.
   pull_request:
     branches: [ main, develop ]
-    paths:
-      - 'src/**'
-      - 'tests/**'
-      - 'pyproject.toml'
-      - 'requirements*.txt'
-      - 'uv.lock'
-      - 'assets/**'
-      - 'rxconfig.py'
-      - '.github/workflows/ci-tests.yml'
   schedule:
     - cron: '0 2 * * *'
   # workflow_dispatch: allows re-running tests manually from the Actions UI
@@ -240,7 +238,7 @@ jobs:
       run: make build
 
     - name: Upload build artifacts
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7
       with:
         name: build-artifacts-${{ needs.config.outputs.package-version }}
         retention-days: 60
@@ -272,7 +270,7 @@ jobs:
         fail-on-cache-miss: false
 
     - name: Download test results
-      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8
       with:
         path: test-results/
 
@@ -313,7 +311,7 @@ jobs:
         fail-on-cache-miss: false
 
     - name: Download coverage artifacts
-      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8
       with:
         path: coverage-artifacts/
 
@@ -374,7 +372,45 @@ jobs:
       - coverage-combine
       - test-report
     steps:
+    # Inline gate instead of a third-party gating action: GitHub can report a
+    # needed job's result as "abandoned" (no runner picked it up, e.g. under
+    # concurrency pressure) in addition to the documented success/failure/
+    # cancelled/skipped set, and no released gating action currently handles
+    # that value without crashing. Fail cleanly on any result other than
+    # "success", with an explicit allow-list for jobs permitted to be skipped.
     - name: Check all required jobs passed
-      uses: re-actors/alls-green@b5b5b37504aa4183270bd3d855c52a67f212be35  # v1.3.0
-      with:
-        jobs: ${{ toJSON(needs) }}
+      env:
+        NEEDED_JOBS: ${{ toJSON(needs) }}
+        # Space-separated job names allowed to finish "skipped" without
+        # failing this gate. Empty today: every job listed in `needs:` above
+        # always runs regardless of upstream outcome.
+        ALLOWED_SKIPS: ""
+      run: |
+        set -euo pipefail
+
+        # Parse first so a jq failure aborts the step, and fail closed when
+        # there is nothing to check.
+        jobs=$(jq -r 'to_entries[] | [.key, .value.result] | @tsv' <<<"$NEEDED_JOBS")
+        if [ -z "$jobs" ]; then
+          echo "::error::CI gate received no job results"
+          exit 1
+        fi
+
+        failed=0
+        while IFS=$'\t' read -r job_name result; do
+          if [ "$result" = "success" ]; then
+            continue
+          fi
+          if [ "$result" = "skipped" ] && [[ " $ALLOWED_SKIPS " == *" $job_name "* ]]; then
+            continue
+          fi
+          echo "::error::job '$job_name' did not succeed (result: $result)"
+          failed=1
+        done <<<"$jobs"
+
+        if [ "$failed" -ne 0 ]; then
+          echo "::error::CI gate failed: one or more required jobs did not succeed"
+          exit 1
+        fi
+
+        echo "All required jobs succeeded."

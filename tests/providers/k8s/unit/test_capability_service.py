@@ -322,6 +322,19 @@ class TestGetAvailableCredentialSources:
         assert "" not in names
         assert "valid" in names
 
+    def test_uses_injected_logger_not_module_logger(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Debug logging on the exception paths must go through the
+        constructor-injected LoggingPort, not a separately created logger."""
+        logger = _make_logger()
+        svc = K8sCapabilityService(logger=logger)  # type: ignore[arg-type]
+        self._make_fake_k8s_config(monkeypatch, raise_on_list=True)
+        with patch(
+            "orb.providers.k8s.auth.in_cluster.is_in_cluster",
+            side_effect=RuntimeError("no in-cluster detection"),
+        ):
+            svc.get_available_credential_sources()
+        assert logger.debug.call_count == 2
+
 
 @pytest.mark.unit
 class TestTestCredentials:
@@ -421,3 +434,44 @@ class TestGetOperationalRequirements:
         req = K8sCapabilityService.get_operational_requirements()
         assert "namespace" in req
         assert "description" in req["namespace"]
+
+
+@pytest.mark.unit
+class TestCredentialProbeLeavesSharedClientUntouched:
+    def test_probe_uses_a_per_request_timeout_and_keeps_shared_configuration(self) -> None:
+        configuration = SimpleNamespace(host="https://k8s:6443")
+        client = SimpleNamespace(configuration=configuration)
+        with (
+            patch("kubernetes.config.load_kube_config"),
+            patch("kubernetes.client.api_client.ApiClient", return_value=client),
+            patch(
+                "kubernetes.client.CoreV1Api.get_api_resources",
+                return_value=MagicMock(resources=[]),
+            ) as probe,
+        ):
+            result = K8sCapabilityService.test_credentials("ctx-a")
+
+            from orb.providers.k8s.auth.kubeconfig import get_shared_api_client
+
+            shared = get_shared_api_client(context="ctx-a")
+
+        assert result["success"] is True
+        assert shared is client
+        assert not hasattr(shared.configuration, "timeout")
+        probe.assert_called_once_with(_request_timeout=5)
+
+    def test_failed_probe_is_not_cached_so_a_retry_reloads_credentials(self) -> None:
+        with (
+            patch("kubernetes.config.load_kube_config") as load,
+            patch("kubernetes.client.api_client.ApiClient", side_effect=MagicMock),
+            patch(
+                "kubernetes.client.CoreV1Api.get_api_resources",
+                side_effect=[RuntimeError("token expired"), MagicMock(resources=[])],
+            ),
+        ):
+            first = K8sCapabilityService.test_credentials("ctx-a")
+            second = K8sCapabilityService.test_credentials("ctx-a")
+
+        assert first["success"] is False
+        assert second["success"] is True
+        assert load.call_count == 2

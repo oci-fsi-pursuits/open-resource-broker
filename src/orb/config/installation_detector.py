@@ -41,6 +41,8 @@ def detect_installation_mode(package_name: str = "orb-py") -> Tuple[str, Optiona
                         source_path = source_url[7:]  # Remove file://
                         return "editable", Path(source_path)
             except (json.JSONDecodeError, OSError):
+                # direct_url.json is best-effort metadata; fall through to the
+                # egg-info heuristics below if it is missing or unreadable.
                 pass
 
         # Check for older editable install (egg-info in source tree)
@@ -147,8 +149,8 @@ def get_scripts_location() -> Path:
                 scripts_dir = strategy.get_scripts_directory()
                 if scripts_dir is not None:
                     return scripts_dir
-        except Exception:
-            pass  # Best-effort: DI container may not be ready during installation detection
+        except Exception:  # noqa: S110  # Best-effort: DI container may not be ready during installation detection
+            pass
 
         from orb.config.platform_dirs import get_root_location
 

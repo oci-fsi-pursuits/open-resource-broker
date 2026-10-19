@@ -76,6 +76,35 @@ class GCPComputeClient:
         self._images_client: Optional[ImagesClient] = None
         self._retry_policies: dict[str, Any] = {}
 
+    def close(self) -> None:
+        """Close the transport of every lazily created Compute Engine client.
+
+        ``google-cloud-compute`` client classes expose no public ``close()``;
+        the only release path is ``transport.close()`` (what the SDK's own
+        context-manager ``__exit__`` calls). Dropping references alone leaves
+        the underlying connection pool to be reclaimed by garbage collection,
+        which is not guaranteed to happen promptly.
+        """
+        clients: tuple[Optional[Any], ...] = (
+            self._instances_client,
+            self._instance_templates_client,
+            self._region_igm_client,
+            self._zone_igm_client,
+            self._images_client,
+        )
+        for client in clients:
+            if client is None:
+                continue
+            try:
+                client.transport.close()
+            except Exception as exc:
+                self._logger.warning("Failed to close GCP compute client transport: %s", exc)
+        self._instances_client = None
+        self._instance_templates_client = None
+        self._region_igm_client = None
+        self._zone_igm_client = None
+        self._images_client = None
+
     def create_instance(
         self,
         *,
@@ -393,8 +422,10 @@ class GCPComputeClient:
 
         retry_profile = self._retry_profile_for(operation_name)
         per_attempt_timeout = float(self._config.connect_timeout + self._config.read_timeout)
-        # getattr use is intentional at this sdk boundary: it keeps the public constant
-        # readable without hiding the actual retry policy inside inline exception references.
+        # getattr: exception_name is a class name string from the retry
+        # profile config and must resolve to the matching exception class on
+        # google.api_core.exceptions; there is no typed accessor for "look up
+        # an SDK exception class by its configured name".
         retryable_exceptions = tuple(
             getattr(google_exceptions, exception_name)
             for exception_name in retry_profile.retryable_exception_names

@@ -14,7 +14,6 @@ from orb.providers.oci.handlers.oci_compute_handler import OCIComputeHandler
 from orb.providers.oci.mapping.template_mapper import OCITemplateMapper
 from orb.providers.oci.provider_plugin import OCIPlugin
 
-
 ROOT = Path(__file__).parents[4]
 CATALOG = json.loads((ROOT / "config/oci_templates.json").read_text(encoding="utf-8"))["templates"]
 EXPECTED_SHAPES = {

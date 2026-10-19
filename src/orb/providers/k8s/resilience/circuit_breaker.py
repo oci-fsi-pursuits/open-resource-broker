@@ -28,7 +28,7 @@ from orb.infrastructure.resilience.strategy.circuit_breaker import (
     CircuitState,
 )
 
-if TYPE_CHECKING:  # pragma: no cover — type-checking only
+if TYPE_CHECKING:
     pass
 
 # Map CircuitState enum → integer gauge value (0=closed 1=open 2=half_open).
@@ -105,7 +105,7 @@ class K8sCircuitBreaker(CircuitBreakerStrategy):
                 name=self.service_name,
                 state=_STATE_TO_GAUGE.get(state, 0),
             )
-        except Exception:  # pragma: no cover — defensive against misconfigured metrics
+        except Exception:  # noqa: S110  # pragma: no cover — defensive against misconfigured metrics
             pass
 
     # ------------------------------------------------------------------

@@ -26,13 +26,22 @@ pip install -e ".[dev]"
 
 Run `orb init` to create the configuration directory and set up your first provider.
 
-By default, `orb init` runs interactively and discovers your AWS VPCs, subnets, and security groups:
+By default, `orb init` runs interactively. For AWS it discovers VPCs, subnets,
+and security groups. For Azure it lists subscriptions by name and requires an
+explicit subscription choice, then lists resource groups and physical locations
+for that subscription. The location menu preselects `eastus2` when available.
+For GCP it lists accessible projects
+and regions for the selected project, with the ADC project preselected when
+available. Each Azure and GCP choice also allows manual entry when listing is
+unavailable or the desired resource is not shown. If GCP project listing returns
+403, the wizard offers the ADC project when available; if region listing returns
+403, it offers common regions marked as unverified:
 
 ```bash
 orb init
 ```
 
-For CI/CD pipelines or scripted environments, skip AWS discovery with `--non-interactive`:
+For CI/CD pipelines or scripted environments, skip interactive discovery with `--non-interactive`:
 
 ```bash
 orb init --non-interactive
@@ -48,6 +57,8 @@ orb init --non-interactive \
   --security-group-ids sg-0abc1234 \
   --fleet-role arn:aws:iam::123456789012:role/MySpotFleetRole
 ```
+
+This guide uses AWS, but the same `orb init --provider-type <type>` flow sets up Azure, Google Cloud, and Kubernetes — see the [Azure Provider Guide](../providers/azure/index.md), the [Google Cloud Provider Guide](../providers/gcp/index.md), and the [Kubernetes Provider Guide](../providers/k8s/index.md).
 
 ## Step 2: Generate templates
 

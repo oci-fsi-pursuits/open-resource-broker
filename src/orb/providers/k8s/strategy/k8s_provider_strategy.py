@@ -85,7 +85,7 @@ __all__ = [
     "_outcome_to_provider_result",
 ]
 
-if TYPE_CHECKING:  # pragma: no cover — type-checking only
+if TYPE_CHECKING:
     from orb.domain.request.aggregate import Request
     from orb.domain.template.template_aggregate import Template
     from orb.monitoring.health import HealthCheck
@@ -1049,6 +1049,13 @@ class K8sProviderStrategy(ProviderStrategy):
     def test_credentials(cls, credential_source: Optional[str] = None, **kwargs: Any) -> dict:
         """Verify the selected credentials can reach the apiserver."""
         return K8sCapabilityService.test_credentials(credential_source, **kwargs)
+
+    @classmethod
+    def release_init_resources(cls) -> None:
+        """Drop the kubeconfig loads, ApiClients and context listings cached for the init run."""
+        from orb.providers.k8s.auth.kubeconfig import clear_shared_kube_state
+
+        clear_shared_kube_state()
 
     @classmethod
     def get_credential_requirements(cls) -> dict:

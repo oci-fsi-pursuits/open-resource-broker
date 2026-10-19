@@ -281,7 +281,6 @@ Hooks that run on every commit (enforced):
 - `validate-imports` — import validation
 
 Additional hooks run via `make pre-commit-full` (manual stage):
-- `bandit` — security analysis
 - `detect-secrets` — hardcoded secret detection
 - `validate-workflows` — GitHub Actions YAML validation
 
@@ -468,6 +467,10 @@ The project uses PyPI Trusted Publishing (OIDC) instead of API tokens:
 ### Reporting Security Issues
 
 Please see our [Security Policy](SECURITY.md) for responsible disclosure procedures.
+
+## Reporting Issues
+
+Use the issue forms under [New Issue](https://github.com/finos/open-resource-broker/issues/new/choose) for bug reports, feature requests, provider/scheduler integration requests, and documentation issues. For open-ended questions or ideas, use [GitHub Discussions](https://github.com/finos/open-resource-broker/discussions) instead of opening an issue. Security vulnerabilities should never be reported through a public issue — see [Reporting Security Issues](#reporting-security-issues).
 
 ## Getting Help
 

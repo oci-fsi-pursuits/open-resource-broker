@@ -201,6 +201,7 @@ def test_single_shape_survives_dto_conversion(plugin, field):
 
 def test_explicit_api_key_auth_is_passed_to_cli_without_mutating_environment(monkeypatch):
     import os
+
     from orb.providers.oci.oci_cli_auth import build_oci_cli_env
 
     monkeypatch.setenv("OCI_CLI_USER", "ambient-user")
@@ -245,8 +246,8 @@ def test_launch_passes_network_security_groups_to_cli():
 def test_pre_live_helper_resolves_one_catalog_entry(tmp_path, monkeypatch, plugin):
     import importlib.util
     import json
-    from pathlib import Path
     import sys
+    from pathlib import Path
 
     path = Path(__file__).resolve().parents[4] / "dev-tools/oci/run_pre_live_gate.py"
     spec = importlib.util.spec_from_file_location("oci_gate", path)

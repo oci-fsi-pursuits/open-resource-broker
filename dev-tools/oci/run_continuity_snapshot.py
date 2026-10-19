@@ -12,7 +12,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-
 PASS_RE = re.compile(r"(?P<passed>\d+)\s+passed")
 
 

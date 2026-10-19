@@ -15,7 +15,7 @@ from orb.domain.base.provider_fulfilment import FulfilmentState, ProviderFulfilm
 from orb.infrastructure.mocking.dry_run_context import is_dry_run_active
 from orb.providers.base.strategy import ProviderOperation, ProviderResult
 from orb.providers.oci.mapping import OCITemplateMapper
-from orb.providers.oci.oci_cli_auth import build_oci_cli_extra_args, build_oci_cli_env
+from orb.providers.oci.oci_cli_auth import build_oci_cli_env, build_oci_cli_extra_args
 from orb.providers.oci.services import OCIPricingService
 
 
@@ -93,7 +93,8 @@ class OCIComputeHandler:
         if payload is not None:
             cmd.extend(["--from-json", json.dumps(payload)])
 
-        completed = subprocess.run(
+        # Internal OCI subcommands use an argv list; values are not shell code.
+        completed = subprocess.run(  # noqa: S603
             cmd,
             capture_output=True,
             text=True,

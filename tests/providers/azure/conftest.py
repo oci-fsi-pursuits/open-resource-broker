@@ -8,6 +8,16 @@ from orb.providers.azure.configuration.config import AzureProviderConfig
 from tests.providers.azure.strategy_test_support import build_strategy_harness
 
 
+@pytest.fixture(autouse=True)
+def _close_shared_azure_credentials():
+    """Drop init-scoped credentials so tests never see each other's identities."""
+    from orb.providers.azure.infrastructure.credential_factory import close_shared_credentials
+
+    close_shared_credentials()
+    yield
+    close_shared_credentials()
+
+
 @pytest.fixture
 def azure_config():
     return AzureProviderConfig(

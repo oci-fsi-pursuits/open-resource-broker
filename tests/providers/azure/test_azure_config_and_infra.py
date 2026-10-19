@@ -42,6 +42,30 @@ class TestAzureProviderConfig:
 
         assert AzureProviderConfig().region == "westeurope"
 
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [("eastus2", "eastus2"), ("EastUS2", "eastus2"), ("  westeurope ", "westeurope")],
+    )
+    def test_region_is_normalised_to_a_lowercase_slug(self, value, expected):
+        assert AzureProviderConfig(region=value).region == expected
+        assert AzureProviderConfig(location=value).region == expected
+
+    @pytest.mark.parametrize("value", ["East US 2", "east-us-2", "", "2eastus", "e", "east_us"])
+    def test_region_that_is_not_a_location_slug_is_rejected(self, value):
+        with pytest.raises(ValueError, match="eastus2"):
+            AzureProviderConfig(region=value)
+
+    def test_default_region_is_valid(self):
+        assert AzureProviderConfig().region == "eastus2"
+
+    def test_environment_region_goes_through_the_same_validation(self, monkeypatch):
+        monkeypatch.setenv("ORB_AZURE_REGION", "WestEurope")
+        assert AzureProviderConfig().region == "westeurope"
+
+        monkeypatch.setenv("ORB_AZURE_REGION", "West Europe")
+        with pytest.raises(ValueError, match="eastus2"):
+            AzureProviderConfig()
+
     def test_location_alias_populates_region(self):
         config = AzureProviderConfig(
             subscription_id="12345678-1234-1234-1234-123456789012",

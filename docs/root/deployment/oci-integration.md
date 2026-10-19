@@ -303,8 +303,9 @@ Symphony worker registration; verify those separately before production use.
 
 ## Troubleshooting
 
-- `...config/config.json not found` is informational when `--config` is
-  passed explicitly.
+- `...config/config.json not found`: confirm `ORB_CONFIG_DIR` points to your
+  deployment directory and that its standard `config.json` exists. A custom
+  filename alone can leave early discovery using defaults, even with `--config`.
 - `ocid1.instance...mock...` should only appear in explicit test/dry-run mode.
   In live mode, OCI launch failures are returned as provider errors.
 - auth, region, subnet/AD, or policy mismatches can surface as

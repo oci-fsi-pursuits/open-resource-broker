@@ -2,8 +2,8 @@ from __future__ import annotations
 
 """Template-to-OCI launch payload mapping helpers."""
 
-from typing import Any
 from math import isfinite
+from typing import Any
 
 from orb.providers.oci.services import OCIPricingService
 

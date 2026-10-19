@@ -29,11 +29,7 @@ class GCPHealthCheckService:
             )
 
         try:
-            import google.auth
-            import google.auth.transport.requests
-
-            credentials, project = google.auth.default()
-            credentials.refresh(google.auth.transport.requests.Request())
+            project = self.authenticate()
 
             response_time_ms = (time.time() - start_time) * 1000
             return ProviderHealthStatus.healthy(
@@ -56,37 +52,61 @@ class GCPHealthCheckService:
                 },
             )
 
-    def get_available_credential_sources(self) -> list[dict]:
+    @staticmethod
+    def authenticate() -> str | None:
+        """Refresh Application Default Credentials and return their project."""
+        import google.auth
+        import google.auth.transport.requests
+
+        credentials, project = google.auth.default(
+            scopes=["https://www.googleapis.com/auth/cloud-platform"]
+        )
+        credentials.refresh(google.auth.transport.requests.Request())
+        return project
+
+    @classmethod
+    def get_available_credential_sources(cls) -> list[dict]:
         """Return supported credential sources."""
         return [
             {
                 "name": "adc",
                 "description": "Application Default Credentials / workload identity",
+                "config_delta": {},
             }
         ]
 
-    def test_credentials(self, credential_source: Optional[str] = None, **kwargs) -> dict:
+    @classmethod
+    def test_credentials(cls, credential_source: Optional[str] = None, **kwargs) -> dict:
         """Test ADC availability without fetching real SDK clients."""
         del credential_source, kwargs
-        status = self.check_health()
-        if status.is_healthy:
-            return {"success": True, "project_id": self._config.project_id}
-        return {
-            "success": False,
-            "error": status.status_message,
-            "details": status.error_details or {},
-        }
+        if is_dry_run_active():
+            return {"success": True}
+        try:
+            import google.auth.transport.requests
 
-    def get_credential_requirements(self) -> dict:
+            from orb.providers.gcp.services.init_discovery import cached_default_credentials
+
+            # Credentials are shared with the discovery steps that follow; the
+            # runtime health check keeps resolving them afresh via authenticate().
+            credentials, project = cached_default_credentials()
+            credentials.refresh(google.auth.transport.requests.Request())
+            return {"success": True, "project_id": project}
+        except ImportError:
+            return {"success": False, "error": "Install orb-py[gcp] to use GCP init."}
+        except Exception as exc:
+            # Drop the cached credentials so a retry in the same run re-resolves them.
+            from orb.providers.gcp.services.init_discovery import clear_default_credentials
+
+            clear_default_credentials()
+            return {"success": False, "error": f"GCP credential check failed: {exc!s}"}
+
+    @classmethod
+    def get_credential_requirements(cls) -> dict:
         """Describe GCP auth requirements."""
-        return {
-            "application_default_credentials": {
-                "required": True,
-                "description": "GCP provider uses Application Default Credentials only",
-            }
-        }
+        return {}
 
-    def get_operational_requirements(self) -> dict:
+    @classmethod
+    def get_operational_requirements(cls) -> dict:
         """Describe non-secret operational requirements."""
         return {
             "project_id": {"required": True, "description": "GCP project ID"},

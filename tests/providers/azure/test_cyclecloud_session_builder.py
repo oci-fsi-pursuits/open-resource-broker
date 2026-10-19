@@ -1,6 +1,7 @@
 """Focused tests for CycleCloud session settings resolution."""
 
 import json
+import re
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
 
@@ -222,7 +223,9 @@ def test_cyclecloud_credential_data_repr_masks_secret_fields():
     assert "cc_admin" not in credential_repr
     assert "changeme" not in credential_repr
     assert "tok-123" not in credential_repr
-    assert "https://cc.example.com" in credential_repr
+    url_field = re.search(r"url='([^']*)'", credential_repr)
+    assert url_field is not None, f"expected a url field in {credential_repr!r}"
+    assert url_field.group(1) == "https://cc.example.com"
     assert "bearer" in credential_repr
 
 
@@ -253,6 +256,31 @@ async def test_resolve_async_auth_loads_credentials_from_file(tmp_path: Path):
     assert headers == {}
     assert resolved_auth_mode == "basic"
     assert isinstance(auth, httpx.BasicAuth)
+
+
+@pytest.mark.asyncio
+async def test_resolve_async_auth_rejects_basic_auth_over_plain_http(tmp_path: Path):
+    credential_file = tmp_path / "cyclecloud-credentials.json"
+    credential_file.write_text(
+        json.dumps(
+            {
+                "username": "file-admin",
+                "password": "file-secret",
+                "auth_mode": "basic",
+            }
+        ),
+        encoding="utf-8",
+    )
+    builder = CycleCloudSessionBuilder(
+        provider_cfg=_provider_config(
+            url="http://cc.example.com", credential_path=str(credential_file)
+        ),
+    )
+    settings = builder.build_settings()
+    assert settings.base_url == "http://cc.example.com"
+
+    with pytest.raises(CycleCloudConnectionError):
+        await builder.resolve_async_auth(settings=settings)
 
 
 def test_build_settings_takes_verify_ssl_from_provider_config():

@@ -46,7 +46,7 @@ def test_hf_all_domain_statuses_map_to_allowed_output(hf_strategy):
     """Every RequestStatus value maps to a value in the HF allowed status set."""
     from orb.domain.request.request_types import RequestStatus
 
-    for domain_status in RequestStatus:
+    for domain_status in list(RequestStatus):
         mapped = hf_strategy._map_domain_status_to_hostfactory(domain_status.value)
         assert mapped in HF_ALLOWED_STATUSES, (
             f"RequestStatus.{domain_status.name} ('{domain_status.value}') "
@@ -173,7 +173,7 @@ def test_hf_no_domain_status_raises_on_mapping(hf_strategy):
     """_map_domain_status_to_hostfactory never raises for any RequestStatus value."""
     from orb.domain.request.request_types import RequestStatus
 
-    for domain_status in RequestStatus:
+    for domain_status in list(RequestStatus):
         try:
             result = hf_strategy._map_domain_status_to_hostfactory(domain_status.value)
             assert isinstance(result, str), (
@@ -199,3 +199,43 @@ def test_hf_no_machine_status_raises_on_mapping(hf_strategy):
             assert result in HF_MACHINE_RESULTS
         except Exception as exc:
             pytest.fail(f"_map_machine_status_to_result raised for '{status}': {exc}")
+
+
+# ---------------------------------------------------------------------------
+# 5. SLURM: domain statuses pass through unchanged
+# ---------------------------------------------------------------------------
+
+
+def test_slurm_all_domain_statuses_produce_valid_output(slurm_strategy):
+    """Every RequestStatus value passes through unchanged for SLURM."""
+    from orb.domain.request.request_types import RequestStatus
+
+    for domain_status in list(RequestStatus):
+        from datetime import datetime, timezone
+
+        from orb.application.request.dto import RequestDTO
+
+        dto = RequestDTO(
+            request_id="req-abc",
+            status=domain_status.value,
+            requested_count=1,
+            created_at=datetime.now(timezone.utc),
+        )
+        result = slurm_strategy.format_request_status_response([dto])
+        output_status = result["requests"][0]["status"]
+        assert output_status == domain_status.value, (
+            f"SLURM should pass through '{domain_status.value}', got '{output_status}'"
+        )
+
+
+def test_slurm_node_state_mapping_exhaustive(slurm_strategy):
+    """Every known SLURM node state maps to a valid ORB machine status."""
+    from orb.infrastructure.scheduler.slurm.field_mappings import (
+        SLURM_NODE_STATE_TO_ORB_MACHINE_STATUS,
+    )
+
+    valid_statuses = {"available", "running", "launching", "terminated", "failed", "pending"}
+    for slurm_state, orb_status in SLURM_NODE_STATE_TO_ORB_MACHINE_STATUS.items():
+        assert orb_status in valid_statuses, (
+            f"SLURM state '{slurm_state}' maps to '{orb_status}' not in {valid_statuses}"
+        )

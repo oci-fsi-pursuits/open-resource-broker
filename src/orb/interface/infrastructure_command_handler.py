@@ -7,12 +7,14 @@ from orb.config.platform_dirs import get_config_location
 from orb.domain.base.ports.console_port import ConsolePort
 from orb.infrastructure.error.decorators import handle_interface_exceptions
 from orb.infrastructure.registry.cli_spec_registry import CLISpecRegistry
+from orb.interface.provider_resource_release import release_provider_init_resources
 
 
 @handle_interface_exceptions(context="infrastructure_discover", interface_type="cli")
 async def handle_infrastructure_discover(args) -> Dict[str, Any]:
     """Handle orb infrastructure discover command."""
     container = args._container
+    providers: List[Dict[str, Any]] = []
     try:
         if args.provider_name:
             providers = [_get_provider_config(args.provider_name, container)]
@@ -34,6 +36,8 @@ async def handle_infrastructure_discover(args) -> Dict[str, Any]:
             "error": f"Infrastructure discovery failed: {e}",
             "status": "error",
         }
+    finally:
+        _release_provider_caches(providers, container)
 
 
 @handle_interface_exceptions(context="infrastructure_show", interface_type="cli")
@@ -64,6 +68,7 @@ async def handle_infrastructure_show(args) -> Dict[str, Any]:
 async def handle_infrastructure_validate(args) -> Dict[str, Any]:
     """Handle orb infrastructure validate command."""
     container = args._container
+    providers: List[Dict[str, Any]] = []
     try:
         if args.provider_name:
             providers = [_get_provider_config(args.provider_name, container)]
@@ -85,6 +90,14 @@ async def handle_infrastructure_validate(args) -> Dict[str, Any]:
             "error": f"Infrastructure validation failed: {e}",
             "status": "error",
         }
+    finally:
+        _release_provider_caches(providers, container)
+
+
+def _release_provider_caches(providers: List[Dict[str, Any]], container: Any) -> None:
+    """Release credentials and clients the providers cached while being queried."""
+    provider_types = {str(p["type"]) for p in providers if p.get("type")}
+    release_provider_init_resources(container, provider_types)
 
 
 async def _discover_provider_infrastructure(

@@ -11,16 +11,10 @@ on:
       - 'uv.lock'
       - '.ruff.toml'
       - '.github/workflows/ci-quality.yml'
+  # No paths filter on pull_request: these checks act as the merge gate, so
+  # they run on every PR (including docs-only changes). push keeps its paths filter.
   pull_request:
     branches: [ main, develop ]
-    paths:
-      - 'src/**'
-      - 'tests/**'
-      - 'pyproject.toml'
-      - 'requirements*.txt'
-      - 'uv.lock'
-      - '.ruff.toml'
-      - '.github/workflows/ci-quality.yml'
   # workflow_dispatch: allows re-running quality checks manually from the Actions UI
   workflow_dispatch:
 
@@ -146,7 +140,7 @@ jobs:
         run: make format-fix
 
       - name: Post review suggestions
-        uses: reviewdog/action-suggester@c387862ad6765a9729f2b40ee4d8b5769f2145c7  # v1.26.1
+        uses: reviewdog/action-suggester@8219e3d2e54a63ddecf1318659aa541bd1fa7202  # v1.26.2
         with:
           tool_name: ruff
           level: warning

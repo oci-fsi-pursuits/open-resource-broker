@@ -29,7 +29,7 @@ from orb.providers.k8s.value_objects import KubernetesProviderApi
 from orb.providers.k8s.watch.multi_namespace import MultiNamespaceWatcher
 from orb.providers.k8s.watch.node_state_cache import K8sNodeStateCache
 
-if TYPE_CHECKING:  # pragma: no cover — type-checking only
+if TYPE_CHECKING:
     from orb.domain.request.aggregate import Request
     from orb.domain.template.template_aggregate import Template
 
@@ -250,7 +250,7 @@ class K8sHandlerRegistry:
                 continue
             try:
                 examples.extend(getter())
-            except Exception:
+            except Exception:  # noqa: S112  # a handler failing to produce examples must not block the others
                 continue
         return examples
 

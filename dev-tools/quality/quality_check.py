@@ -41,15 +41,18 @@ except ImportError:
 
 # --- Configuration ---
 
-# Emoji detection pattern
+# Emoji detection pattern.
+# Each range gets its own character class joined by alternation (rather than
+# one combined class) so static analyzers don't misread adjacent supplementary
+# -plane ranges as overlapping.
 EMOJI_PATTERN = re.compile(
-    "["
-    "\U0001f600-\U0001f64f"  # emoticons
-    "\U0001f300-\U0001f5ff"  # symbols & pictographs
-    "\U0001f680-\U0001f6ff"  # transport & map
-    "\U0001f1e0-\U0001f1ff"  # flags
-    "\U00002700-\U000027bf"  # dingbats (fixed range)
-    "]+",
+    "(?:"
+    "[\U0001f600-\U0001f64f]"  # emoticons
+    "|[\U0001f300-\U0001f5ff]"  # symbols & pictographs
+    "|[\U0001f680-\U0001f6ff]"  # transport & map
+    "|[\U0001f1e0-\U0001f1ff]"  # flags
+    "|[\U00002700-\U000027bf]"  # dingbats (fixed range)
+    ")+",
     flags=re.UNICODE,
 )
 
@@ -129,6 +132,50 @@ CODE_EXTENSIONS = {".py"}
 DOC_EXTENSIONS = {".md", ".rst", ".txt"}
 CONFIG_EXTENSIONS = {".yaml", ".yml", ".json", ".toml"}
 ALL_EXTENSIONS = CODE_EXTENSIONS | DOC_EXTENSIONS | CONFIG_EXTENSIONS
+
+# Directories under src/orb/providers/ that hold cross-provider abstractions
+# or infrastructure (interfaces, the provider registry, shared execution
+# services) rather than a specific SDK boundary, and are therefore not
+# subject to getattr() justification scoping.
+_NON_PROVIDER_PROVIDER_DIRS = frozenset({"base", "registry", "services"})
+
+_PROVIDERS_ROOT = Path(__file__).resolve().parents[2] / "src" / "orb" / "providers"
+
+
+def discover_provider_names() -> tuple[str, ...]:
+    """Return every provider package name under src/orb/providers/.
+
+    A provider package is any immediate subdirectory of providers/ that is a
+    real Python package (has an __init__.py) and is not one of the shared,
+    non-provider-specific trees in _NON_PROVIDER_PROVIDER_DIRS. This makes
+    getattr() justification scoping discover new providers automatically
+    instead of requiring a hard-coded list to be kept in sync.
+    """
+    if not _PROVIDERS_ROOT.is_dir():
+        return ()
+    names = []
+    for entry in sorted(_PROVIDERS_ROOT.iterdir()):
+        if not entry.is_dir() or entry.name.startswith("_"):
+            continue
+        if entry.name in _NON_PROVIDER_PROVIDER_DIRS:
+            continue
+        if not (entry / "__init__.py").is_file():
+            continue
+        names.append(entry.name)
+    return tuple(names)
+
+
+# Provider trees where getattr() usage must carry a justification comment,
+# because their SDKs expose heterogeneous, loosely-typed objects that make
+# getattr() an easy way to silently paper over a missing attribute.
+GETATTR_JUSTIFICATION_SCOPES = tuple(
+    f"/orb/providers/{name}/" for name in discover_provider_names()
+)
+
+# A justification may be a per-call comment ("# getattr: <reason>") or a
+# function-level one ("# getattr throughout this function: <reason>") placed
+# anywhere between the enclosing function and the call itself.
+GETATTR_COMMENT_PATTERN = re.compile(r"#\s*getattr\b", re.IGNORECASE)
 
 # --- Violation Classes ---
 
@@ -263,6 +310,18 @@ class DebugStatementViolation(Violation):
 
     def can_autofix(self) -> bool:
         return True
+
+
+class GetattrJustificationViolation(Violation):
+    """getattr() call in a provider SDK boundary without a justification comment."""
+
+    def __init__(self, file_path: str, line_num: int, content: str):
+        super().__init__(
+            file_path,
+            line_num,
+            content,
+            "getattr() requires an adjacent '# getattr: <reason>' justification comment",
+        )
 
 
 # --- Checker Classes ---
@@ -469,6 +528,68 @@ class ImportChecker(FileChecker):
         return violations
 
 
+class GetattrJustificationChecker(FileChecker):
+    """Require a justification comment for getattr() in Azure/GCP providers.
+
+    Azure and Google Cloud SDK objects frequently lack a shared typed
+    protocol, which makes getattr() an easy way to silently paper over a
+    missing or renamed attribute. Each use within the Azure or GCP provider
+    trees must carry a nearby ``# getattr: <reason>`` comment (or a single
+    function-level ``# getattr throughout ...`` comment covering every call
+    in that function) so the shortcut is a documented decision.
+    """
+
+    def check_content(self, file_path: str, content: str) -> list[Violation]:
+        if not file_path.endswith(".py"):
+            return []
+
+        normalised_path = "/" + file_path.replace("\\", "/")
+        if not any(scope in normalised_path for scope in GETATTR_JUSTIFICATION_SCOPES):
+            return []
+
+        try:
+            tree = ast.parse(content)
+        except SyntaxError:
+            return []
+
+        lines = content.splitlines()
+
+        # Map each line number to the start line of its innermost enclosing
+        # function. ast.walk() visits outer scopes before the nested scopes
+        # defined within them, so later (more specific) assignments correctly
+        # override the enclosing function's range.
+        scope_starts: dict[int, int] = {}
+        for node in ast.walk(tree):
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                start = node.lineno
+                end = getattr(node, "end_lineno", None) or start
+                for lineno in range(start, end + 1):
+                    scope_starts[lineno] = start
+
+        violations = []
+        for node in ast.walk(tree):
+            if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Name)):
+                continue
+            if node.func.id != "getattr":
+                continue
+
+            call_line = node.lineno
+            scope_start = scope_starts.get(call_line, 1)
+            window = lines[scope_start - 1 : call_line]
+            if any(GETATTR_COMMENT_PATTERN.search(line) for line in window):
+                continue
+
+            violations.append(
+                GetattrJustificationViolation(
+                    file_path,
+                    call_line,
+                    lines[call_line - 1].strip() if call_line - 1 < len(lines) else "",
+                )
+            )
+
+        return violations
+
+
 class CommentChecker(FileChecker):
     """Check for TODO/FIXME comments without tickets and commented code.
 
@@ -564,6 +685,7 @@ class QualityChecker:
             LanguageChecker(),
             DocstringChecker(),
             ImportChecker(),
+            GetattrJustificationChecker(),
             CommentChecker(),
         ]
         self.gitignore_spec = self._load_gitignore()
@@ -781,6 +903,8 @@ def main():
                 category = "Unused imports"
             elif "Commented-out code" in v.message:
                 category = "Commented-out code"
+            elif "getattr()" in v.message:
+                category = "Unjustified getattr() usage"
             else:
                 category = "Other issues"
 

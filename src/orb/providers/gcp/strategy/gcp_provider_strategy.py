@@ -8,6 +8,8 @@ import time
 from collections.abc import Callable
 from typing import Any, Mapping, Optional
 
+from pydantic import ValidationError
+
 from orb.domain.base.ports import LoggingPort
 from orb.domain.machine.aggregate import Machine
 from orb.infrastructure.di.injectable import injectable
@@ -35,6 +37,7 @@ from orb.providers.gcp.services import (
     GCPMutationService,
     GCPOperationContextService,
     GCPProvisioningService,
+    init_discovery,
 )
 from orb.providers.gcp.services.operation_context import GCPMutationOperationContext
 from orb.providers.gcp.services.operation_parameters import (
@@ -604,7 +607,8 @@ class GCPProviderStrategy(ProviderStrategy):
         """Run the provider health check service."""
         return self._health_service.check_health()
 
-    def generate_provider_name(self, config: dict[str, Any]) -> str:
+    @classmethod
+    def generate_provider_name(cls, config: dict[str, Any]) -> str:
         """Generate a provider name from GCP project and region values."""
         project_id = config.get("project_id", "default")
         region = config.get("region", "global")
@@ -623,35 +627,101 @@ class GCPProviderStrategy(ProviderStrategy):
         """Return the expected provider-name pattern."""
         return "{type}_{project_id}_{region}"
 
-    def get_available_credential_sources(self) -> list[dict]:
+    @classmethod
+    def get_available_credential_sources(cls) -> list[dict]:
         """List credential sources visible to the health check service."""
-        return self._health_service.get_available_credential_sources()
+        return GCPHealthCheckService.get_available_credential_sources()
 
-    def test_credentials(self, credential_source: Optional[str] = None, **kwargs) -> dict:
+    @classmethod
+    def test_credentials(cls, credential_source: Optional[str] = None, **kwargs) -> dict:
         """Validate access using the selected credential source."""
-        return self._health_service.test_credentials(credential_source, **kwargs)
+        return GCPHealthCheckService.test_credentials(credential_source, **kwargs)
 
-    def get_credential_requirements(self) -> dict:
+    @classmethod
+    def release_init_resources(cls) -> None:
+        """Drop the Application Default Credentials cached for the init run."""
+        init_discovery.clear_default_credentials()
+
+    @classmethod
+    def get_credential_requirements(cls) -> dict:
         """Return the credential requirements for the GCP provider."""
-        return self._health_service.get_credential_requirements()
+        return GCPHealthCheckService.get_credential_requirements()
 
-    def get_operational_requirements(self) -> dict:
+    @classmethod
+    def get_operational_requirements(cls) -> dict:
         """Return non-credential operational requirements for the GCP provider."""
-        return self._health_service.get_operational_requirements()
+        return GCPHealthCheckService.get_operational_requirements()
 
-    def get_available_regions(self) -> list[tuple[str, str]]:
+    @classmethod
+    def get_available_regions(cls) -> list[tuple[str, str]]:
         """List available GCP regions exposed through the CLI surface."""
-        return list(self._AVAILABLE_REGIONS)
+        return list(cls._AVAILABLE_REGIONS)
 
-    def get_default_region(self) -> str:
+    @classmethod
+    def get_default_region(cls) -> str:
         """Return the default region for new GCP providers."""
         return "us-central1"
 
-    def get_cli_extra_config_keys(self) -> set[str]:
+    @classmethod
+    def get_contextual_operational_param_choices(
+        cls, param: str, selected_config: dict[str, Any]
+    ) -> list[tuple[str, str]]:
+        """Discover projects and regions available to the current identity."""
+        if param == "project_id":
+            from requests.exceptions import HTTPError
+
+            try:
+                projects = init_discovery.list_projects()
+            except HTTPError as exc:
+                if exc.response is None or exc.response.status_code != 403:
+                    raise
+                projects = []
+            project_id = init_discovery.default_project()
+            if project_id and project_id not in {value for value, _ in projects}:
+                projects.insert(0, (project_id, f"{project_id} (ADC default; unverified)"))
+            return projects
+        if param == "region" and (project_id := selected_config.get("project_id")):
+            from requests.exceptions import HTTPError
+
+            try:
+                return init_discovery.list_regions(project_id)
+            except HTTPError as exc:
+                if exc.response is None or exc.response.status_code != 403:
+                    raise
+                return [
+                    (region, f"{label} (unverified)") for region, label in cls._AVAILABLE_REGIONS
+                ]
+        return []
+
+    @classmethod
+    def get_operational_param_default(cls, param: str) -> str:
+        """Preselect the ADC project when credentials identify one."""
+        if param == "project_id":
+            return init_discovery.default_project() or ""
+        if param == "region":
+            return cls.get_default_region()
+        return ""
+
+    @classmethod
+    def validate_operational_param(
+        cls, param: str, value: str, selected_config: dict[str, Any]
+    ) -> str | None:
+        """Validate manual init input with the provider config model."""
+        config = {"project_id": selected_config.get("project_id", value)}
+        config[param] = value
+        try:
+            GCPProviderConfig.model_validate(config)
+        except ValidationError as exc:
+            return str(exc.errors()[0]["msg"]).removeprefix("Value error, ")
+        return None
+
+    @classmethod
+    def get_cli_extra_config_keys(cls) -> set[str]:
         """List additional template keys accepted from GCP CLI arguments."""
         return {"network", "subnetwork", "service_account_email", "service_account_scopes"}
 
-    def get_cli_infrastructure_defaults(self, args: argparse.Namespace) -> dict[str, Any]:
+    @classmethod
+    def get_cli_infrastructure_defaults(cls, args: argparse.Namespace) -> dict[str, Any]:
         """Extract infrastructure defaults from parsed GCP CLI arguments."""
         result: dict[str, Any] = {}
         if args.gcp_network:
@@ -668,40 +738,38 @@ class GCPProviderStrategy(ProviderStrategy):
             ]
         return result
 
-    def discover_infrastructure(self, provider_config: Mapping[str, object]) -> dict[str, object]:
+    def discover_infrastructure(self, provider_config: Mapping[str, Any]) -> dict[str, object]:
         """Return the configured infrastructure fields visible to the GCP provider."""
         config = provider_config.get("config", provider_config)
-        config_mapping = config if isinstance(config, Mapping) else {}
         return {
             "provider": provider_config.get("name", self._provider_name or "gcp"),
-            "project_id": config_mapping.get("project_id", self._config.project_id),
-            "region": config_mapping.get("region", self._config.region),
-            "networks": [config_mapping.get("network")] if config_mapping.get("network") else [],
-            "subnetworks": [config_mapping.get("subnetwork")]
-            if config_mapping.get("subnetwork")
-            else [],
+            "project_id": config.get("project_id", self._config.project_id),
+            "region": config.get("region", self._config.region),
+            "networks": [config.get("network")] if config.get("network") else [],
+            "subnetworks": [config.get("subnetwork")] if config.get("subnetwork") else [],
         }
 
     def discover_infrastructure_interactive(
         self,
-        provider_config: Mapping[str, object],
+        provider_config: Mapping[str, Any],
     ) -> dict[str, object]:
         """Return discovered infrastructure without prompting for extra input."""
         return self.discover_infrastructure(provider_config)
 
-    def validate_infrastructure(self, provider_config: Mapping[str, object]) -> dict[str, object]:
+    def validate_infrastructure(self, provider_config: Mapping[str, Any]) -> dict[str, object]:
         """Validate the minimum infrastructure fields required by the provider."""
         config = provider_config.get("config", provider_config)
-        config_mapping = config if isinstance(config, Mapping) else {}
         errors: list[str] = []
-        if not config_mapping.get("project_id"):
+        if not config.get("project_id"):
             errors.append("project_id is required")
-        if not config_mapping.get("region"):
+        if not config.get("region"):
             errors.append("region is required")
         return {"valid": len(errors) == 0, "errors": errors, "warnings": []}
 
     def cleanup(self) -> None:
-        """Release provider-owned state."""
+        """Close owned compute client transports and release provider state."""
+        if self._compute_client is not None:
+            self._compute_client.close()
         self._handler_factory = None
         self._compute_client = None
         self._initialized = False

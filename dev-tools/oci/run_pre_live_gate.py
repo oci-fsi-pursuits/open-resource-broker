@@ -15,7 +15,6 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
-
 TERMINAL_OK = {"complete", "completed"}
 TERMINAL_FAIL = {"failed", "error", "cancelled", "canceled", "timeout", "partial"}
 

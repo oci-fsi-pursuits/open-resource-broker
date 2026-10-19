@@ -95,7 +95,10 @@ def create_aws_strategy(provider_config: Any) -> Any:
         with suppress(Exception):
             from orb.domain.base.ports.health_check_port import HealthCheckPort
             from orb.infrastructure.di.container import get_container
-            from orb.providers.aws.health import register_aws_health_checks
+            from orb.providers.aws.health import (
+                lazy_aws_client_getter,
+                register_aws_health_checks,
+            )
             from orb.providers.health_scoping import (
                 connectivity_check_kind,
                 is_default_provider_instance,
@@ -104,7 +107,7 @@ def create_aws_strategy(provider_config: Any) -> Any:
             # Register connectivity checks only for the default/active instance
             # so a secondary AWS instance cannot drag the overall status down.
             provider_cfg = config_port.get_provider_config() if config_port else None
-            if strategy.aws_client is not None and is_default_provider_instance(
+            if config_port is not None and is_default_provider_instance(
                 provider_name, provider_cfg
             ):
                 health_check = get_container().get(HealthCheckPort)
@@ -116,7 +119,9 @@ def create_aws_strategy(provider_config: Any) -> Any:
                 # readiness (kind="core"); with multiple providers it does not.
                 register_aws_health_checks(
                     health_check,
-                    strategy.aws_client,
+                    # Resolved on first check execution so creating the strategy
+                    # (as ``orb init`` does) never opens an AWS session.
+                    lazy_aws_client_getter(lambda: strategy.aws_client),
                     _storage_strategy,
                     kind=connectivity_check_kind(provider_cfg),
                 )
@@ -181,16 +186,9 @@ def create_aws_resolver() -> Any:
     Returns:
         AWS template resolver instance
     """
-    try:
-        # Image resolution now handled by generic service
-        # Return None to indicate no legacy resolver needed
-        return None
-    except ImportError:
-        # AWS resolver not available, return None
-        return None
-    except Exception as e:
-        # Re-raise with context - let caller handle logging
-        raise RuntimeError(f"Failed to create AWS resolver: {e!s}")
+    # Image resolution is now handled by a generic service; return None to
+    # indicate no legacy resolver is needed.
+    return None
 
 
 def create_aws_validator(provider_config: Any = None) -> Any:

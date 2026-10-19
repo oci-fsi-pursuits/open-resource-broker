@@ -646,3 +646,76 @@ class TestListResources:
         result = svc.list_resources("subnets", vpc_id="vpc-001")
         assert result[0]["id"] == "subnet-ipv6"
         assert result[0]["cidr_block"] == ""
+
+
+# ---------------------------------------------------------------------------
+# Shared-session mode (used by the interactive init flow)
+# ---------------------------------------------------------------------------
+
+
+def _shared_session():
+    session = MagicMock()
+    session.client.return_value.get_caller_identity.return_value = {
+        "Account": "123456789012",
+        "Arn": "arn:aws:iam::123456789012:user/example",
+    }
+    return session
+
+
+def _make_shared_service(region="us-east-1", profile=None):
+    return AWSInfrastructureDiscoveryService(
+        region=region,
+        profile=profile,
+        logger=MagicMock(),
+        console=MagicMock(),
+        use_shared_session=True,
+    )
+
+
+@pytest.mark.unit
+class TestSharedSessionMode:
+    def test_services_share_one_session_and_one_identity_lookup(self):
+        session = _shared_session()
+        with patch("boto3.Session", return_value=session) as session_cls:
+            first = _make_shared_service()
+            second = _make_shared_service(region="eu-west-2")
+            arns = [first._discover_spotfleet_role(), second._discover_spotfleet_role()]
+
+        session_cls.assert_called_once()
+        assert all("123456789012" in str(arn) for arn in arns)
+        identity_calls = [c for c in session.client.call_args_list if c.args == ("sts",)]
+        assert len(identity_calls) == 1
+        session.client.return_value.get_caller_identity.assert_called_once()
+
+    def test_clients_are_created_for_the_requested_region(self):
+        session = _shared_session()
+        with patch("boto3.Session", return_value=session):
+            _make_shared_service(region="eu-west-2")
+
+        regions = {
+            c.kwargs.get("region_name") for c in session.client.call_args_list if c.args[0] == "ec2"
+        }
+        assert regions == {"eu-west-2"}
+
+    def test_default_mode_keeps_a_private_session(self):
+        with patch("orb.providers.aws.session_factory.AWSSessionFactory.create_session") as create:
+            create.return_value = MagicMock()
+            AWSInfrastructureDiscoveryService(
+                region="us-east-1", profile=None, logger=MagicMock(), console=MagicMock()
+            )
+
+        create.assert_called_once_with(profile=None, region="us-east-1")
+
+    def test_interactive_discovery_from_strategy_uses_shared_session(self):
+        from orb.providers.aws.strategy.aws_provider_strategy import AWSProviderStrategy
+
+        strategy = AWSProviderStrategy.__new__(AWSProviderStrategy)
+        strategy._aws_config = MagicMock(region="us-east-1", profile=None)
+        strategy._logger = MagicMock()
+        strategy._console = MagicMock()
+        with patch(
+            "orb.providers.aws.strategy.aws_provider_strategy.AWSInfrastructureDiscoveryService"
+        ) as service_cls:
+            strategy.discover_infrastructure_interactive({"config": {"region": "eu-west-2"}})
+
+        assert service_cls.call_args.kwargs["use_shared_session"] is True

@@ -270,7 +270,7 @@ class TestDiscoverClusterEndpoint:
     def test_returns_unknown_on_exception(self) -> None:
         svc = _make_service()
         with patch(
-            "kubernetes.config.new_client_from_config",
+            "kubernetes.config.load_kube_config",
             side_effect=RuntimeError("bad context"),
         ):
             endpoint = svc.discover_cluster_endpoint(context="nonexistent")
@@ -280,7 +280,10 @@ class TestDiscoverClusterEndpoint:
         svc = _make_service()
         fake_client = MagicMock()
         fake_client.configuration.host = "https://1.2.3.4:6443"
-        with patch("kubernetes.config.new_client_from_config", return_value=fake_client):
+        with (
+            patch("kubernetes.config.load_kube_config"),
+            patch("kubernetes.client.api_client.ApiClient", return_value=fake_client),
+        ):
             endpoint = svc.discover_cluster_endpoint(context="my-ctx")
         assert endpoint == "https://1.2.3.4:6443"
 
@@ -696,3 +699,224 @@ class TestValidateInfrastructure:
         svc._core_v1 = MagicMock(return_value=fake_core)  # type: ignore[method-assign]
         with pytest.raises(K8sError):
             svc.validate_infrastructure({})
+
+
+# ---------------------------------------------------------------------------
+# Kubeconfig / ApiClient reuse within one init run
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def kube_loaders():
+    """Patch the SDK loaders so each load and ApiClient construction is observable."""
+    clients: list[MagicMock] = []
+
+    def _new_client(*_args: Any, **_kwargs: Any) -> MagicMock:
+        client = MagicMock()
+        client.configuration.host = "https://1.2.3.4:6443"
+        clients.append(client)
+        return client
+
+    with (
+        patch(
+            "orb.providers.k8s.services.infrastructure_discovery_service.is_in_cluster",
+            return_value=False,
+        ),
+        patch("kubernetes.config.load_kube_config") as load,
+        patch("kubernetes.config.load_incluster_config") as load_incluster,
+        patch("kubernetes.client.api_client.ApiClient", side_effect=_new_client) as api_client,
+    ):
+        yield SimpleNamespace(
+            load=load, load_incluster=load_incluster, api_client=api_client, clients=clients
+        )
+
+
+@pytest.mark.unit
+class TestApiClientReuse:
+    def test_core_v1_called_twice_loads_kubeconfig_once(self, kube_loaders) -> None:
+        svc = _make_service(context="ctx-a")
+
+        svc._core_v1()
+        svc._core_v1()
+        svc._auth_v1()
+
+        kube_loaders.load.assert_called_once()
+        kube_loaders.api_client.assert_called_once()
+        assert svc._api_client is kube_loaders.clients[0]
+
+    def test_services_for_the_same_context_share_one_client(self, kube_loaders) -> None:
+        first = _make_service(context="ctx-a")
+        second = _make_service(context="ctx-a")
+
+        assert first._get_api_client() is second._get_api_client()
+
+        kube_loaders.load.assert_called_once()
+
+    def test_each_distinct_context_gets_its_own_client(self, kube_loaders) -> None:
+        a = _make_service(context="ctx-a")._get_api_client()
+        b = _make_service(context="ctx-b")._get_api_client()
+
+        assert a is not b
+        assert kube_loaders.load.call_count == 2
+        assert kube_loaders.api_client.call_count == 2
+
+    def test_in_cluster_client_is_shared(self, kube_loaders) -> None:
+        with patch(
+            "orb.providers.k8s.services.infrastructure_discovery_service.is_in_cluster",
+            return_value=True,
+        ):
+            first = _make_service()._get_api_client()
+            second = _make_service()._get_api_client()
+
+        assert first is second
+        kube_loaders.load_incluster.assert_called_once()
+
+    def test_failed_load_is_not_cached(self, kube_loaders) -> None:
+        kube_loaders.load.side_effect = [RuntimeError("expired token"), None]
+        svc = _make_service(context="ctx-a")
+
+        with pytest.raises(RuntimeError):
+            svc._get_api_client()
+        svc._get_api_client()
+
+        assert kube_loaders.load.call_count == 2
+        kube_loaders.api_client.assert_called_once()
+
+    def test_credential_probe_and_discovery_share_one_client(self, kube_loaders) -> None:
+        from orb.providers.k8s.services.capability_service import K8sCapabilityService
+
+        with patch("kubernetes.client.CoreV1Api.get_api_resources", return_value=None):
+            assert K8sCapabilityService.test_credentials("ctx-a")["success"] is True
+        _make_service(context="ctx-a")._get_api_client()
+
+        kube_loaders.load.assert_called_once()
+        kube_loaders.api_client.assert_called_once()
+
+    def test_endpoint_lookup_reuses_the_client_for_the_context(self, kube_loaders) -> None:
+        svc = _make_service(context="ctx-a")
+        svc._get_api_client()
+
+        assert svc.discover_cluster_endpoint(context="ctx-a") == "https://1.2.3.4:6443"
+
+        kube_loaders.load.assert_called_once()
+        kube_loaders.api_client.assert_called_once()
+
+    def test_release_hook_forces_a_fresh_load(self, kube_loaders) -> None:
+        from orb.providers.k8s.strategy.k8s_provider_strategy import K8sProviderStrategy
+
+        svc = _make_service(context="ctx-a")
+        svc._get_api_client()
+        K8sProviderStrategy.release_init_resources()
+        _make_service(context="ctx-a")._get_api_client()
+
+        assert kube_loaders.load.call_count == 2
+
+
+@pytest.mark.unit
+class TestInteractiveInitReuse:
+    def _run_init(self, tmp_path: Path) -> tuple[MagicMock, MagicMock, int]:
+        from kubernetes.client import AuthorizationV1Api, CoreV1Api
+
+        from tests.utilities.init_flow import run_interactive_init
+
+        contexts = (
+            [
+                {"name": "ctx-a", "context": {"cluster": "c1"}},
+                {"name": "ctx-b", "context": {"cluster": "c1"}},
+            ],
+            {"name": "ctx-a"},
+        )
+        namespace = SimpleNamespace(
+            metadata=SimpleNamespace(name="default", creation_timestamp=None),
+            status=SimpleNamespace(phase="Active"),
+        )
+        with (
+            patch("orb.providers.k8s.auth.in_cluster.is_in_cluster", return_value=False),
+            patch(
+                "orb.providers.k8s.services.infrastructure_discovery_service.is_in_cluster",
+                return_value=False,
+            ),
+            patch("kubernetes.config.list_kube_config_contexts", return_value=contexts),
+            patch("kubernetes.config.load_kube_config") as load,
+            patch("kubernetes.client.api_client.ApiClient.__init__", return_value=None) as init,
+            patch.object(CoreV1Api, "__init__", return_value=None),
+            patch.object(AuthorizationV1Api, "__init__", return_value=None),
+            patch.object(
+                CoreV1Api, "get_api_resources", return_value=SimpleNamespace(resources=[])
+            ),
+            patch.object(
+                CoreV1Api, "list_namespace", return_value=SimpleNamespace(items=[namespace])
+            ),
+            patch.object(
+                CoreV1Api, "list_namespaced_service_account", return_value=SimpleNamespace(items=[])
+            ),
+            patch.object(
+                CoreV1Api, "list_namespaced_secret", return_value=SimpleNamespace(items=[])
+            ),
+            patch.object(
+                AuthorizationV1Api,
+                "create_self_subject_access_review",
+                return_value=SimpleNamespace(status=SimpleNamespace(allowed=True, reason="")),
+            ),
+            patch(
+                "kubernetes.client.api_client.ApiClient.configuration",
+                SimpleNamespace(host="https://1.2.3.4:6443"),
+                create=True,
+            ),
+        ):
+            code = run_interactive_init("k8s", tmp_path)
+        return load, init, code
+
+    def test_full_init_loads_kubeconfig_and_builds_client_once(self, tmp_path) -> None:
+        load, init, code = self._run_init(tmp_path)
+
+        assert code == 0
+        load.assert_called_once()
+        init.assert_called_once()
+
+    def test_second_init_run_loads_again(self, tmp_path) -> None:
+        self._run_init(tmp_path)
+        load, init, code = self._run_init(tmp_path)
+
+        assert code == 0
+        load.assert_called_once()
+        init.assert_called_once()
+
+
+@pytest.mark.unit
+class TestKubeContextEnumerationReuse:
+    def test_contexts_are_parsed_once_across_services(self) -> None:
+        from orb.providers.k8s.services.capability_service import K8sCapabilityService
+
+        contexts = ([{"name": "ctx-a", "context": {"cluster": "c1"}}], {"name": "ctx-a"})
+        with (
+            patch(
+                "orb.providers.k8s.auth.in_cluster.is_in_cluster",
+                return_value=False,
+            ),
+            patch("kubernetes.config.list_kube_config_contexts", return_value=contexts) as parse,
+        ):
+            K8sCapabilityService(logger=_make_logger()).get_available_credential_sources()
+            _make_service().discover_contexts()
+            _make_service().discover_contexts()
+
+        parse.assert_called_once()
+
+    def test_failed_parse_is_not_cached(self) -> None:
+        contexts = ([{"name": "ctx-a", "context": {"cluster": "c1"}}], {"name": "ctx-a"})
+        with patch(
+            "kubernetes.config.list_kube_config_contexts",
+            side_effect=[RuntimeError("no kubeconfig"), contexts],
+        ):
+            assert _make_service().discover_contexts() == ([], None)
+            all_contexts, _ = _make_service().discover_contexts()
+
+        assert [c.name for c in all_contexts] == ["ctx-a"]
+
+    def test_distinct_kubeconfig_files_are_parsed_separately(self) -> None:
+        with patch("kubernetes.config.list_kube_config_contexts", return_value=([], None)) as parse:
+            _make_service().discover_contexts(Path("/tmp/one"))
+            _make_service().discover_contexts(Path("/tmp/two"))
+            _make_service().discover_contexts(Path("/tmp/one"))
+
+        assert parse.call_count == 2

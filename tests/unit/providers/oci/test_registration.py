@@ -1,11 +1,14 @@
 """Unit tests for OCI provider base registration."""
 
-from orb.providers.oci.registration import create_oci_strategy, register_oci_provider
+from orb.infrastructure.registry.cli_spec_registry import CLISpecRegistry
+from orb.providers.oci.provider_plugin import OCIPlugin
+from orb.providers.oci.registration import (
+    create_oci_strategy,
+    initialize_oci_provider,
+    register_oci_provider,
+)
 from orb.providers.oci.strategy.oci_provider_strategy import OCIProviderStrategy
 from orb.providers.registry.provider_registry import ProviderRegistry
-from orb.infrastructure.registry.cli_spec_registry import CLISpecRegistry
-from orb.providers.oci.registration import initialize_oci_provider
-from orb.providers.oci.provider_plugin import OCIPlugin
 
 
 def test_register_oci_provider_registers_provider_type():

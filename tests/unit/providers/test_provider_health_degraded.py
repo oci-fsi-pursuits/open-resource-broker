@@ -29,7 +29,7 @@ class TestAWSHealthDegraded:
             captured[name] = fn
 
         health_check.register_check.side_effect = _capture
-        register_aws_health_checks(health_check, aws_client, storage_strategy="json")
+        register_aws_health_checks(health_check, lambda: aws_client, storage_strategy="json")
         return captured
 
     def test_aws_connectivity_failure_is_degraded(self) -> None:
@@ -119,3 +119,26 @@ class TestK8sHealthDegraded:
 
         result = captured["kubernetes_api"]()
         assert result.status == "healthy"
+
+
+@pytest.mark.unit
+class TestAWSHealthClientGetter:
+    def _checks(self, getter) -> dict[str, Callable[[], HealthStatus]]:
+        from orb.providers.aws.health import register_aws_health_checks
+
+        captured: dict[str, Callable[[], HealthStatus]] = {}
+        health_check = MagicMock()
+        health_check.register_check.side_effect = lambda name, fn, **_: captured.update({name: fn})
+        register_aws_health_checks(health_check, getter)
+        return captured
+
+    def test_getter_is_not_called_at_registration(self) -> None:
+        getter = MagicMock()
+        self._checks(getter)
+        getter.assert_not_called()
+
+    @pytest.mark.parametrize("getter", [lambda: None, MagicMock(side_effect=RuntimeError("boom"))])
+    def test_unavailable_client_is_unknown_not_degraded(self, getter) -> None:
+        checks = self._checks(getter)
+        assert checks["aws"]().status == "unknown"
+        assert checks["ec2"]().status == "unknown"

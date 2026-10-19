@@ -194,9 +194,6 @@ class K8sCapabilityService:
 
     def get_available_credential_sources(self) -> list[dict]:
         """Return Kubernetes credential sources visible to ORB."""
-        from orb.infrastructure.logging.logger import get_logger as _get_logger
-
-        _log = _get_logger(__name__)
         sources: list[dict] = []
 
         try:
@@ -211,12 +208,12 @@ class K8sCapabilityService:
                     }
                 )
         except Exception as exc:
-            _log.debug("in_cluster detection failed: %s", exc)
+            self._logger.debug("in_cluster detection failed: %s", exc)
 
         try:
-            import kubernetes.config as _k8s_config
+            from orb.providers.k8s.auth.kubeconfig import list_shared_kube_config_contexts
 
-            contexts, current = _k8s_config.list_kube_config_contexts()
+            contexts, current = list_shared_kube_config_contexts()
             current_name = current.get("name") if current else None
             for ctx in contexts or []:
                 name = ctx.get("name", "")
@@ -236,7 +233,7 @@ class K8sCapabilityService:
                     }
                 )
         except Exception as exc:
-            _log.debug("kubeconfig context enumeration failed: %s", exc)
+            self._logger.debug("kubeconfig context enumeration failed: %s", exc)
 
         if not sources:
             sources.append(
@@ -257,7 +254,6 @@ class K8sCapabilityService:
         """Verify the selected credentials can reach the apiserver."""
         try:
             import kubernetes.client as _k8s_client
-            import kubernetes.config as _k8s_config
             from kubernetes.client.exceptions import ApiException
         except ImportError:
             return {
@@ -268,40 +264,32 @@ class K8sCapabilityService:
             }
 
         from orb.providers.k8s.auth.kubeconfig import (
-            _force_non_interactive_exec,
-            _install_non_interactive_refresh_hook_on,
+            discard_shared_api_client,
+            get_shared_api_client,
         )
 
+        source: dict[str, Any] = {}
         try:
-            # ``load_kube_config`` / ``load_config`` run the exec credential
-            # plugin to mint the token, and its interactivity is decided by
-            # ``sys.stdout.isatty()``; force the non-interactive branch so a
-            # TTY-attached ``orb`` diagnostic attaches the token.  The lazy
-            # re-mint hook is wrapped afterwards so the ``get_api_resources``
-            # call below stays non-interactive if the token has expired.
+            # The client is cached per credential source, so the discovery steps
+            # that follow reuse this kubeconfig load instead of repeating it.
             if (
                 credential_source is not None
                 and _normalise_sentinel(credential_source) == _IN_CLUSTER_SENTINEL
             ):
-                _k8s_config.load_incluster_config()
+                source = {"in_cluster": True}
+                api_client = get_shared_api_client(**source)
                 context_label = "in-cluster"
             elif credential_source and credential_source not in ("default", ""):
-                with _force_non_interactive_exec():
-                    _k8s_config.load_kube_config(context=credential_source)
-                _install_non_interactive_refresh_hook_on(None)
+                source = {"context": credential_source}
+                api_client = get_shared_api_client(**source)
                 context_label = credential_source
             else:
-                with _force_non_interactive_exec():
-                    _k8s_config.load_config()
-                _install_non_interactive_refresh_hook_on(None)
+                source = {"auto_detect": True}
+                api_client = get_shared_api_client(**source)
                 context_label = "auto-detected"
 
-            from kubernetes.client.api_client import ApiClient
-
-            api_client = ApiClient()
-            api_client.configuration.timeout = 5  # type: ignore[attr-defined]
             api = _k8s_client.CoreV1Api(api_client=api_client)
-            resources = api.get_api_resources()
+            resources = api.get_api_resources(_request_timeout=5)
             endpoint = api_client.configuration.host  # type: ignore[attr-defined]
 
             return {
@@ -311,11 +299,14 @@ class K8sCapabilityService:
                 "api_groups": len(resources.resources) if resources else 0,
             }
         except ApiException as exc:
+            # Drop the cached client so a retry in the same run re-resolves credentials.
+            discard_shared_api_client(**source)
             return {
                 "success": False,
                 "error": (f"Apiserver rejected the probe ({exc.status}): {exc.reason}"),
             }
         except Exception as exc:
+            discard_shared_api_client(**source)
             return {"success": False, "error": str(exc)}
 
     @staticmethod

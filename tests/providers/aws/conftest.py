@@ -85,9 +85,9 @@ def _aws_fake_credentials(request: pytest.FixtureRequest):
         yield
         return
     os.environ.setdefault("AWS_ACCESS_KEY_ID", "testing")
-    os.environ.setdefault("AWS_SECRET_ACCESS_KEY", "testing")  # nosec B105
-    os.environ.setdefault("AWS_SECURITY_TOKEN", "testing")  # nosec B105
-    os.environ.setdefault("AWS_SESSION_TOKEN", "testing")  # nosec B105
+    os.environ.setdefault("AWS_SECRET_ACCESS_KEY", "testing")
+    os.environ.setdefault("AWS_SECURITY_TOKEN", "testing")
+    os.environ.setdefault("AWS_SESSION_TOKEN", "testing")
     os.environ.setdefault("AWS_DEFAULT_REGION", REGION)
     yield
 
@@ -158,14 +158,34 @@ def make_patch_moto_compat():
 # ---------------------------------------------------------------------------
 
 
+@pytest.fixture(autouse=True)
+def _ignore_ambient_aws_profile(monkeypatch):
+    """A profile exported in the developer's shell must not leak into AWS tests."""
+    monkeypatch.delenv("AWS_PROFILE", raising=False)
+    monkeypatch.delenv("AWS_DEFAULT_PROFILE", raising=False)
+
+
+@pytest.fixture(autouse=True)
+def _clear_shared_aws_sessions():
+    """Drop init-scoped session/identity caches so tests never see each other's credentials."""
+    from orb.providers.aws.session_factory import clear_shared_sessions
+
+    clear_shared_sessions()
+    yield
+    clear_shared_sessions()
+
+
 @pytest.fixture(scope="function")
-def moto_aws():
+def moto_aws(monkeypatch):
     """Start moto mock_aws context for the duration of each test.
 
     Fake AWS credentials are supplied session-scoped by
     ``_aws_fake_credentials`` above so botocore is already primed by the
-    time this fixture runs.
+    time this fixture runs.  A profile exported in the developer's shell is
+    dropped so it cannot shadow those credentials.
     """
+    monkeypatch.delenv("AWS_PROFILE", raising=False)
+    monkeypatch.delenv("AWS_DEFAULT_PROFILE", raising=False)
     with mock_aws():
         yield
 

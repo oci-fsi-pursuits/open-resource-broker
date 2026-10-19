@@ -184,7 +184,7 @@ class TestDiscoverInfrastructureSmokeTest:
                 ),
             ),
             patch(
-                "kubernetes.config.new_client_from_config",
+                "orb.providers.k8s.auth.kubeconfig.get_shared_api_client",
                 return_value=SimpleNamespace(
                     configuration=SimpleNamespace(host="https://1.2.3.4:6443")
                 ),
@@ -217,7 +217,7 @@ class TestDiscoverInfrastructureSmokeTest:
             ),
             patch("kubernetes.config.list_kube_config_contexts", return_value=([], None)),
             patch(
-                "kubernetes.config.new_client_from_config",
+                "orb.providers.k8s.auth.kubeconfig.get_shared_api_client",
                 return_value=SimpleNamespace(configuration=SimpleNamespace(host="unknown")),
             ),
         ):
@@ -233,7 +233,7 @@ class TestDiscoverInfrastructureSmokeTest:
             ),
             patch("kubernetes.config.list_kube_config_contexts", return_value=([], None)),
             patch(
-                "kubernetes.config.new_client_from_config",
+                "orb.providers.k8s.auth.kubeconfig.get_shared_api_client",
                 return_value=SimpleNamespace(
                     configuration=SimpleNamespace(host="https://k8s.example")
                 ),
@@ -251,7 +251,7 @@ class TestDiscoverInfrastructureSmokeTest:
             ),
             patch("kubernetes.config.list_kube_config_contexts", return_value=([], None)),
             patch(
-                "kubernetes.config.new_client_from_config",
+                "orb.providers.k8s.auth.kubeconfig.get_shared_api_client",
                 return_value=SimpleNamespace(configuration=SimpleNamespace(host="unknown")),
             ),
         ):
@@ -267,7 +267,7 @@ class TestDiscoverInfrastructureSmokeTest:
             ),
             patch("kubernetes.config.list_kube_config_contexts", return_value=([], None)),
             patch(
-                "kubernetes.config.new_client_from_config",
+                "orb.providers.k8s.auth.kubeconfig.get_shared_api_client",
                 return_value=SimpleNamespace(configuration=SimpleNamespace(host="unknown")),
             ),
         ):
@@ -286,7 +286,7 @@ class TestDiscoverInfrastructureSmokeTest:
             ),
             patch("kubernetes.config.list_kube_config_contexts", return_value=([], None)),
             patch(
-                "kubernetes.config.new_client_from_config",
+                "orb.providers.k8s.auth.kubeconfig.get_shared_api_client",
                 return_value=SimpleNamespace(configuration=SimpleNamespace(host="unknown")),
             ),
         ):
@@ -302,7 +302,7 @@ class TestDiscoverInfrastructureSmokeTest:
             ),
             patch("kubernetes.config.list_kube_config_contexts", return_value=([], None)),
             patch(
-                "kubernetes.config.new_client_from_config",
+                "orb.providers.k8s.auth.kubeconfig.get_shared_api_client",
                 return_value=SimpleNamespace(configuration=SimpleNamespace(host="unknown")),
             ),
         ):

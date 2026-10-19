@@ -1,12 +1,12 @@
 """Scheduler Registry - Registry pattern for scheduler strategy factories."""
 
-import logging
 from typing import Any, Callable, ClassVar
 
 from orb.domain.base.exceptions import ConfigurationError
+from orb.infrastructure.logging.logger import get_logger
 from orb.infrastructure.registry.base_registry import BaseRegistration, BaseRegistry, RegistryMode
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class UnsupportedSchedulerError(Exception):
@@ -38,15 +38,29 @@ class SchedulerRegistry(BaseRegistry):
     """
 
     _SCHEDULER_METADATA: ClassVar[dict[str, dict[str, str]]] = {
-        "default": {"display_name": "default", "description": "Standalone usage"},
+        "default": {"display_name": "Default", "description": "Standalone usage"},
         "hostfactory": {
-            "display_name": "hostfactory",
+            "display_name": "IBM Spectrum Symphony (host factory)",
             "description": "IBM Spectrum Symphony integration",
+        },
+        "slurm": {
+            "display_name": "Slurm Workload Manager",
+            "description": "SLURM workload manager integration",
         },
     }
 
     _SCHEDULER_EXTRA_CONFIG: ClassVar[dict[str, dict[str, str]]] = {
         "hostfactory": {"config_root": "$ORB_CONFIG_DIR"},
+        "slurm": {"config_root": "$SLURM_ORB_CONFIG_DIR"},
+    }
+
+    # Grid schedulers that consume ORB through the default scheduler's native
+    # API rather than a dedicated scheduler strategy of their own. Declared
+    # here, on the scheduler they integrate through, so anything that needs
+    # the full list of integrations ORB supports (docs, issue templates) can
+    # read it instead of hardcoding it.
+    _SCHEDULER_INTEGRATIONS: ClassVar[dict[str, tuple[str, ...]]] = {
+        "default": ("HTC-Grid", "OpenGRIS Scaler"),
     }
 
     def __init__(self) -> None:
@@ -62,6 +76,14 @@ class SchedulerRegistry(BaseRegistry):
             scheduler_type,
             {"display_name": scheduler_type, "description": f"{scheduler_type} scheduler"},
         )
+
+    def get_integrations(self, scheduler_type: str) -> tuple[str, ...]:
+        """Return the names of third-party integrations that use *scheduler_type*.
+
+        Empty tuple when the scheduler type has no declared integrations
+        (the common case).
+        """
+        return self._SCHEDULER_INTEGRATIONS.get(scheduler_type, ())
 
     def get_extra_config_for_type(self, scheduler_type: str) -> dict[str, str]:
         """Return extra config keys to inject under scheduler config for this type.
@@ -101,7 +123,9 @@ class SchedulerRegistry(BaseRegistry):
         Useful for calling classmethods before app initialization.
         """
         registration = self._get_type_registration(scheduler_type)
-        assert isinstance(registration, SchedulerRegistration)
+        assert isinstance(  # noqa: S101  # type-narrowing only; _get_type_registration always returns this type
+            registration, SchedulerRegistration
+        )
         if registration.strategy_class is None:
             raise ValueError(f"No strategy class registered for scheduler type: {scheduler_type}")
         return registration.strategy_class

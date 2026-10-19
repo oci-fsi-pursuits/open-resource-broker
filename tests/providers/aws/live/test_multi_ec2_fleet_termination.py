@@ -53,7 +53,7 @@ def _get_boto_profile_and_region() -> tuple[str | None, str]:
                 profile = provider_cfg.get("profile")
                 region = provider_cfg.get("region")
         except Exception:
-            pass
+            pass  # Config file unreadable; fall back to AWS_PROFILE env var below
     # Fall back to AWS_PROFILE env var so the explicit profile_name is always
     # non-None when a profile is available.  This forces botocore to use
     # profile-based credentials and ignore injected fake env var credentials.
@@ -759,8 +759,10 @@ def test_multi_ec2_fleet_termination(setup_multi_ec2_fleet_templates):
                     fleet_type = fleet.get("Type", "unknown")
                     if fleet_type == "maintain":
                         maintain_fleets_remaining.append(fleet_id)
-            except Exception:  # nosec B110
-                pass
+            except ClientError:
+                # Fleet lookup can fail once the fleet is fully deleted; it is
+                # already counted in final_remaining_fleets above
+                logging.getLogger(__name__).debug("describe_fleets failed for %s", fleet_id)
 
     if final_remaining_fleets:
         # Log detailed information about remaining fleets for debugging

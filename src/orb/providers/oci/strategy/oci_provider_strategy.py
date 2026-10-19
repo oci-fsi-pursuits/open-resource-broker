@@ -23,7 +23,7 @@ from orb.providers.base.strategy import (
 from orb.providers.oci.configuration.config import OCIProviderConfig
 from orb.providers.oci.handlers import OCIComputeHandler
 from orb.providers.oci.mapping import OCITemplateMapper
-from orb.providers.oci.oci_cli_auth import build_oci_cli_extra_args, build_oci_cli_env
+from orb.providers.oci.oci_cli_auth import build_oci_cli_env, build_oci_cli_extra_args
 from orb.providers.oci.services import OCIPricingService
 
 
@@ -420,7 +420,8 @@ class OCIProviderStrategy(ProviderStrategy):
     ) -> dict[str, Any]:
         cmd = [shutil.which("oci") or "oci", *args, "--region", region, "--all"]
         cmd.extend(build_oci_cli_extra_args(profile=profile, credential_source=credential_source))
-        completed = subprocess.run(
+        # Internal discovery subcommands use argv without shell interpolation.
+        completed = subprocess.run(  # noqa: S603
             cmd,
             capture_output=True,
             text=True,

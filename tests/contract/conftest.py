@@ -27,15 +27,13 @@ REGION = "eu-west-2"
 @pytest.fixture(scope="function")
 def moto_aws():
     """Start moto mock_aws context for the duration of each test."""
-    try:
-        from moto import mock_aws
-    except ImportError:
-        pytest.skip("moto not installed")
+    pytest.importorskip("moto")
+    from moto import mock_aws
 
     os.environ.setdefault("AWS_ACCESS_KEY_ID", "testing")
-    os.environ.setdefault("AWS_SECRET_ACCESS_KEY", "testing")  # nosec B105
-    os.environ.setdefault("AWS_SECURITY_TOKEN", "testing")  # nosec B105
-    os.environ.setdefault("AWS_SESSION_TOKEN", "testing")  # nosec B105
+    os.environ.setdefault("AWS_SECRET_ACCESS_KEY", "testing")
+    os.environ.setdefault("AWS_SECURITY_TOKEN", "testing")
+    os.environ.setdefault("AWS_SESSION_TOKEN", "testing")
     os.environ.setdefault("AWS_DEFAULT_REGION", REGION)
     with mock_aws():
         yield
@@ -219,6 +217,14 @@ def default_strategy():
     from orb.infrastructure.scheduler.default.default_strategy import DefaultSchedulerStrategy
 
     return DefaultSchedulerStrategy(logger=_make_mock_logger())
+
+
+@pytest.fixture
+def slurm_strategy():
+    """SlurmSchedulerStrategy with no external dependencies."""
+    from orb.infrastructure.scheduler.slurm.slurm_strategy import SlurmSchedulerStrategy
+
+    return SlurmSchedulerStrategy(logger=_make_mock_logger())
 
 
 # ---------------------------------------------------------------------------

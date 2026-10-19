@@ -13,8 +13,12 @@ from collections.abc import Mapping
 from threading import Condition, RLock
 from typing import TYPE_CHECKING, Any, Callable, Optional
 
+from pydantic import ValidationError
+
 from orb.domain.base.ports import LoggingPort
+from orb.infrastructure.adapters.logging_adapter import LoggingAdapter
 from orb.infrastructure.di.injectable import injectable
+from orb.infrastructure.mocking.dry_run_context import is_dry_run_active
 from orb.providers.azure.capabilities import (
     get_supported_api_capabilities,
     get_supported_apis,
@@ -24,15 +28,25 @@ from orb.providers.azure.configuration.validator import validate_azure_template
 from orb.providers.azure.domain.template.azure_template_aggregate import AzureTemplate
 from orb.providers.azure.domain.template.value_objects import AzureProviderApi
 from orb.providers.azure.exceptions import AzureError, AzureValidationError
+from orb.providers.azure.infrastructure.credential_factory import (
+    AzureCredentialAccessTokenProvider,
+    close_shared_credentials,
+    get_shared_default_azure_credential,
+    suppress_azure_identity_warnings,
+)
 from orb.providers.azure.infrastructure.error_utils import (
     canonical_azure_error_code,
     extract_azure_error_details,
 )
+from orb.providers.azure.services import init_discovery
 from orb.providers.azure.services.health_check_service import AzureHealthCheckService
 from orb.providers.azure.services.inventory_service import (
     AzureInventoryService,
     AzureReadOperationContext,
     build_read_operation_context,
+)
+from orb.providers.azure.services.power_operation_service import (
+    AzurePowerOperationService,
 )
 from orb.providers.azure.services.provisioning_service import (
     AzureProvisioningService,
@@ -85,6 +99,17 @@ def _has_provider_config_value(
     key: str,
 ) -> bool:
     return provider_config.get(key) not in (None, "")
+
+
+def _credential_result_from_health(health: ProviderHealthStatus) -> dict:
+    """Translate a health-check result into the test_credentials response shape."""
+    if health.is_healthy:
+        return {"success": True}
+    return {
+        "success": False,
+        "error": health.status_message,
+        "details": health.error_details or {},
+    }
 
 
 @injectable
@@ -154,6 +179,11 @@ class AzureProviderStrategy(ProviderStrategy):
         self._cleanup_requested = False
         self._cleanup_wait_timeout_seconds = 30.0
         self._termination_service = AzureTerminationService(
+            logger=logger,
+            handler_provider=self,
+            default_resource_group=config.resource_group,
+        )
+        self._power_operation_service = AzurePowerOperationService(
             logger=logger,
             handler_provider=self,
             default_resource_group=config.resource_group,
@@ -382,6 +412,8 @@ class AzureProviderStrategy(ProviderStrategy):
                 ProviderOperationType.VALIDATE_TEMPLATE,
                 ProviderOperationType.GET_AVAILABLE_TEMPLATES,
                 ProviderOperationType.HEALTH_CHECK,
+                ProviderOperationType.START_INSTANCES,
+                ProviderOperationType.STOP_INSTANCES,
             ],
             supported_apis=get_supported_apis(),
             features={
@@ -403,36 +435,82 @@ class AzureProviderStrategy(ProviderStrategy):
         """Check Azure connectivity and return the current health status."""
         return self._health_check_service.check_health()
 
-    def get_available_credential_sources(self) -> list[dict]:
+    @classmethod
+    def get_available_credential_sources(cls) -> list[dict]:
         """Return Azure credential source options."""
-        return [{"name": None, "description": "DefaultAzureCredential / managed identity"}]
+        return [
+            {
+                "name": None,
+                "description": "DefaultAzureCredential / managed identity",
+                "config_delta": {},
+            }
+        ]
 
-    def get_credential_requirements(self) -> dict:
-        """Azure auth uses ambient credentials and does not require pre-auth prompts."""
-        return {}
+    @classmethod
+    def get_credential_requirements(cls) -> dict:
+        """Allow a user-assigned managed identity to be selected before auth."""
+        return {
+            "client_id": {
+                "required": False,
+                "prompt": True,
+                "description": "Managed identity client ID (optional)",
+            }
+        }
 
-    def get_operational_requirements(self) -> dict:
+    @classmethod
+    def get_operational_requirements(cls) -> dict:
         """Return the Azure values init must collect to build a working provider config."""
         return {
             "subscription_id": {"required": True, "description": "Azure subscription ID"},
             "resource_group": {"required": True, "description": "Azure resource group"},
             "region": {"required": True, "description": "Azure location"},
-            "client_id": {
-                "required": False,
-                "prompt": True,
-                "description": "Managed identity client ID (optional)",
-            },
         }
 
-    def get_default_region(self) -> str:
+    @classmethod
+    def get_contextual_operational_param_choices(
+        cls, param: str, selected_config: dict[str, Any]
+    ) -> list[tuple[str, str]]:
+        """Discover choices using the selected identity and subscription."""
+        client_id = selected_config.get("client_id")
+        if param == "subscription_id":
+            return init_discovery.list_subscriptions(client_id)
+        subscription_id = selected_config.get("subscription_id")
+        if not subscription_id:
+            return []
+        if param == "resource_group":
+            return init_discovery.list_resource_groups(client_id, subscription_id)
+        if param == "region":
+            return init_discovery.list_locations(client_id, subscription_id)
+        return []
+
+    @classmethod
+    def get_default_region(cls) -> str:
         """Return the default Azure location for CLI prompts."""
         return "eastus2"
 
-    def get_cli_provider_config(self, args: argparse.Namespace) -> dict[str, Any]:
+    @classmethod
+    def get_operational_param_default(cls, param: str) -> str:
+        """Default only the deployable location, never the subscription or group."""
+        return cls.get_default_region() if param == "region" else ""
+
+    @classmethod
+    def validate_operational_param(
+        cls, param: str, value: str, selected_config: dict[str, Any]
+    ) -> str | None:
+        """Validate manual init input with the provider config model."""
+        del selected_config
+        try:
+            AzureProviderConfig.model_validate({param: value})
+        except ValidationError as exc:
+            return str(exc.errors()[0]["msg"]).removeprefix("Value error, ")
+        return None
+
+    @classmethod
+    def get_cli_provider_config(cls, args: argparse.Namespace) -> dict[str, Any]:
         """Extract Azure provider config from init CLI args."""
         args_dict = vars(args)
         provider_config: dict[str, Any] = {
-            "region": args_dict.get("azure_location") or self.get_default_region(),
+            "region": args_dict.get("azure_location") or cls.get_default_region(),
         }
 
         field_map = {
@@ -467,19 +545,46 @@ class AzureProviderStrategy(ProviderStrategy):
 
         return provider_config
 
-    def test_credentials(self, credential_source: Optional[str] = None, **kwargs) -> dict:
-        """Validate Azure credentials by performing a health check."""
+    @classmethod
+    def test_credentials(cls, credential_source: Optional[str] = None, **kwargs) -> dict:
+        """Validate Azure credentials without health-check traceback output."""
         del credential_source
-        health = self._health_check_service.check_health()
-        if health.is_healthy:
+        if is_dry_run_active():
             return {"success": True}
-        return {
-            "success": False,
-            "error": health.status_message,
-            "details": health.error_details or {},
-        }
+        try:
+            # The credential is shared with the discovery steps that follow and
+            # closed by ``release_init_resources`` when the init run ends.
+            credential = get_shared_default_azure_credential(kwargs.get("client_id"))
+            with suppress_azure_identity_warnings():
+                AzureCredentialAccessTokenProvider(credential).get_access_token(
+                    "https://management.azure.com/.default"
+                )
+            return {"success": True}
+        except ImportError:
+            return {"success": False, "error": "Install orb-py[azure] to use Azure init."}
+        except Exception as exc:
+            LoggingAdapter().debug("Azure init authentication failed: %s", exc, exc_info=True)
+            return {"success": False, "error": str(exc).splitlines()[0] or type(exc).__name__}
 
-    def generate_provider_name(self, config: dict[str, Any]) -> str:
+    @classmethod
+    def release_init_resources(cls) -> None:
+        """Close the credentials shared by the init run's credential check and discovery."""
+        close_shared_credentials()
+
+    async def test_credentials_async(
+        self, credential_source: Optional[str] = None, **kwargs
+    ) -> dict:
+        """Validate Azure credentials off the event loop via the async credential path.
+
+        Uses ``check_health_async``, which fetches the token with the native
+        async ``DefaultAzureCredential`` instead of blocking the event loop.
+        """
+        del credential_source
+        health = await self._health_check_service.check_health_async()
+        return _credential_result_from_health(health)
+
+    @classmethod
+    def generate_provider_name(cls, config: dict[str, Any]) -> str:
         """Generate Azure provider name."""
         subscription_id = config.get("subscription_id", "default")
         region = config.get("region", "eastus")
@@ -572,6 +677,22 @@ class AzureProviderStrategy(ProviderStrategy):
             return await self._handle_get_available_templates()
         elif operation.operation_type == ProviderOperationType.HEALTH_CHECK:
             return await self._handle_health_check(operation)
+        elif operation.operation_type == ProviderOperationType.START_INSTANCES:
+            return await self._handle_start_instances(operation)
+        elif operation.operation_type == ProviderOperationType.STOP_INSTANCES:
+            return await self._handle_stop_instances(operation)
+        elif operation.operation_type == ProviderOperationType.CLEANUP_MACHINE_RESOURCES:
+            return self._unsupported_machine_operation_result(
+                "cleanup_machine_resources",
+                "Azure VMSS/VM deletion already tears down the resources it owns "
+                "(disks, NICs); there is no separate per-machine cleanup step to run.",
+            )
+        elif operation.operation_type == ProviderOperationType.GET_MACHINE_HEALTH:
+            return self._unsupported_machine_operation_result(
+                "get_machine_health",
+                "Azure machine health is derived from check_hosts_status "
+                "(GET_INSTANCE_STATUS); there is no separate per-machine health check.",
+            )
         else:
             return ProviderResult.error_result(
                 f"Unsupported operation: {operation.operation_type}",
@@ -680,6 +801,56 @@ class AzureProviderStrategy(ProviderStrategy):
                 "TERMINATE_INSTANCES_ERROR",
                 exc,
             )
+
+    # ------------------------------------------------------------------
+    # START_INSTANCES / STOP_INSTANCES
+    # ------------------------------------------------------------------
+
+    async def _handle_start_instances(self, operation: ProviderOperation) -> ProviderResult:
+        """Power on stopped/deallocated machines."""
+        try:
+            return await self._power_operation_service.start_instances_async(operation)
+        except asyncio.CancelledError:
+            raise
+        except AzureValidationError as exc:
+            return self._error_result(str(exc), "START_INSTANCES_ERROR", exc)
+        except Exception as exc:
+            return self._error_result(
+                f"Failed to start instances: {exc!s}",
+                "START_INSTANCES_ERROR",
+                exc,
+            )
+
+    async def _handle_stop_instances(self, operation: ProviderOperation) -> ProviderResult:
+        """Power off running machines; deallocates (stops billing) by default."""
+        try:
+            return await self._power_operation_service.stop_instances_async(operation)
+        except asyncio.CancelledError:
+            raise
+        except AzureValidationError as exc:
+            return self._error_result(str(exc), "STOP_INSTANCES_ERROR", exc)
+        except Exception as exc:
+            return self._error_result(
+                f"Failed to stop instances: {exc!s}",
+                "STOP_INSTANCES_ERROR",
+                exc,
+            )
+
+    @staticmethod
+    def _unsupported_machine_operation_result(operation_name: str, reason: str) -> ProviderResult:
+        """Build the documented-unsupported response for a per-machine operation.
+
+        Used for operations AWS implements via a dedicated machine adapter
+        (volume/ENI cleanup, live EC2 health checks) that have no Azure
+        equivalent -- rather than silently no-op'ing, this returns a clear,
+        intentional error so callers do not mistake it for a transient
+        failure.
+        """
+        return ProviderResult.error_result(
+            f"{operation_name} is not supported by the Azure provider: {reason}",
+            f"{operation_name.upper()}_NOT_SUPPORTED",
+            {"operation": operation_name},
+        )
 
     # ------------------------------------------------------------------
     # GET_INSTANCE_STATUS

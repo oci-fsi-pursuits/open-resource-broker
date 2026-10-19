@@ -531,7 +531,7 @@ def _get_capacity(provider_api: str, resource_id: str) -> int:
         resp = asg_client.describe_auto_scaling_groups(AutoScalingGroupNames=[resource_id])
         asgs = resp.get("AutoScalingGroups") or [{}]
         return int(asgs[0].get("DesiredCapacity", 0))
-    pytest.fail(f"Unsupported provider API for capacity check: {provider_api}")
+    raise AssertionError(f"Unsupported provider API for capacity check: {provider_api}")
 
 
 def _wait_for_fleet_stable(resource_id: str, timeout: int = 300) -> None:
@@ -2137,6 +2137,7 @@ def test_partial_return_reduces_capacity(setup_host_factory_mock_with_scenario, 
             # Try graceful return first
             return_response = hfm.request_return_machines(remaining_ids)
             return_request_id = _extract_request_id(return_response)
+            log.info("3.2: Return request ID: %s", return_request_id)
 
             # Wait for graceful return with timeout
             log.info("3.2: Waiting for graceful return completion (timeout: 120s)")
@@ -2553,7 +2554,7 @@ def test_unknown_template_returns_error(setup_host_factory_mock):
 
 def test_requests_list_cli_shows_request_id(setup_host_factory_mock):
     """orb requests list output includes a request_id after request_machines."""
-    import subprocess  # nosec B404
+    import subprocess
     import sys as _sys
 
     hfm = setup_host_factory_mock
@@ -2561,7 +2562,7 @@ def test_requests_list_cli_shows_request_id(setup_host_factory_mock):
     request_id = res.get("requestId") or res.get("request_id") or ""
     assert request_id, f"No request_id in request_machines response: {res}"
 
-    proc = subprocess.run(  # nosec B603
+    proc = subprocess.run(
         [_sys.executable, "-m", "orb", "requests", "list"],
         capture_output=True,
         text=True,
