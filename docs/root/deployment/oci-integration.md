@@ -169,6 +169,23 @@ listed its members. This verifies cluster visibility; RDMA worker launch and
 RDMA/MPI performance were tested separately using workstation authentication.
 Actual Symphony registration remains a separate acceptance test.
 
+#### Post-upstream validation: 2026-10-19 UTC
+
+After integrating upstream main `3e211ec1`, runtime commit `085285bd` passed the
+live lifecycle gate from a separate checkout and freshly built core wheel on the
+Ubuntu 24.04/Python 3.12 broker. The virtual environment had no Azure `httpx`
+dependency, and the broker had no OCI profile file. Instance-principal auth
+acquired one `VM.Standard.E5.Flex` worker with 1 OCPU, 8 GB RAM, and a 100 GB boot
+disk, resolved its private IP, and returned it with `Decision: go`.
+
+OCI independently confirmed worker termination and no additional persistent boot
+volumes remained. ORB return succeeded without fallback or emergency termination.
+OCI Audit recorded successful `LaunchInstance` (200) and `TerminateInstance` (204)
+requests authenticated as the broker instance principal. The test's Bastion
+session was closed; the broker was retained for further manual validation.
+This validates the synchronized E5 lifecycle, not every catalog shape or workload
+bootstrap/Symphony registration.
+
 ## Authentication precedence
 
 OCI CLI auth selection order:
