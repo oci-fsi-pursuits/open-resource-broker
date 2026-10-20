@@ -186,6 +186,16 @@ session was closed; the broker was retained for further manual validation.
 This validates the synchronized E5 lifecycle, not every catalog shape or workload
 bootstrap/Symphony registration.
 
+#### Validation after command-execution fixes: 2026-10-20 UTC
+
+Runtime commit `7843c2a0` passed the same instance-principal E5 lifecycle gate
+after rebuilding and reinstalling the core wheel on the retained broker. The
+installed handler no longer contains pytest-dependent execution selection. One
+worker reached running state, returned its private IP/DNS, and was returned with
+`Decision: go`. OCI independently confirmed termination; no additional persistent
+boot volumes remained, and no fallback or emergency termination was needed.
+The broker remains available; the test's Bastion session was closed.
+
 ## Authentication precedence
 
 OCI CLI auth selection order:
