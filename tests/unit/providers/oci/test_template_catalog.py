@@ -168,7 +168,6 @@ def test_flex_sizing_aliases_become_canonical_cli_fields():
 async def test_invalid_dense_sizing_stops_before_live_cli():
     handler = OCIComputeHandler(MagicMock(), "us-phoenix-1")
     handler._oci_cli_available = True
-    handler._force_live_cli_for_tests = True
     handler._run_oci = MagicMock(side_effect=AssertionError("Invalid sizing reached OCI"))
     result = await handler.create_instances(
         ProviderOperation(

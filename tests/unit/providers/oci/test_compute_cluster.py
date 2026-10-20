@@ -98,7 +98,6 @@ def template():
 def make_handler():
     handler = OCIComputeHandler(MagicMock(), "us-phoenix-1")
     handler._oci_cli_available = True
-    handler._force_live_cli_for_tests = True
     return handler
 
 
@@ -246,7 +245,6 @@ async def test_rdma_dry_run_does_not_contact_oci(template):
 @pytest.mark.asyncio
 async def test_cli_global_dry_run_blocks_live_cli_without_pytest_or_operation_flags(template):
     handler = make_handler()
-    handler._is_test_context = MagicMock(return_value=False)
     handler._run_oci = MagicMock(side_effect=AssertionError("global dry run contacted OCI"))
     with dry_run_context():
         result = await handler.create_instances(

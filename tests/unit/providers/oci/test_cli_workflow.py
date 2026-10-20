@@ -21,9 +21,8 @@ def test_init_generate_list_with_oci_defaults(tmp_path, scheduler):
         "ORB_WORK_DIR": str(tmp_path / "work"),
         "ORB_LOG_DIR": str(tmp_path / "logs"),
     }
-    # Exercise production CLI mode: pytest's environment must not implicitly
-    # enable OCI mocks and conceal a missing --dry-run context check.
-    env.pop("PYTEST_CURRENT_TEST", None)
+    # Retain pytest's environment: only an explicit dry-run request may
+    # simulate OCI operations, including in a child CLI process.
     fake_bin = tmp_path / "fake-bin"
     fake_bin.mkdir()
     invoked = tmp_path / "unexpected-oci-call"

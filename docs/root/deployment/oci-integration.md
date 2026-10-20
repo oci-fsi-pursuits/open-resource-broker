@@ -270,7 +270,12 @@ selects the requested catalog entry and resolves its defaults before calling the
   precedence over provider defaults when the catalog is reloaded.
 - Dry-run operations never invoke the OCI CLI. Unit tests mock cloud responses;
   they do not establish that IAM, quotas, images, or network configuration work
-  in a particular tenancy.
+  in a particular tenancy. Test environment variables do not enable simulation;
+  mock workers require an explicit dry-run or mock request.
+- OCI command failures report the subcommand, exit code, and structured service
+  code/status when available. Command arguments, launch payloads, and raw CLI
+  output are omitted because they can contain bootstrap data or keys. Timeouts
+  and execution failures also omit the underlying command and output.
 - API-key configuration is forwarded via documented child-process
   [OCI CLI environment variables](https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/clienvironmentvariables.htm).
   NSGs are forwarded using the documented
@@ -323,7 +328,7 @@ Symphony worker registration; verify those separately before production use.
 - `...config/config.json not found`: confirm `ORB_CONFIG_DIR` points to your
   deployment directory and that its standard `config.json` exists. A custom
   filename alone can leave early discovery using defaults, even with `--config`.
-- `ocid1.instance...mock...` should only appear in explicit test/dry-run mode.
+- `ocid1.instance...mock...` should only appear in explicit mock/dry-run mode.
   In live mode, OCI launch failures are returned as provider errors.
 - auth, region, subnet/AD, or policy mismatches can surface as
   `NotAuthorizedOrNotFound` during OCI CLI verification.

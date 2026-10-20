@@ -23,6 +23,7 @@ def _make_strategy(initialized: bool = True) -> OCIProviderStrategy:
 async def test_create_instances_success() -> None:
     strategy = _make_strategy()
     operation = ProviderOperation(
+        context={"dry_run": True},
         operation_type=ProviderOperationType.CREATE_INSTANCES,
         parameters={
             "template_id": "tpl-oci",
@@ -75,6 +76,7 @@ async def test_create_instances_requires_oci_template_fields() -> None:
 async def test_create_instances_supports_nested_template_payload() -> None:
     strategy = _make_strategy()
     operation = ProviderOperation(
+        context={"dry_run": True},
         operation_type=ProviderOperationType.CREATE_INSTANCES,
         parameters={
             "count": 1,
@@ -99,6 +101,7 @@ async def test_create_instances_supports_nested_template_payload() -> None:
 async def test_create_instances_supports_template_config_payload() -> None:
     strategy = _make_strategy()
     operation = ProviderOperation(
+        context={"dry_run": True},
         operation_type=ProviderOperationType.CREATE_INSTANCES,
         parameters={
             "count": 1,
@@ -147,6 +150,7 @@ async def test_create_uses_serialized_config_when_domain_template_is_also_provid
 async def test_create_instances_supports_template_config_with_nested_configuration() -> None:
     strategy = _make_strategy()
     operation = ProviderOperation(
+        context={"dry_run": True},
         operation_type=ProviderOperationType.CREATE_INSTANCES,
         parameters={
             "count": 1,
@@ -176,6 +180,7 @@ async def test_create_instances_supports_template_config_with_nested_configurati
 async def test_create_instances_supports_flex_runtime_inputs_and_pricing() -> None:
     strategy = _make_strategy()
     operation = ProviderOperation(
+        context={"dry_run": True},
         operation_type=ProviderOperationType.CREATE_INSTANCES,
         parameters={
             "template_id": "tpl-oci-flex",
@@ -218,6 +223,7 @@ async def test_terminate_instances_requires_machine_ids() -> None:
 async def test_get_instance_status_success() -> None:
     strategy = _make_strategy()
     operation = ProviderOperation(
+        context={"dry_run": True},
         operation_type=ProviderOperationType.GET_INSTANCE_STATUS,
         parameters={"machine_ids": ["ocid1.instance.oc1..abc"]},
     )
@@ -255,7 +261,6 @@ async def test_create_instances_live_cli_path_parses_real_ocid() -> None:
     strategy = _make_strategy()
     handler = strategy._compute_handler
     handler._oci_cli_available = True
-    handler._force_live_cli_for_tests = True
     handler._run_oci = MagicMock(
         return_value={
             "data": {
@@ -292,7 +297,6 @@ async def test_create_instances_live_cli_uses_preemptible_flag() -> None:
     strategy = _make_strategy()
     handler = strategy._compute_handler
     handler._oci_cli_available = True
-    handler._force_live_cli_for_tests = True
 
     observed_args = []
 
@@ -337,7 +341,6 @@ async def test_create_instances_preemptible_fallback_to_ondemand() -> None:
     strategy = _make_strategy()
     handler = strategy._compute_handler
     handler._oci_cli_available = True
-    handler._force_live_cli_for_tests = True
 
     call_count = {"n": 0}
     observed_args = []
@@ -387,7 +390,6 @@ async def test_create_instances_cli_unavailable_outside_mock_returns_error() -> 
     strategy = _make_strategy()
     handler = strategy._compute_handler
     handler._oci_cli_available = False
-    handler._is_test_context = MagicMock(return_value=False)
 
     operation = ProviderOperation(
         operation_type=ProviderOperationType.CREATE_INSTANCES,
@@ -412,7 +414,6 @@ async def test_create_instances_live_launch_failure_returns_error_without_mock_i
     strategy = _make_strategy()
     handler = strategy._compute_handler
     handler._oci_cli_available = True
-    handler._force_live_cli_for_tests = True
     handler._run_oci = MagicMock(side_effect=RuntimeError("NotAuthorizedOrNotFound"))
 
     operation = ProviderOperation(
@@ -440,7 +441,6 @@ async def test_create_instances_preemptible_fallback_failure_returns_error() -> 
     strategy = _make_strategy()
     handler = strategy._compute_handler
     handler._oci_cli_available = True
-    handler._force_live_cli_for_tests = True
     handler._run_oci = MagicMock(side_effect=RuntimeError("capacity still unavailable"))
 
     operation = ProviderOperation(
@@ -470,7 +470,6 @@ async def test_get_instance_status_supports_instance_ids_live_cli() -> None:
     strategy = _make_strategy()
     handler = strategy._compute_handler
     handler._oci_cli_available = True
-    handler._force_live_cli_for_tests = True
     handler._run_oci = MagicMock(
         return_value={
             "data": {
@@ -496,7 +495,6 @@ async def test_terminate_instances_supports_instance_ids_live_cli() -> None:
     strategy = _make_strategy()
     handler = strategy._compute_handler
     handler._oci_cli_available = True
-    handler._force_live_cli_for_tests = True
     handler._run_oci = MagicMock(return_value={"data": {}})
 
     operation = ProviderOperation(
@@ -514,7 +512,6 @@ def test_terminate_instances_live_failure_returns_error() -> None:
     strategy = _make_strategy()
     handler = strategy._compute_handler
     handler._oci_cli_available = True
-    handler._force_live_cli_for_tests = True
     handler._run_oci = MagicMock(side_effect=RuntimeError("terminate denied"))
 
     operation = ProviderOperation(
@@ -532,7 +529,6 @@ def test_get_instance_status_live_failure_returns_error() -> None:
     strategy = _make_strategy()
     handler = strategy._compute_handler
     handler._oci_cli_available = True
-    handler._force_live_cli_for_tests = True
     handler._run_oci = MagicMock(side_effect=RuntimeError("status denied"))
 
     operation = ProviderOperation(
@@ -564,6 +560,7 @@ async def test_describe_resource_instances_requires_resource_ids() -> None:
 async def test_describe_resource_instances_success() -> None:
     strategy = _make_strategy()
     operation = ProviderOperation(
+        context={"dry_run": True},
         operation_type=ProviderOperationType.DESCRIBE_RESOURCE_INSTANCES,
         parameters={"resource_ids": ["ocid1.instancepool.oc1..pool1"]},
     )

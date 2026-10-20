@@ -12,7 +12,6 @@ from orb.providers.oci.handlers.oci_compute_handler import OCIComputeHandler
 def make_handler():
     handler = OCIComputeHandler(MagicMock(), "us-phoenix-1")
     handler._oci_cli_available = True
-    handler._force_live_cli_for_tests = True
     return handler
 
 

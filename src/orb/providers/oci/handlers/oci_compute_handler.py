@@ -1,12 +1,12 @@
-from __future__ import annotations
-
 """Provider-local OCI compute operation handler."""
 
+from __future__ import annotations
+
 import json
-import os
 import re
 import shutil
 import subprocess
+from collections.abc import Callable
 from typing import Any
 from uuid import uuid4
 
@@ -29,18 +29,16 @@ class OCIComputeHandler:
         profile: str | None = None,
         credential_source: str | None = None,
         auth_config: dict[str, Any] | None = None,
+        *,
+        run_command: Callable[..., subprocess.CompletedProcess[str]] | None = None,
     ) -> None:
         self._logger = logger
         self._region = region
         self._profile = profile
         self._credential_source = credential_source
         self._auth_config = auth_config or {}
-        self._oci_cli_available = shutil.which("oci") is not None
-        self._force_live_cli_for_tests = False
-
-    @staticmethod
-    def _is_test_context() -> bool:
-        return bool(os.environ.get("PYTEST_CURRENT_TEST"))
+        self._run_command = run_command if run_command is not None else subprocess.run
+        self._oci_cli_available = run_command is not None or shutil.which("oci") is not None
 
     def _use_live_cli(self, operation: ProviderOperation | None = None) -> bool:
         if is_dry_run_active():
@@ -49,15 +47,11 @@ class OCIComputeHandler:
             (operation.context or {}).get(key) for key in ("dry_run", "mock", "allow_mock")
         ):
             return False
-        if not self._oci_cli_available:
-            return False
-        if self._force_live_cli_for_tests:
-            return True
-        return not self._is_test_context()
+        return self._oci_cli_available
 
     def _use_mock_mode(self, operation: ProviderOperation) -> bool:
         context = operation.context or {}
-        return self._is_test_context() or bool(
+        return bool(
             is_dry_run_active()
             or context.get("dry_run")
             or context.get("mock")
@@ -93,25 +87,58 @@ class OCIComputeHandler:
         if payload is not None:
             cmd.extend(["--from-json", json.dumps(payload)])
 
-        # Internal OCI subcommands use an argv list; values are not shell code.
-        completed = subprocess.run(  # noqa: S603
-            cmd,
-            capture_output=True,
-            text=True,
-            check=False,
-            env=build_oci_cli_env(self._auth_config),
-            timeout=120,
+        # Only internal subcommand names identify the operation in diagnostics.
+        # Arguments, CLI output, and exception text can contain bootstrap data.
+        operation = " ".join(
+            args[: next((i for i, arg in enumerate(args) if arg.startswith("--")), len(args))]
         )
+        try:
+            completed = self._run_command(
+                cmd,
+                capture_output=True,
+                text=True,
+                check=False,
+                env=build_oci_cli_env(self._auth_config),
+                timeout=120,
+            )
+        except subprocess.TimeoutExpired:
+            raise RuntimeError(f"OCI CLI timed out during {operation} (120 seconds)") from None
+        except (OSError, subprocess.SubprocessError):
+            raise RuntimeError(f"OCI CLI could not execute {operation}") from None
         if completed.returncode != 0:
+            details = self._service_error_summary(completed.stderr)
             raise RuntimeError(
-                f"OCI CLI command failed ({completed.returncode}): {' '.join(cmd)}\n"
-                f"STDOUT: {completed.stdout.strip()}\nSTDERR: {completed.stderr.strip()}"
+                f"OCI CLI command failed ({completed.returncode}) during {operation}{details}"
             )
 
         raw = completed.stdout.strip()
         if not raw:
             return {}
-        return json.loads(raw)
+        try:
+            return json.loads(raw)
+        except json.JSONDecodeError:
+            raise RuntimeError(f"OCI CLI returned invalid JSON during {operation}") from None
+
+    @staticmethod
+    def _service_error_summary(stderr: str) -> str:
+        """Keep structured service codes/statuses, never free-form error messages."""
+        raw = stderr.strip()
+        if raw.startswith("ServiceError:"):
+            raw = raw[len("ServiceError:") :].strip()
+        try:
+            error = json.loads(raw)
+        except (ValueError, TypeError):
+            return ""
+        if not isinstance(error, dict):
+            return ""
+        details = []
+        code = error.get("code")
+        if isinstance(code, str) and re.fullmatch(r"[A-Za-z][A-Za-z0-9_.-]{0,79}", code):
+            details.append(f"code={code}")
+        status = error.get("status")
+        if isinstance(status, int) and 100 <= status <= 599:
+            details.append(f"status={status}")
+        return ": " + ", ".join(details) if details else ""
 
     def _resolve_availability_domain(
         self,
@@ -385,9 +412,7 @@ class OCIComputeHandler:
                     data = launch_result.get("data", {})
                     instance_id = data.get("id")
                     if not instance_id:
-                        raise RuntimeError(
-                            f"OCI launch response missing instance ID: {launch_result}"
-                        )
+                        raise RuntimeError("OCI launch response missing instance ID")
                     instance_ids.append(instance_id)
                     effective_capacity_types.append(effective_capacity_type)
                     instances.append(
@@ -453,7 +478,7 @@ class OCIComputeHandler:
                     },
                 )
         elif self._use_mock_mode(operation):
-            # Explicit test/dry-run fallback only. Production live failures must surface.
+            # Only explicit mock/dry-run requests simulate workers.
             instance_ids = [f"ocid1.instance.oc1..mock{idx + 1}" for idx in range(requested)]
             instances = [
                 {

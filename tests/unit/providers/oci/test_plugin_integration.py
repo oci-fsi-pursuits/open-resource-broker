@@ -127,7 +127,6 @@ async def test_dry_run_never_invokes_installed_cli():
     strategy = create_oci_strategy({"credential_source": "instance_principal"})
     handler = strategy._compute_handler
     handler._oci_cli_available = True
-    handler._force_live_cli_for_tests = True
     handler._run_oci = MagicMock(side_effect=AssertionError("dry run invoked OCI"))
     result = await strategy.execute_operation(
         ProviderOperation(
@@ -154,7 +153,6 @@ async def test_live_launch_remains_pending_until_polled():
     strategy = create_oci_strategy({"credential_source": "instance_principal"})
     handler = strategy._compute_handler
     handler._oci_cli_available = True
-    handler._force_live_cli_for_tests = True
     handler._run_oci = MagicMock(
         return_value={"data": {"id": "ocid1.instance.oc1..test", "lifecycle-state": "PROVISIONING"}}
     )
