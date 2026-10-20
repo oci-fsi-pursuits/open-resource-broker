@@ -196,6 +196,14 @@ worker reached running state, returned its private IP/DNS, and was returned with
 boot volumes remained, and no fallback or emergency termination was needed.
 The broker remains available; the test's Bastion session was closed.
 
+The remaining original review items were reconciled in runtime `1d85d40b`,
+including nonblocking compute dispatch, ordinary-batch rollback, API-key path
+checks, and removal of the unused payload builder. A rebuilt/reinstalled wheel
+passed another instance-principal E5 lifecycle gate on 2026-10-20 UTC. Worker
+termination and boot-volume cleanup were independently checked, with no fallback
+or emergency termination. The 592-test OCI/shared-provider regression selection
+and two additional fresh-wheel CLI workflows passed.
+
 ## Authentication precedence
 
 OCI CLI auth selection order:
