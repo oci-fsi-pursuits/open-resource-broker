@@ -115,9 +115,6 @@ def test_compute_cluster_survives_nested_template_and_dto(template):
         assert payload["agent_config"] == template["agent_config"]
         assert payload["shape"] == "BM.Optimized3.36"
         assert "shape_config" not in payload
-        assert (
-            OCIComputeHandler._build_launch_cli_payload(payload)["computeClusterId"] == cluster_id
-        )
     finally:
         OCIPlugin.reset_for_testing()
 
@@ -323,7 +320,7 @@ def test_return_does_not_delete_shared_compute_cluster():
 
 @pytest.mark.parametrize("cluster_mode", [True, False])
 @pytest.mark.asyncio
-async def test_partial_cluster_launch_rolls_back_only_its_accepted_nodes(template, cluster_mode):
+async def test_partial_launch_rolls_back_only_its_accepted_nodes(template, cluster_mode):
     if not cluster_mode:
         template.pop("compute_cluster_id")
     handler = make_handler()
@@ -364,7 +361,7 @@ async def test_partial_cluster_launch_rolls_back_only_its_accepted_nodes(templat
     )
     assert not result.success
     assert result.metadata["launched_instance_ids"] == ["accepted-node"]
-    assert rollback == (["accepted-node"] if cluster_mode else [])
+    assert rollback == ["accepted-node"]
     assert result.metadata["rollback_requested_instance_ids"] == rollback
     assert result.metadata["rollback_errors"] == []
 

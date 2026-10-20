@@ -275,6 +275,10 @@ selects the requested catalog entry and resolves its defaults before calling the
 - Live launch results require asynchronous polling. Status and resource discovery
   return ORB's flat instance-list format, normalized machine states, and the
   `ProviderFulfilment` verdict required by the current request state machine.
+- OCI compute operations run in worker threads so CLI execution does not block
+  the async request loop. The broker's dry-run mode is preserved across threads.
+- Explicit API-key paths expand user/environment shorthand and relative paths.
+  Credential validation rejects paths that do not identify an existing file.
 - Template create/update uses the registered provider extension before saving.
   OCI fields round-trip through `provider_config`; explicit saved fields take
   precedence over provider defaults when the catalog is reloaded.

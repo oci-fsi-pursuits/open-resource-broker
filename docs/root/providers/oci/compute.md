@@ -173,10 +173,10 @@ termination. It leaves a shared compute cluster intact. Normal returns use OCI
 CLI termination defaults; verify boot-volume cleanup independently. The live
 canaries confirmed boot disks were removed.
 
-After a partial compute-cluster launch failure, ORB requests rollback of accepted
+After a partial batch launch failure, ORB requests rollback of accepted
 workers whose IDs it received. A lost response may require tag-based recovery;
-see [RDMA cleanup](compute-clusters.md#configure-the-template). Ordinary instance
-batches do not have the cluster-specific rollback safeguard. Additional block
+see [RDMA cleanup](compute-clusters.md#configure-the-template). This applies to
+ordinary instance batches and compute-cluster batches. Additional block
 volumes, networks, and application data are not managed by this handler.
 
 ## IAM permissions

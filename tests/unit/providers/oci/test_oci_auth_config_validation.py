@@ -2,8 +2,45 @@
 
 from unittest.mock import MagicMock
 
+import pytest
+
 from orb.providers.oci.configuration.config import OCIProviderConfig
 from orb.providers.oci.strategy.oci_provider_strategy import OCIProviderStrategy
+
+
+@pytest.mark.parametrize("value", ["~/oci-key.pem", "$OCI_TEST_KEY_DIR/oci-key.pem", "oci-key.pem"])
+def test_api_key_path_expands_user_environment_and_relative_paths(tmp_path, monkeypatch, value):
+    import os
+
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv("USERPROFILE", str(tmp_path))
+    monkeypatch.setenv("OCI_TEST_KEY_DIR", str(tmp_path))
+    monkeypatch.chdir(tmp_path)
+    key = tmp_path / "oci-key.pem"
+    key.write_text("synthetic key fixture")
+    config = OCIProviderConfig(
+        credential_source="api_key",
+        tenancy_ocid="tenancy",
+        user_ocid="user",
+        fingerprint="fingerprint",
+        private_key_path=value,
+    )
+    assert config.private_key_path == os.path.normpath(str(key))
+    assert config.validate_auth_configuration()[0]
+
+
+@pytest.mark.parametrize("directory", [True, False])
+def test_api_key_path_requires_existing_file(tmp_path, directory):
+    key = tmp_path if directory else tmp_path / "missing.pem"
+    result = OCIProviderStrategy.test_credentials(
+        "api_key",
+        tenancy_ocid="tenancy",
+        user_ocid="user",
+        fingerprint="fingerprint",
+        private_key_path=str(key),
+    )
+    assert not result["success"]
+    assert result["missing_fields"] == ["private_key_path"]
 
 
 def test_session_auth_accepts_named_profile_without_api_key_fields() -> None:
@@ -43,15 +80,17 @@ def test_config_validation_succeeds_with_default_oci_cli_credentials() -> None:
     assert "default oci cli" in message.lower()
 
 
-def test_config_validation_succeeds_for_api_key_source_when_complete() -> None:
+def test_config_validation_succeeds_for_api_key_source_when_complete(tmp_path) -> None:
     config = OCIProviderConfig(region="us-phoenix-1")
+    key = tmp_path / "key.pem"
+    key.write_text("synthetic key fixture")
 
     is_valid, _, missing, source = config.validate_auth_configuration(
         credential_source="api_key",
         tenancy_ocid="ocid1.tenancy.oc1..abc",
         user_ocid="ocid1.user.oc1..abc",
         fingerprint="aa:bb:cc",
-        private_key_path="/tmp/key.pem",
+        private_key_path=str(key),
     )
 
     assert is_valid is True

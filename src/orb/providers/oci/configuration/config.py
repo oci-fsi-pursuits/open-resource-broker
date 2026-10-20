@@ -1,8 +1,9 @@
 """OCI provider configuration."""
 
+import os
 from typing import Any, Optional
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from orb.infrastructure.interfaces.provider import BaseProviderConfig
@@ -36,6 +37,14 @@ class OCIProviderConfig(BaseSettings, BaseProviderConfig):  # type: ignore[misc]
         default=None, description="OCI API key private key path"
     )
 
+    @field_validator("private_key_path", mode="before")
+    @classmethod
+    def normalize_private_key_path(cls, value: Any) -> str | None:
+        """Resolve user/environment shorthand consistently before invoking OCI CLI."""
+        if value is None or not str(value).strip():
+            return None
+        return os.path.abspath(os.path.expandvars(os.path.expanduser(str(value).strip())))
+
     def validate_auth_configuration(
         self, credential_source: Optional[str] = None, **overrides: Any
     ) -> tuple[bool, str, list[str], str]:
@@ -67,6 +76,15 @@ class OCIProviderConfig(BaseSettings, BaseProviderConfig):  # type: ignore[misc]
             missing = [field for field in api_key_fields if not effective.get(field)]
             if missing:
                 return False, "Missing required OCI API key fields", missing, source
+            if not os.path.isfile(
+                self.normalize_private_key_path(effective["private_key_path"]) or ""
+            ):
+                return (
+                    False,
+                    "OCI API private key must be an existing file",
+                    ["private_key_path"],
+                    source,
+                )
             return True, "OCI API key configuration is valid", [], source
 
         if source not in {"default", "profile"}:
@@ -85,5 +103,12 @@ class OCIProviderConfig(BaseSettings, BaseProviderConfig):  # type: ignore[misc]
                 "No usable OCI auth configuration found (profile or complete api_key fields required)",
                 missing,
                 "default",
+            )
+        if not os.path.isfile(self.normalize_private_key_path(effective["private_key_path"]) or ""):
+            return (
+                False,
+                "OCI API private key must be an existing file",
+                ["private_key_path"],
+                "api_key",
             )
         return True, "OCI API key configuration is valid", [], "api_key"

@@ -14,6 +14,7 @@ from orb.domain.base.ports import LoggingPort
 from orb.domain.base.provider_fulfilment import FulfilmentState, ProviderFulfilment
 from orb.infrastructure.mocking.dry_run_context import is_dry_run_active
 from orb.providers.base.strategy import ProviderOperation, ProviderResult
+from orb.providers.oci.async_utils import run_blocking_operation
 from orb.providers.oci.mapping import OCITemplateMapper
 from orb.providers.oci.oci_cli_auth import build_oci_cli_env, build_oci_cli_extra_args
 from orb.providers.oci.services import OCIPricingService
@@ -296,40 +297,10 @@ class OCIComputeHandler:
 
         return self._run_oci(args, region_override=inferred_region)
 
-    @staticmethod
-    def _build_launch_cli_payload(launch_payload: dict[str, Any]) -> dict[str, Any]:
-        vnic = launch_payload.get("create_vnic_details", {})
-        source = launch_payload.get("source_details", {})
-
-        payload: dict[str, Any] = {
-            "displayName": launch_payload.get("display_name"),
-            "compartmentId": launch_payload.get("compartment_id"),
-            "shape": launch_payload.get("shape"),
-            "createVnicDetails": {
-                "subnetId": vnic.get("subnet_id"),
-            },
-            "sourceDetails": {
-                "sourceType": source.get("source_type", "image"),
-                "imageId": source.get("image_id"),
-            },
-        }
-        if launch_payload.get("availability_domain"):
-            payload["availabilityDomain"] = launch_payload.get("availability_domain")
-        if launch_payload.get("compute_cluster_id"):
-            payload["computeClusterId"] = launch_payload["compute_cluster_id"]
-        if launch_payload.get("agent_config"):
-            payload["agentConfig"] = launch_payload["agent_config"]
-        if isinstance(vnic.get("nsg_ids"), list) and vnic.get("nsg_ids"):
-            payload["createVnicDetails"]["nsgIds"] = vnic["nsg_ids"]
-        if isinstance(launch_payload.get("metadata"), dict) and launch_payload.get("metadata"):
-            payload["metadata"] = launch_payload["metadata"]
-        if isinstance(launch_payload.get("freeform_tags"), dict) and launch_payload.get(
-            "freeform_tags"
-        ):
-            payload["freeformTags"] = launch_payload["freeform_tags"]
-        return payload
-
     async def create_instances(self, operation: ProviderOperation) -> ProviderResult:
+        return await run_blocking_operation(self._create_instances, operation)
+
+    def _create_instances(self, operation: ProviderOperation) -> ProviderResult:
         params = operation.parameters or {}
         template_data = (
             params.get("template_config")
@@ -366,8 +337,7 @@ class OCIComputeHandler:
             for idx in range(requested)
         ]
         for launch_request in launch_requests:
-            if launch_request.get("compute_cluster_id"):
-                launch_request["freeform_tags"]["orb_request_id"] = request_id
+            launch_request["freeform_tags"]["orb_request_id"] = request_id
 
         instance_ids: list[str] = []
         instances: list[dict[str, Any]] = []
@@ -440,29 +410,28 @@ class OCIComputeHandler:
                 self._logger.error("OCI live launch failed for template %s: %s", template_id, exc)
                 rollback_ids: list[str] = []
                 rollback_errors: list[dict[str, str]] = []
-                if normalized_template.get("compute_cluster_id"):
-                    for instance_id in instance_ids:
-                        try:
-                            self._run_oci(
-                                [
-                                    "compute",
-                                    "instance",
-                                    "terminate",
-                                    "--instance-id",
-                                    instance_id,
-                                    "--preserve-boot-volume",
-                                    "false",
-                                    "--force",
-                                ]
-                            )
-                            rollback_ids.append(instance_id)
-                        except Exception as rollback_exc:
-                            rollback_errors.append(
-                                {"instance_id": instance_id, "error": str(rollback_exc)}
-                            )
-                            self._logger.error(
-                                "OCI cluster rollback failed for %s: %s", instance_id, rollback_exc
-                            )
+                for instance_id in instance_ids:
+                    try:
+                        self._run_oci(
+                            [
+                                "compute",
+                                "instance",
+                                "terminate",
+                                "--instance-id",
+                                instance_id,
+                                "--preserve-boot-volume",
+                                "false",
+                                "--force",
+                            ]
+                        )
+                        rollback_ids.append(instance_id)
+                    except Exception as rollback_exc:
+                        rollback_errors.append(
+                            {"instance_id": instance_id, "error": str(rollback_exc)}
+                        )
+                        self._logger.error(
+                            "OCI launch rollback failed for %s: %s", instance_id, rollback_exc
+                        )
                 return ProviderResult.error_result(
                     f"OCI live launch failed: {exc}",
                     "OCI_LAUNCH_FAILED",
@@ -764,10 +733,11 @@ class OCIComputeHandler:
                 "MISSING_RESOURCE_IDS",
             )
 
-        return self.get_instance_status(
+        return await run_blocking_operation(
+            self.get_instance_status,
             ProviderOperation(
                 operation_type=operation.operation_type,
                 parameters={**params, "instance_ids": resource_ids},
                 context=operation.context,
-            )
+            ),
         )

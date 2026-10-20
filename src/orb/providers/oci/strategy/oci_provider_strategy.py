@@ -20,6 +20,7 @@ from orb.providers.base.strategy import (
     ProviderResult,
     ProviderStrategy,
 )
+from orb.providers.oci.async_utils import run_blocking_operation
 from orb.providers.oci.configuration.config import OCIProviderConfig
 from orb.providers.oci.handlers import OCIComputeHandler
 from orb.providers.oci.mapping import OCITemplateMapper
@@ -116,9 +117,13 @@ class OCIProviderStrategy(ProviderStrategy):
         if operation.operation_type == ProviderOperationType.CREATE_INSTANCES:
             return await self._compute_handler.create_instances(operation)
         if operation.operation_type == ProviderOperationType.TERMINATE_INSTANCES:
-            return self._compute_handler.terminate_instances(operation)
+            return await run_blocking_operation(
+                self._compute_handler.terminate_instances, operation
+            )
         if operation.operation_type == ProviderOperationType.GET_INSTANCE_STATUS:
-            return self._compute_handler.get_instance_status(operation)
+            return await run_blocking_operation(
+                self._compute_handler.get_instance_status, operation
+            )
         if operation.operation_type == ProviderOperationType.DESCRIBE_RESOURCE_INSTANCES:
             return await self._compute_handler.describe_resource_instances(operation)
 
