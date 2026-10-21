@@ -40,6 +40,7 @@ def create_oci_strategy(provider_config: Any) -> Any:
             provider_name = None
         elif hasattr(provider_config, "config"):
             provider_instance_config = provider_config
+            # getattr: config wrappers expose settings but may omit an instance name.
             provider_name = getattr(provider_config, "name", None)
             oci_config = OCIProviderConfig(**_extract_oci_provider_settings(provider_config))
         else:

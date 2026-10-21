@@ -683,6 +683,7 @@ class OCIComputeHandler:
             )
         target = params.get("requested_count")
         if target is None:
+            # getattr: direct status calls omit the optional request aggregate.
             target = getattr(params.get("request"), "requested_count", len(machine_ids))
         running = sum(instance["status"] == "running" for instance in instances)
         failed = sum(
@@ -703,7 +704,9 @@ class OCIComputeHandler:
             pending_count=pending,
             failed_count=failed,
         )
+        # getattr: the request is optional for direct instance/resource lookups.
         request_type = getattr(params.get("request"), "request_type", None)
+        # getattr: request adapters may supply either the enum or its string value.
         if getattr(request_type, "value", request_type) == "return":
             terminated = sum(instance["status"] == "terminated" for instance in instances)
             fulfilment = ProviderFulfilment(

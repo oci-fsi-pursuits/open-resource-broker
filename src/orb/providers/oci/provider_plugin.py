@@ -10,6 +10,9 @@ class OCIPlugin(ProviderPlugin):
 
     provider_name = "oci"
 
+    def display_name(self) -> str:
+        return "Oracle Cloud Infrastructure (OCI)"
+
     def strategy_factory(self) -> Any:
         from orb.providers.oci.registration import create_oci_strategy
 
