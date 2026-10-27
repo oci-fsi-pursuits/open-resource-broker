@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=80.9.0", "wheel"]
+requires = ["setuptools>=84.1.0", "wheel>=0.41.3"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "orb-py"
-version = "1.8.5"
+version = "1.9.1"
 description = "Open Resource Broker (ORB) — dynamic cloud resource provisioning via CLI and REST API"
 readme = "README.md"
 license = "Apache-2.0"
@@ -96,7 +96,7 @@ aws = [
 # Only the SDK client is required here; everything else (jinja2, watchdog,
 # alembic etc.) is legacy-plugin baggage and stays in the [k8s-legacy] extra.
 k8s = [
-    "kubernetes",
+    "kubernetes>=36.0.0",
 ]
 
 # Azure provider runtime dependencies. Install with:
@@ -132,19 +132,19 @@ all-providers = [
 # Legacy k8s HostFactory plugin — heavy deps gated behind optional extra.
 # Install with: pip install orb-py[k8s-legacy]
 k8s-legacy = [
-    "kubernetes",
+    "kubernetes>=36.0.0",
     "boto3>=1.42.21",
     "jinja2>=3.1.0",
-    "typing-extensions",
-    "watchdog",
+    "typing-extensions>=4.0.0",
+    "watchdog>=6.0.0",
     "rich>=13.3.0",
     "pydantic>=2.0.0",
     "pydantic-settings>=2.0.0",
-    "tenacity",
+    "tenacity>=9.0.0",
     "prometheus-client>=0.17.0",
     "sqlalchemy>=2.0.0",
-    "pg8000",
-    "alembic",
+    "pg8000>=1.31.0",
+    "alembic>=1.13",
     "fastapi>=0.128.0",
     "uvicorn>=0.24.0",
 ]
@@ -282,7 +282,7 @@ dev = [
     "pyright>=1.1.408,<2.0.0",
     "types-PyYAML>=6.0.12.12,<7.0.0",
     "types-python-dateutil>=2.8.19.14,<3.0.0",
-    "kubernetes-stubs-elephant-fork>=36.0.2,<37.0.0",
+    "kubernetes-stubs-elephant-fork>=37.0.1",
     "tomli>=2.0.0,<3.0.0",
     # --- toolchain from dependency-groups.arch ---
     "import-linter>=2.0,<3.0.0",
@@ -309,9 +309,9 @@ dev = [
     # CVE-2026-78677, CVE-2026-78678, CVE-2026-78679, CVE-2026-87817,
     # CVE-2026-87819, GHSA-jm78-9fvv-mhgr (high), GHSA-59cr-6r3x-644w (medium)
     "gitpython>=3.1.62",
-    "watchdog",
-    "tenacity",
-    "pg8000",
+    "watchdog>=6.0.0",
+    "tenacity>=9.0.0",
+    "pg8000>=1.31.0",
     "kmock>=0.7",
     # --- toolchain from dependency-groups.docs ---
     "mkdocs>=1.5.0,<2.0.0",
@@ -331,7 +331,7 @@ dev = [
     # --- inlined from dependency-groups.build ---
     "build>=1.0.3,<2.0.0",
     "wheel>=0.41.3,<1.0.0",
-    "setuptools>=80.9.0",
+    "setuptools>=84.1.0",
     # --- dev-only tools (not in any CI group) ---
     # Security: Fix CVE-2024-53899 (command injection), CVE-2026-102925,
     # CVE-2026-102930, CVE-2026-102937, CVE-2026-102938
@@ -391,7 +391,7 @@ typecheck = [
     # Type stubs (augment the runtime packages above)
     "types-PyYAML>=6.0.12.12,<7.0.0",
     "types-python-dateutil>=2.8.19.14,<3.0.0",
-    "kubernetes-stubs-elephant-fork>=36.0.2,<37.0.0",
+    "kubernetes-stubs-elephant-fork>=37.0.1",
     # For pyproject.toml parsing in dev scripts (Python < 3.11)
     "tomli>=2.0.0,<3.0.0",
 ]
@@ -436,10 +436,10 @@ test = [
     # CVE-2026-87819, GHSA-jm78-9fvv-mhgr (high), GHSA-59cr-6r3x-644w (medium)
     "gitpython>=3.1.62",
     # k8s-legacy extra deps — required for tests/integration/k8s_legacy/
-    "kubernetes",
-    "watchdog",
-    "tenacity",
-    "pg8000",
+    "kubernetes>=36.0.0",
+    "watchdog>=6.0.0",
+    "tenacity>=9.0.0",
+    "pg8000>=1.31.0",
     "uvicorn>=0.24.0",
     "prometheus-client>=0.17.0",
     "alembic>=1.13",
@@ -483,7 +483,7 @@ build = [
     # Matches [build-system].requires: python -m build --no-isolation (used
     # by build.sh) reuses this environment's packages for the build backend
     # instead of provisioning its own, so setuptools must be present here too.
-    "setuptools>=80.9.0",
+    "setuptools>=84.1.0",
 ]
 
 # --- umbrella groups (preserve --all-groups / local dev-install behaviour) ---

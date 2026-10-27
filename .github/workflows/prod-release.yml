@@ -318,7 +318,7 @@ jobs:
         trivyignores: .trivyignore.yaml
 
     - name: Upload Trivy scan results
-      uses: github/codeql-action/upload-sarif@24c54180a607b1449ed407dd24f251e4e9147c8d  # v4.38.3
+      uses: github/codeql-action/upload-sarif@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee  # v4.39.0
       if: always()
       with:
         sarif_file: 'trivy-results-py${{ matrix.python-version }}.sarif'
@@ -488,7 +488,7 @@ jobs:
         path: dist/
 
     - name: Publish to PyPI
-      uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33  # release/v1
+      uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086  # release/v1
       with:
         print-hash: true
         verbose: true
@@ -671,9 +671,9 @@ jobs:
   #   reusable-sdk-publish.yml creates and pushes this tag (make sdk-go-tag) on
   #   the release channel, pointing at the vX.Y.Z release commit, whose contents
   #   already include the bumped sdk/go/orb/version.go (stamped in the
-  #   semantic-release build hook).  It authenticates with the ORB CICD App token
-  #   because the tag push targets a possibly branch-protected ref.  This used to
-  #   be the "Tag Go SDK module" step in semantic-release.yml.
+  #   semantic-release build hook).  It pushes the tag with GITHUB_TOKEN
+  #   (contents: write); tag refs are not covered by the branch rulesets on main.
+  #   This used to be the "Tag Go SDK module" step in semantic-release.yml.
   # ---------------------------------------------------------------------------
 
   # Gate the SDK publish caller on a passing static spec-conformance check for
@@ -791,7 +791,7 @@ jobs:
         node-version: '24'
 
     - name: Set up Java (Corretto 17)
-      uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6  # v6.0.1
+      uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad  # v6.1.0
       with:
         java-version: '17'
         distribution: 'corretto'
