@@ -10,6 +10,8 @@ ARG PYTHON_VERSION=3.13
 ARG PACKAGE_NAME_SHORT=orb
 
 # Apply all available security patches and upgrade Python toolchain
+# Unpinned: Debian drops superseded package versions, so exact pins break builds.
+# hadolint ignore=DL3008
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
@@ -56,7 +58,7 @@ RUN mkdir -p /app/logs /app/data /app/tmp
 # urllib3, msgpack); those copies are not reachable at runtime but still
 # show up as vulnerable packages in image scans, so dropping pip removes
 # them entirely instead of just patching the top-level entries.
-RUN pip install --no-cache-dir uv==0.13.4 \
+RUN pip install --no-cache-dir uv==0.13.6 \
     && uv venv /opt/venv \
     && rm -rf /usr/local/lib/python*/ensurepip \
         /usr/local/lib/python*/site-packages/pip \
