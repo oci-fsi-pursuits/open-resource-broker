@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "profiles": {
+    "oci-234": {
+      "prefixes": ["src/orb/providers/oci/", "tests/providers/oci/", "docs/root/providers/oci/"],
+      "paths": [
+        "config/oci_config.local.example.json", "config/oci_config.remote.example.json",
+        "docs/root/deployment/oci-integration.md", "docs/root/deployment/cloud_platforms.md",
+        "docs/root/deployment/iam-permissions.md", "docs/root/deployment/readme.md",
+        "docs/root/cli/multi-provider-templates.md", "docs/root/hostfactory/supported-apis.md",
+        "docs/mkdocs.yml", "README.md", "pyproject.toml", "uv.lock",
+        ".github/ISSUE_TEMPLATE/bug_report.yml", ".github/ISSUE_TEMPLATE/feature_request.yml",
+        ".github/labels.yml"
+      ],
+      "content_review": "Shared metadata and documentation changes must only integrate OCI. Path approval does not approve arbitrary content."
+    },
+    "oci-capacity": {
+      "prefixes": ["src/orb/providers/oci/", "tests/providers/oci/"],
+      "paths": [],
+      "content_review": "OCI sizing calculations and focused tests only. Shared HostFactory integration is a separate PR."
+    },
+    "azure-588": {
+      "prefixes": [],
+      "paths": [
+        "src/orb/providers/azure/infrastructure/services/spot_placement_score_adapter.py",
+        "tests/providers/azure/test_azure_strategy.py",
+        "tests/providers/azure/test_optional_transport.py"
+      ],
+      "content_review": "Optional Azure transport import fix and its regression coverage only."
+    },
+    "packaging-589": {
+      "prefixes": [],
+      "paths": [".dockerignore", "Dockerfile", "MANIFEST.in"],
+      "content_review": "Portable release inputs and writable runtime directories only."
+    },
+    "fork-tooling": {
+      "prefixes": [],
+      "paths": [
+        "AGENTS.md", ".agents/skills/orb-provider-review/SKILL.md",
+        ".agents/skills/orb-provider-review/agents/openai.yaml",
+        ".agents/skills/orb-provider-review/scripts/check_scope.py",
+        ".agents/skills/orb-provider-review/references/scope-policy.json",
+        ".agents/skills/orb-provider-review/tests/test_scope.py"
+      ],
+      "content_review": "Fork-only safeguards. Keep this branch and these files out of upstream feature PRs."
+    }
+  }
+}

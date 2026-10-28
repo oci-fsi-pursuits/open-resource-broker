@@ -1,0 +1,4 @@
+interface:
+  display_name: "ORB Provider Review"
+  short_description: "Review ORB provider changes against PR scope"
+  default_prompt: "Use $orb-provider-review to review this ORB change before editing or publishing."
