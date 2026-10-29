@@ -1,0 +1,1376 @@
+{
+  "version": 1,
+  "as_of": "2026-10-28",
+  "source": {
+    "title": "OCI Implementation Gap Assessment",
+    "date": "2026-10-27"
+  },
+  "baselines": {
+    "main": "2a7724796318d85eb171f50ad2f2bbba886187ec",
+    "oci": "21b3bd05878850c3ee2adca62d83ea56ddfd0748",
+    "capacity_helper": "1befd18bc567e29e9c8cfd7edc93ef4315a85233"
+  },
+  "external_dependencies": [
+    {
+      "id": "EXT-OCI234",
+      "url": "https://github.com/finos/open-resource-broker/pull/234",
+      "state": "open"
+    },
+    {
+      "id": "EXT-AZURE588",
+      "url": "https://github.com/finos/open-resource-broker/pull/588",
+      "state": "open"
+    },
+    {
+      "id": "EXT-PACKAGING589",
+      "url": "https://github.com/finos/open-resource-broker/pull/589",
+      "state": "open"
+    },
+    {
+      "id": "EXT-RELEASE622",
+      "url": "https://github.com/finos/open-resource-broker/issues/622",
+      "state": "tracking"
+    }
+  ],
+  "branches": {
+    "codex/hostfactory-template-attributes": {
+      "base_ref": "upstream/main",
+      "scope": "shared",
+      "existing": true,
+      "state": "starter",
+      "description": "Generic explicit-attribute preservation and optional resolved-template derivation."
+    },
+    "codex/oci-capacity-helper": {
+      "base_ref": "pr/oci-provider-scoped",
+      "scope": "provider",
+      "existing": true,
+      "state": "implemented",
+      "description": "Implemented hardware facts and tests; not connected to HostFactory."
+    },
+    "codex/oci-hostfactory-capacity": {
+      "base_ref": "codex/oci-capacity-helper",
+      "scope": "provider",
+      "existing": true,
+      "state": "starter",
+      "description": "OCI consumer of the accepted generic attribute extension and hardware helper."
+    },
+    "codex/oci-launch-preflight": {
+      "base_ref": "pr/oci-provider-scoped",
+      "scope": "provider",
+      "existing": true,
+      "state": "starter",
+      "description": "CLI-based image, subnet, shape and live Flex-limit validation."
+    },
+    "codex/oci-placement-controls": {
+      "base_ref": "pr/oci-provider-scoped",
+      "scope": "provider",
+      "existing": false,
+      "state": "starter",
+      "description": "Fault domains and existing capacity reservations."
+    },
+    "codex/oci-network-controls": {
+      "base_ref": "pr/oci-provider-scoped",
+      "scope": "provider",
+      "existing": false,
+      "state": "starter",
+      "description": "Explicit public-IP assignment with existing subnet/NSG compatibility."
+    },
+    "codex/oci-defined-tags": {
+      "base_ref": "pr/oci-provider-scoped",
+      "scope": "provider",
+      "existing": false,
+      "state": "starter",
+      "description": "Defined tags with preserved freeform/ownership tags."
+    },
+    "codex/oci-boot-performance": {
+      "base_ref": "pr/oci-provider-scoped",
+      "scope": "provider",
+      "existing": false,
+      "state": "starter",
+      "description": "Boot-volume performance controls."
+    },
+    "codex/oci-secondary-volumes": {
+      "base_ref": "pr/oci-provider-scoped",
+      "scope": "provider",
+      "existing": false,
+      "state": "starter",
+      "description": "Owned block volumes, attachment, retention and cleanup."
+    },
+    "codex/oci-sdk-transport": {
+      "base_ref": "pr/oci-provider-scoped",
+      "scope": "provider",
+      "existing": false,
+      "state": "starter",
+      "description": "Optional SDK transport with CLI/auth/lifecycle parity."
+    },
+    "codex/oci-oke-deployment": {
+      "base_ref": "pr/oci-provider-scoped",
+      "scope": "deployment",
+      "existing": false,
+      "state": "starter",
+      "description": "Portable OKE manifests and image/probe/persistence validation."
+    },
+    "codex/oci-identity-aliases": {
+      "base_ref": "pr/oci-provider-scoped",
+      "scope": "provider",
+      "existing": false,
+      "state": "starter",
+      "description": "OCI consumer of the accepted generic recorded-identity resolver."
+    },
+    "codex/oci-power-actions": {
+      "base_ref": "pr/oci-provider-scoped",
+      "scope": "provider",
+      "existing": false,
+      "state": "starter",
+      "description": "Direct-instance start/stop through the existing generic action surface."
+    },
+    "codex/oci-instance-pools": {
+      "base_ref": "pr/oci-provider-scoped",
+      "scope": "provider",
+      "existing": false,
+      "state": "starter",
+      "description": "OCI pool lifecycle using accepted generic controller/member contracts."
+    },
+    "codex/oci-validation-runbooks": {
+      "base_ref": "pr/oci-provider-scoped",
+      "scope": "validation",
+      "existing": false,
+      "state": "starter",
+      "description": "Offline/live acceptance and portable runbooks; no cloud execution implied."
+    },
+    "codex/oci-oke-workload-identity": {
+      "base_ref": "codex/oci-sdk-transport",
+      "scope": "provider",
+      "existing": false,
+      "state": "starter",
+      "description": "OKE SDK signer and IAM acceptance after transport/deployment foundations."
+    },
+    "codex/machine-identity-aliases": {
+      "base_ref": "upstream/main",
+      "scope": "shared",
+      "existing": false,
+      "state": "starter",
+      "description": "Generic recorded name/DNS identity resolution and persistence."
+    },
+    "codex/pool-lifecycle-contracts": {
+      "base_ref": "upstream/main",
+      "scope": "shared",
+      "existing": false,
+      "state": "starter",
+      "description": "Generic controller/member identity, refresh, ownership and return contracts."
+    },
+    "codex/oci-scheduled-scaling": {
+      "base_ref": "codex/oci-instance-pools",
+      "scope": "provider",
+      "existing": false,
+      "state": "starter",
+      "description": "UTC schedules with agreed scheduler authority, drain and scale-in policy."
+    }
+  },
+  "items": [
+    {
+      "id": "BASE",
+      "title": "Land and preserve the current OCI Compute provider",
+      "phase": 0,
+      "priority": "P0",
+      "status": "implemented_pending_merge",
+      "scope": "baseline",
+      "branch": "pr/oci-provider-scoped",
+      "depends_on": [
+        "EXT-OCI234"
+      ],
+      "design_gates": [],
+      "acceptance": [
+        "Retain OCICompute, existing template IDs, per-template/default resolution and persisted request compatibility.",
+        "Preserve CLI/API-key/profile/security-token/instance-principal/resource-principal modes, region consistency, protected payloads and redacted errors.",
+        "Retain stable request-owned tokens, ambiguous-response reconciliation, definite-capacity-only fallback, rollback and every-instance return outcomes.",
+        "Accepted termination is not verified deletion; ambiguous 404 remains non-success/unconfirmed and return polling stays unknown/in_progress.",
+        "Required upstream CI and review must pass; local tests do not substitute for merge approval."
+      ],
+      "source_refs": [
+        "C01",
+        "C02",
+        "C04",
+        "C05",
+        "C12",
+        "K01",
+        "K02",
+        "K03",
+        "K04",
+        "K05",
+        "S01",
+        "E02",
+        "E09",
+        "E10"
+      ],
+      "estimate": "Existing contribution; remaining CI/review is external.",
+      "owner_role": "OCI provider engineering",
+      "owner": "unassigned",
+      "evidence": [
+        "OCI revision 21b3bd05 has a local installed-wheel regression selection with 591 passing tests; this is not an upstream CI or live-cloud pass.",
+        "The catalog has 25 portable examples across 23 shapes; examples are not live shape acceptance."
+      ]
+    },
+    {
+      "id": "DOC-RDMA",
+      "title": "Correct the signed RDMA launch documentation",
+      "phase": 0,
+      "priority": "P0",
+      "status": "implemented_pending_merge",
+      "scope": "documentation",
+      "branch": "pr/oci-provider-scoped",
+      "depends_on": [
+        "BASE"
+      ],
+      "design_gates": [],
+      "acceptance": [
+        "Document existing dotted provider mappings and signed launch JSON without the removed output hook or unsupported launch flag.",
+        "State existing Compute Cluster, compatible HPC image and AD requirements; distinguish placement from measured RDMA performance."
+      ],
+      "source_refs": [
+        "C12",
+        "P01",
+        "E06"
+      ],
+      "estimate": "Under 0.5 day; documentation change completed.",
+      "owner_role": "OCI documentation engineering",
+      "owner": "unassigned",
+      "evidence": [
+        "The signed RDMA guide correction is included in OCI revision 21b3bd05; documentation build passed.",
+        "No multi-node throughput or real Symphony acceptance is claimed."
+      ]
+    },
+    {
+      "id": "HF-FACTS",
+      "title": "Retain scheduler-neutral OCI capacity facts",
+      "phase": 0,
+      "priority": "P0",
+      "status": "implemented_pending_integration",
+      "scope": "provider",
+      "branch": "codex/oci-capacity-helper",
+      "depends_on": [
+        "BASE"
+      ],
+      "design_gates": [],
+      "acceptance": [
+        "Expose physical cores, logical CPUs, architecture, OCPUs and memory separately using launch alias/default precedence.",
+        "Cover Standard/Optimized/DenseIO, Flex/fixed bare metal and ARM/x86; reject malformed sizing and avoid guessed capacity.",
+        "Keep calculations local and non-mutating; do not assert a deployment CPU policy or HostFactory integration."
+      ],
+      "source_refs": [
+        "C09",
+        "P02",
+        "K03",
+        "E01",
+        "E10"
+      ],
+      "estimate": "Implemented foundation; integration belongs to HF-OCI.",
+      "owner_role": "OCI compute engineering",
+      "owner": "unassigned",
+      "evidence": [
+        "Capacity helper 1befd18b passed 381 offline OCI unit/mocked tests, including 103 helper tests.",
+        "Validation used a clean checkout with explicit source imports; both helper files match their original implementation after line-ending normalization.",
+        "The helper is not wired into HostFactory output and establishes no production scheduler acceptance."
+      ]
+    },
+    {
+      "id": "HF-SHARED",
+      "title": "Preserve explicit HostFactory attributes and add a generic template-aware hook",
+      "phase": 1,
+      "priority": "P0",
+      "status": "design_required",
+      "scope": "shared",
+      "branch": "codex/hostfactory-template-attributes",
+      "depends_on": [],
+      "design_gates": [
+        "Agree canonical explicit-attribute representation and actual configuration-file, DTO and database persistence paths.",
+        "Any database schema/migration is a separate explicit scope decision.",
+        "No provider imports, provider-name branches or universal core/thread conversion in shared infrastructure."
+      ],
+      "acceptance": [
+        "Explicit/custom attributes survive create/update/save/reload and DTO output and take precedence.",
+        "An optional resolved-template hook selects each template provider; legacy shape-only adapters and fallback stay compatible.",
+        "Computed values recalculate after resizing rather than becoming persisted explicit overrides.",
+        "Fake legacy/new adapters, mixed providers and unchanged AWS/GCP/Azure results pass regression checks."
+      ],
+      "source_refs": [
+        "C09",
+        "P02",
+        "E07"
+      ],
+      "estimate": "3-5 engineering days plus persistence/design review.",
+      "owner_role": "Shared scheduler architecture",
+      "owner": "unassigned"
+    },
+    {
+      "id": "HF-OCI",
+      "title": "Integrate OCI capacity into HostFactory output",
+      "phase": 2,
+      "priority": "P0",
+      "status": "design_required",
+      "scope": "provider",
+      "branch": "codex/oci-hostfactory-capacity",
+      "depends_on": [
+        "BASE",
+        "HF-FACTS",
+        "HF-SHARED"
+      ],
+      "design_gates": [
+        "Agree Symphony physical-core/logical-CPU policy, host-type names and RAM units.",
+        "Rebase onto the accepted generic interface; do not merge unlanded shared code into the OCI feature PR."
+      ],
+      "acceptance": [
+        "Resolved defaults and overrides produce type/ncpus/nram matching launch capacity.",
+        "Explicit attributes win; resizing updates automatic values; unsupported sizing does not inherit usable placeholders.",
+        "Test generation, persistence/reload and available-template output for x86/Ampere, Flex and fixed bare metal.",
+        "Complete ACCEPT-SYMPHONY before claiming real scheduler acceptance."
+      ],
+      "source_refs": [
+        "C09",
+        "P02",
+        "K03",
+        "E01",
+        "E07"
+      ],
+      "estimate": "1-2 engineering days for explicit mapping/tests after the shared interface; automatic integration review additional.",
+      "owner_role": "OCI scheduler integration",
+      "owner": "unassigned"
+    },
+    {
+      "id": "PREFLIGHT",
+      "title": "Add live launch compatibility and Flex-bound validation",
+      "phase": 1,
+      "priority": "P1",
+      "status": "planned",
+      "scope": "provider",
+      "branch": "codex/oci-launch-preflight",
+      "depends_on": [
+        "BASE"
+      ],
+      "design_gates": [
+        "Use current CLI transport; no SDK rewrite prerequisite.",
+        "Bound read caching to the operation and distinguish transient/IAM failures from incompatible settings."
+      ],
+      "acceptance": [
+        "Validate image/subnet readiness, image/shape and subnet/AD compatibility, and current shape OCPU/RAM/ratio bounds before launch.",
+        "Rejected conditions submit no launch; valid settings preserve retry/reconciliation, rollback and cluster checks.",
+        "Dry runs stay offline; errors are sanitized; current principal/profile modes remain valid.",
+        "Preflight does not reserve capacity or prove every compute permission."
+      ],
+      "source_refs": [
+        "C03",
+        "P03",
+        "K03"
+      ],
+      "estimate": "2-4 engineering days; live IAM/shape acceptance additional.",
+      "owner_role": "OCI provider engineering",
+      "owner": "unassigned"
+    },
+    {
+      "id": "PLACEMENT",
+      "title": "Add fault domains and existing capacity reservations",
+      "phase": 2,
+      "priority": "P2",
+      "status": "planned",
+      "scope": "provider",
+      "branch": "codex/oci-placement-controls",
+      "depends_on": [
+        "BASE"
+      ],
+      "design_gates": [
+        "Keep placement optional/per-template and preserve defaults.",
+        "Do not implicitly create reservations, clusters or networks."
+      ],
+      "acceptance": [
+        "Persist fault domains and reservation IDs through typed/default/DTO paths into launch.",
+        "Validate a single fault domain for direct instances; define multiple-domain pool placement when pools arrive.",
+        "Test absent/invalid/inaccessible/wrong-region/AD inputs and unchanged Compute Cluster behavior."
+      ],
+      "source_refs": [
+        "C04",
+        "P04",
+        "K02"
+      ],
+      "estimate": "1-3 engineering days per option plus live placement/reservation tests.",
+      "owner_role": "OCI compute engineering",
+      "owner": "unassigned"
+    },
+    {
+      "id": "NETWORK",
+      "title": "Expose explicit public-IP assignment",
+      "phase": 2,
+      "priority": "P2",
+      "status": "planned",
+      "scope": "provider",
+      "branch": "codex/oci-network-controls",
+      "depends_on": [
+        "BASE"
+      ],
+      "design_gates": [
+        "Agree omission/default precedence so existing templates do not unexpectedly gain or lose public addresses."
+      ],
+      "acceptance": [
+        "Map public-IP choice through the typed extension and VNIC payload, preserving subnet/NSG and security_group_ids behavior.",
+        "Test omitted/true/false values, subnet restrictions and resolved template round trips.",
+        "Confirm resulting addresses in a controlled live run; no automatic networking creation."
+      ],
+      "source_refs": [
+        "C04",
+        "P04",
+        "K02",
+        "K05"
+      ],
+      "estimate": "1-3 engineering days plus subnet acceptance.",
+      "owner_role": "OCI networking integration",
+      "owner": "unassigned"
+    },
+    {
+      "id": "TAGS",
+      "title": "Add namespaced defined tags",
+      "phase": 2,
+      "priority": "P2",
+      "status": "planned",
+      "scope": "provider",
+      "branch": "codex/oci-defined-tags",
+      "depends_on": [
+        "BASE"
+      ],
+      "design_gates": [
+        "Reserve ownership tags; avoid silently renaming or colliding freeform tag keys."
+      ],
+      "acceptance": [
+        "Preserve namespaces/keys/values through DTO/default resolution and launch.",
+        "Cover invalid namespaces, IAM errors, input immutability and unchanged freeform/ownership tags.",
+        "Propagate tags to future owned pool/controllers and worker definitions under explicit ownership rules."
+      ],
+      "source_refs": [
+        "C05",
+        "P04"
+      ],
+      "estimate": "1-3 engineering days plus tag-policy acceptance.",
+      "owner_role": "OCI governance integration",
+      "owner": "unassigned"
+    },
+    {
+      "id": "BOOT-PERF",
+      "title": "Expose boot-volume performance settings",
+      "phase": 2,
+      "priority": "P2",
+      "status": "planned",
+      "scope": "provider",
+      "branch": "codex/oci-boot-performance",
+      "depends_on": [
+        "BASE"
+      ],
+      "design_gates": [
+        "Validate current service-supported performance values rather than treating an old evaluation list as permanent."
+      ],
+      "acceptance": [
+        "Map performance independently from boot_volume_gbs and preserve existing boot size/image behavior.",
+        "Test invalid values, round trips and omission when unset.",
+        "Verify performance and boot cleanup live; boot disk is separate from DenseIO local NVMe."
+      ],
+      "source_refs": [
+        "C05",
+        "P04",
+        "K05"
+      ],
+      "estimate": "1-3 engineering days plus storage acceptance.",
+      "owner_role": "OCI storage integration",
+      "owner": "unassigned"
+    },
+    {
+      "id": "VOLUMES",
+      "title": "Add owned secondary volumes and explicit retention",
+      "phase": 3,
+      "priority": "P3",
+      "status": "design_required",
+      "scope": "provider",
+      "branch": "codex/oci-secondary-volumes",
+      "depends_on": [
+        "BASE"
+      ],
+      "design_gates": [
+        "Agree durable volume/attachment ownership, delete/retain policy and restart recovery.",
+        "Guest formatting/mounting is separate; no SDK migration prerequisite.",
+        "Define pool-volume retention separately when pools arrive."
+      ],
+      "acceptance": [
+        "Support size, performance, optional display name and strict delete_on_return with current service limits.",
+        "Track owned volumes/attachments across restart and never delete unowned resources.",
+        "Exercise partial create/attach/launch failures, retries, detach/delete errors and continued cleanup.",
+        "Delete intended volumes, explicitly report retained resources and independently verify final state."
+      ],
+      "source_refs": [
+        "C05",
+        "P07",
+        "K05",
+        "S01"
+      ],
+      "estimate": "5-10 engineering days; guest/live failure scenarios additional.",
+      "owner_role": "OCI storage engineering",
+      "owner": "unassigned"
+    },
+    {
+      "id": "SDK",
+      "title": "Design an optional SDK transport with CLI parity",
+      "phase": 3,
+      "priority": "P3",
+      "status": "design_required",
+      "scope": "provider",
+      "branch": "codex/oci-sdk-transport",
+      "depends_on": [
+        "BASE"
+      ],
+      "design_gates": [
+        "Choose optional transport/dependency boundaries and preserve existing credential_source behavior.",
+        "SDK is not a prerequisite for preflight, placement, networking, tags, volumes or pools.",
+        "Library retries do not replace request-owned identity and ambiguous-response reconciliation."
+      ],
+      "acceptance": [
+        "Contract tests preserve existing auth modes, OCICompute/template IDs, defaults and persisted requests.",
+        "Keep tokens, reconciliation, rollback, capacity-only fallback, every-instance return and uncertain-404 semantics.",
+        "Retain payload privacy and exception/result redaction.",
+        "Contract tests preserve inline authorized keys, existing bootstrap encoding, configured region/realm and bounded operation timeouts without requiring workstation-only key paths.",
+        "Use independently authorized principal/profile/token live tests before changing any deployment default."
+      ],
+      "source_refs": [
+        "C01",
+        "P06",
+        "K01",
+        "K02",
+        "K04",
+        "S01"
+      ],
+      "estimate": "SDK plus workload identity roughly 7-14 engineering days; overlapping estimates must not be summed.",
+      "owner_role": "OCI transport architecture",
+      "owner": "unassigned"
+    },
+    {
+      "id": "OKE-DEPLOY",
+      "title": "Prepare portable OKE deployment and a suitable image",
+      "phase": 3,
+      "priority": "P2",
+      "status": "design_required",
+      "scope": "deployment",
+      "branch": "codex/oci-oke-deployment",
+      "depends_on": [
+        "BASE"
+      ],
+      "design_gates": [
+        "Manifests can proceed alongside auth design; live deployment needs an agreed identity and compatible transport/image.",
+        "Retaining CLI requires a CLI-capable OCI image; keep shared build changes separate and do not duplicate maintainer release follow-ups.",
+        "Single-replica/Recreate/RWO-PVC scaffolding is not HA or database concurrency acceptance."
+      ],
+      "acceptance": [
+        "Parameterize namespace, registry, digest, configuration and resource references; no account-specific values.",
+        "Provide least-privilege service account/RBAC, nonroot writable state, PVC, ClusterIP and appropriate API authentication.",
+        "Use correct API-only versus embedded-UI health routes and test startup/readiness/liveness.",
+        "Build the selected image with required transport dependencies, avoid obsolete CA pins, and verify restart/pod recreation and persisted request recovery."
+      ],
+      "source_refs": [
+        "C08",
+        "P05",
+        "S03",
+        "E08",
+        "E09"
+      ],
+      "estimate": "2-4 engineering days for scaffolding; auth, image/security and production acceptance additional.",
+      "owner_role": "Kubernetes platform engineering",
+      "owner": "unassigned"
+    },
+    {
+      "id": "OKE-AUTH",
+      "title": "Add OKE workload identity through the SDK signer",
+      "phase": 4,
+      "priority": "P3",
+      "status": "design_required",
+      "scope": "provider",
+      "branch": "codex/oci-oke-workload-identity",
+      "depends_on": [
+        "SDK",
+        "OKE-DEPLOY"
+      ],
+      "design_gates": [
+        "Agree cluster/namespace/service-account IAM scope and signer/token-refresh behavior.",
+        "This adds an auth mode without removing existing principals, profiles, security tokens or API keys."
+      ],
+      "acceptance": [
+        "Run pod identity health/acquire/status/return without a mounted broker user private key.",
+        "Test denied permissions, expired/rotated tokens, redaction and separation from image-pull credentials.",
+        "Retain SDK/CLI contract coverage; actual pod/IAM acceptance is separate from mocked signer tests."
+      ],
+      "source_refs": [
+        "C01",
+        "C08",
+        "P06",
+        "K02",
+        "S03",
+        "E08"
+      ],
+      "estimate": "Part of the overlapping 7-14 day SDK/identity estimate; IAM/pod tests additional.",
+      "owner_role": "OCI IAM and platform engineering",
+      "owner": "unassigned"
+    },
+    {
+      "id": "IDENTITY-SHARED",
+      "title": "Add generic recorded machine name and DNS aliases",
+      "phase": 3,
+      "priority": "P3",
+      "status": "design_required",
+      "scope": "shared",
+      "branch": "codex/machine-identity-aliases",
+      "depends_on": [],
+      "design_gates": [
+        "Agree persisted aliases/backward compatibility; schema changes need explicit scope.",
+        "Keep resolution provider-neutral and resolve the whole batch before destructive calls."
+      ],
+      "acceptance": [
+        "Authoritative IDs win; unique recorded display/hostname/FQDN aliases resolve only within the selected provider.",
+        "Reject ambiguous, stale, terminated and cross-provider collisions before return.",
+        "Test save/reload/restart, cancellation/return identity preservation and existing-provider ID compatibility."
+      ],
+      "source_refs": [
+        "C10"
+      ],
+      "estimate": "3-5 engineering days for generic identity/persistence; scheduler acceptance additional.",
+      "owner_role": "Shared machine identity architecture",
+      "owner": "unassigned"
+    },
+    {
+      "id": "IDENTITY-OCI",
+      "title": "Connect OCI inventory and returns to generic aliases",
+      "phase": 4,
+      "priority": "P3",
+      "status": "planned",
+      "scope": "provider",
+      "branch": "codex/oci-identity-aliases",
+      "depends_on": [
+        "BASE",
+        "IDENTITY-SHARED"
+      ],
+      "design_gates": [
+        "Consume the accepted generic resolver without OCI-name branches in shared commands."
+      ],
+      "acceptance": [
+        "Persist observed display/hostname/private-FQDN aliases while retaining authoritative OCIDs and OCICompute.",
+        "Exercise exact-ID precedence, provider scope, duplicate/renamed/restarted workers and terminated aliases.",
+        "Manual/API and scheduler name-based returns resolve the batch safely while ordinary ID returns remain valid."
+      ],
+      "source_refs": [
+        "C10"
+      ],
+      "estimate": "Size provider work after generic design; live acceptance additional.",
+      "owner_role": "OCI identity integration",
+      "owner": "unassigned"
+    },
+    {
+      "id": "POWER",
+      "title": "Add direct-instance start and stop actions",
+      "phase": 3,
+      "priority": "P3",
+      "status": "design_required",
+      "scope": "provider",
+      "branch": "codex/oci-power-actions",
+      "depends_on": [
+        "BASE"
+      ],
+      "design_gates": [
+        "Use the existing generic action interface; no new shared action interface is assumed.",
+        "Agree stopped-worker ownership, scheduler accounting, resume eligibility and billing expectations."
+      ],
+      "acceptance": [
+        "Map direct-instance actions with authorization/state validation and sanitized async status.",
+        "Reject unsupported pool-member actions and distinguish stop from return/termination.",
+        "Test retry, stop/start/status, restart persistence and subsequent ordinary return/cleanup."
+      ],
+      "source_refs": [
+        "C11"
+      ],
+      "estimate": "2-4 engineering days plus stopped-worker acceptance.",
+      "owner_role": "OCI lifecycle engineering",
+      "owner": "unassigned"
+    },
+    {
+      "id": "POOL-SHARED",
+      "title": "Define generic pool lifecycle and scheduler authority contracts",
+      "phase": 3,
+      "priority": "P3",
+      "status": "design_required",
+      "scope": "shared",
+      "branch": "codex/pool-lifecycle-contracts",
+      "depends_on": [],
+      "design_gates": [
+        "Agree controller/member identity, ownership, whole-controller versus selected-member returns and persistence.",
+        "Agree scheduler authority, draining and changing-capacity accounting before autoscaling; add shared scope only if design requires it.",
+        "Keep refresh, cancellation and synchronization generic; no OCI imports or name branches."
+      ],
+      "acceptance": [
+        "Refresh mutable membership after acquire completes; terminal caching must not freeze pool inventory.",
+        "Compute fulfilment from workers/capacity, not controller-ID count, and reconcile nested lifecycle metadata.",
+        "Prove cancellation/return authority, restart recovery, persistence and existing direct-instance/provider compatibility."
+      ],
+      "source_refs": [
+        "C06",
+        "C07",
+        "P08",
+        "K01",
+        "S02",
+        "E03",
+        "E04",
+        "E05"
+      ],
+      "estimate": "Design/review portion of overlapping 1-3 week pool effort.",
+      "owner_role": "Shared orchestration architecture",
+      "owner": "unassigned"
+    },
+    {
+      "id": "POOL-OCI",
+      "title": "Add request-owned OCI instance pools",
+      "phase": 4,
+      "priority": "P3",
+      "status": "design_required",
+      "scope": "provider",
+      "branch": "codex/oci-instance-pools",
+      "depends_on": [
+        "BASE",
+        "POOL-SHARED"
+      ],
+      "design_gates": [
+        "Use accepted controller/member contracts; SDK is optional rather than required.",
+        "Review evaluation request-count limits before scale claims; do not blindly adopt a three-machine cap.",
+        "Agree whole-pool return and pool secondary-volume retention before exposing options."
+      ],
+      "acceptance": [
+        "Track configuration/pool/member IDs and preserve placement/network/image/tag/storage settings.",
+        "Reconcile ambiguous creation before cleanup; support pagination and durable ownership across restart.",
+        "Reject unsupported selected-member returns, poll async cleanup and remove all intended owned configurations/pools/volumes.",
+        "Test partial failures, mutable membership, correct worker fulfilment and beyond-evaluation scale before claiming it."
+      ],
+      "source_refs": [
+        "C02",
+        "C06",
+        "P08",
+        "K01",
+        "S01",
+        "S02",
+        "E03",
+        "E05"
+      ],
+      "estimate": "Roughly 1-3 engineering weeks after contracts; large-scale/live tests additional.",
+      "owner_role": "OCI compute management engineering",
+      "owner": "unassigned"
+    },
+    {
+      "id": "SCHEDULES",
+      "title": "Add owned UTC schedules with safe scale-in",
+      "phase": 5,
+      "priority": "P3",
+      "status": "design_required",
+      "scope": "provider",
+      "branch": "codex/oci-scheduled-scaling",
+      "depends_on": [
+        "POOL-SHARED",
+        "POOL-OCI"
+      ],
+      "design_gates": [
+        "Scheduler authority, worker draining and scale-in policy must be agreed before implementation/live scheduling.",
+        "Treat scale-in termination as an explicit owned lifecycle event with workload consequences."
+      ],
+      "acceptance": [
+        "Validate unique schedule names, UTC Quartz expressions and integer target capacity within limits.",
+        "Track/delete scheduling resources; retry/restart must not duplicate them.",
+        "Prove scale-out and scale-in, zero targets, state/capacity accounting, draining and conflicting schedules.",
+        "Pool return removes intended schedules/controllers and independently verifies cleanup."
+      ],
+      "source_refs": [
+        "C07",
+        "P08",
+        "S02",
+        "E04"
+      ],
+      "estimate": "3-7 engineering days after pools; live timed-event/scale-in acceptance additional.",
+      "owner_role": "OCI scaling and scheduler integration",
+      "owner": "unassigned"
+    },
+    {
+      "id": "ACCEPT-AUTH-SHAPES",
+      "title": "Validate authentication, shapes and preemptible coverage",
+      "phase": 2,
+      "priority": "P1",
+      "status": "validation_pending",
+      "scope": "validation",
+      "branch": "codex/oci-validation-runbooks",
+      "depends_on": [
+        "BASE"
+      ],
+      "design_gates": [
+        "Select a separately authorized bounded live matrix, spending and cleanup limits; examples do not authorize expensive launches."
+      ],
+      "acceptance": [
+        "Record tested/untested/unavailable combinations of current auth modes and Standard/Optimized/DenseIO, Flex/fixed, x86/ARM, VM/BM families.",
+        "Verify sizing, image, addresses/DNS and resource state; 25 examples/23 shapes are not live acceptance.",
+        "Exercise preemptible interruption, boot-volume preservation and definite-capacity-only on-demand fallback without changing shape/image.",
+        "Retain source/package provenance, actual import locations and independent termination/volume cleanup evidence."
+      ],
+      "source_refs": [
+        "C01",
+        "C02",
+        "C12",
+        "S02",
+        "E01",
+        "E02",
+        "E10"
+      ],
+      "estimate": "Matrix-dependent live validation; no fixed duration or cloud cost assumed.",
+      "owner_role": "OCI validation engineering",
+      "owner": "unassigned"
+    },
+    {
+      "id": "ACCEPT-HPC",
+      "title": "Validate multi-node RDMA and workload behavior",
+      "phase": 4,
+      "priority": "P2",
+      "status": "validation_pending",
+      "scope": "validation",
+      "branch": "codex/oci-validation-runbooks",
+      "depends_on": [
+        "BASE",
+        "DOC-RDMA"
+      ],
+      "design_gates": [
+        "Authorize BM capacity, compatible image, existing cluster and bounded multi-node tests separately."
+      ],
+      "acceptance": [
+        "Verify real cluster membership, RDMA agents/drivers, connectivity and a documented transport/workload measurement.",
+        "Report hardware/image/placement and results; creation or membership alone is not performance acceptance.",
+        "Return every worker and verify deletion while retaining the shared cluster."
+      ],
+      "source_refs": [
+        "C12",
+        "E06"
+      ],
+      "estimate": "Capacity/image dependent; size after test design.",
+      "owner_role": "HPC validation engineering",
+      "owner": "unassigned"
+    },
+    {
+      "id": "ACCEPT-SYMPHONY",
+      "title": "Complete real Symphony worker acceptance",
+      "phase": 4,
+      "priority": "P0",
+      "status": "validation_pending",
+      "scope": "validation",
+      "branch": "codex/oci-validation-runbooks",
+      "depends_on": [
+        "HF-FACTS",
+        "HF-SHARED",
+        "HF-OCI"
+      ],
+      "design_gates": [
+        "Agree CPU policy, architecture labels, RAM units and real worker bootstrap/registration."
+      ],
+      "acceptance": [
+        "Available-template attributes equal launched/registered resources after resizing and explicit overrides.",
+        "Exercise bootstrap, registration, task dispatch, return/drain and cleanup.",
+        "Repeat identity, power and pool/scaling workflows as implemented; mocks are not real Symphony acceptance."
+      ],
+      "source_refs": [
+        "C09",
+        "P02",
+        "E07"
+      ],
+      "estimate": "Environment-dependent; implementation estimates exclude scheduler acceptance.",
+      "owner_role": "Symphony integration engineering",
+      "owner": "unassigned"
+    },
+    {
+      "id": "ACCEPT-PLATFORM",
+      "title": "Close API, container, persistence and security gaps",
+      "phase": 5,
+      "priority": "P2",
+      "status": "validation_pending",
+      "scope": "validation",
+      "branch": "codex/oci-validation-runbooks",
+      "depends_on": [
+        "BASE",
+        "EXT-AZURE588",
+        "EXT-PACKAGING589",
+        "EXT-RELEASE622"
+      ],
+      "design_gates": [
+        "Distinguish focused tests, baseline/platform limitations, fresh CI and production acceptance.",
+        "Agree persistence/concurrency/HA deployment before production HA or database claims."
+      ],
+      "acceptance": [
+        "Reproduce/close relevant REST fixture errors; verify pool member percentages and nested lifecycle freshness when pools exist.",
+        "Build/start the selected OCI-capable image from clean inputs; verify transport dependencies, writable state, probes and supported runtimes/architectures.",
+        "Run dependency/image security and API-auth checks; exclude credentials, local configs and validation records from release inputs.",
+        "Test restart/pod recovery and the actual storage backend; a single-replica PVC is not HA/database safety.",
+        "Keep Azure/packaging fixes and maintainer release follow-ups separate; do not duplicate implementation or label waiting workflows as passes."
+      ],
+      "source_refs": [
+        "C08",
+        "S03",
+        "E05",
+        "E08",
+        "E09",
+        "E11"
+      ],
+      "estimate": "Depends on selected backend/platform/features; not a fixed production-readiness estimate.",
+      "owner_role": "Platform security and validation engineering",
+      "owner": "unassigned"
+    },
+    {
+      "id": "DOC-RUNBOOKS",
+      "title": "Publish portable capability and validation runbooks",
+      "phase": 2,
+      "priority": "P2",
+      "status": "planned",
+      "scope": "documentation",
+      "branch": "codex/oci-validation-runbooks",
+      "depends_on": [
+        "BASE",
+        "DOC-RDMA"
+      ],
+      "design_gates": [
+        "Use existing provider/deployment documentation conventions and public authoritative behavior; keep run-specific records separate.",
+        "Confirm permission/attribution before copying confidential implementation; planning does not authorize disclosure."
+      ],
+      "acceptance": [
+        "Provide fresh source/wheel/local/compute/OKE instructions as features land, including auth/configuration/transport/rollback/cleanup.",
+        "Document provider API, shape, memory, key/bootstrap, network/storage aliases without silently changing contracts.",
+        "Record tested commit, dirty state, commands/results, artifact hashes and mocked/live/production limits; old evaluation counts are not current full-suite evidence.",
+        "Update limitations after acceptance; publish no confidential source, account IDs, keys, registry values or raw deployment reports."
+      ],
+      "source_refs": [
+        "C08",
+        "P05",
+        "K01",
+        "K03",
+        "K04",
+        "K05",
+        "S03",
+        "E10",
+        "E11"
+      ],
+      "estimate": "0.5-1.5 engineering days for initial adaptation; feature updates add work.",
+      "owner_role": "OCI documentation engineering",
+      "owner": "unassigned"
+    }
+  ],
+  "coverage": [
+    {
+      "id": "C01",
+      "category": "capability",
+      "title": "Transport and authentication",
+      "item_ids": [
+        "BASE",
+        "SDK",
+        "OKE-AUTH",
+        "ACCEPT-AUTH-SHAPES"
+      ]
+    },
+    {
+      "id": "C02",
+      "category": "capability",
+      "title": "Direct VM provisioning and evaluation count limits",
+      "item_ids": [
+        "BASE",
+        "ACCEPT-AUTH-SHAPES",
+        "POOL-OCI"
+      ]
+    },
+    {
+      "id": "C03",
+      "category": "capability",
+      "title": "Image/subnet/shape/Flex preflight",
+      "item_ids": [
+        "PREFLIGHT"
+      ]
+    },
+    {
+      "id": "C04",
+      "category": "capability",
+      "title": "Placement and networking",
+      "item_ids": [
+        "BASE",
+        "PLACEMENT",
+        "NETWORK"
+      ]
+    },
+    {
+      "id": "C05",
+      "category": "capability",
+      "title": "Storage performance, volumes and tags",
+      "item_ids": [
+        "BASE",
+        "BOOT-PERF",
+        "VOLUMES",
+        "TAGS"
+      ]
+    },
+    {
+      "id": "C06",
+      "category": "capability",
+      "title": "Instance pools",
+      "item_ids": [
+        "POOL-SHARED",
+        "POOL-OCI"
+      ]
+    },
+    {
+      "id": "C07",
+      "category": "capability",
+      "title": "Scheduled scaling",
+      "item_ids": [
+        "POOL-SHARED",
+        "SCHEDULES"
+      ]
+    },
+    {
+      "id": "C08",
+      "category": "capability",
+      "title": "OKE broker deployment",
+      "item_ids": [
+        "OKE-DEPLOY",
+        "OKE-AUTH",
+        "ACCEPT-PLATFORM",
+        "DOC-RUNBOOKS"
+      ]
+    },
+    {
+      "id": "C09",
+      "category": "capability",
+      "title": "HostFactory CPU/RAM/architecture",
+      "item_ids": [
+        "HF-FACTS",
+        "HF-SHARED",
+        "HF-OCI",
+        "ACCEPT-SYMPHONY"
+      ]
+    },
+    {
+      "id": "C10",
+      "category": "capability",
+      "title": "Name and DNS returns",
+      "item_ids": [
+        "IDENTITY-SHARED",
+        "IDENTITY-OCI"
+      ]
+    },
+    {
+      "id": "C11",
+      "category": "capability",
+      "title": "Direct VM start and stop",
+      "item_ids": [
+        "POWER"
+      ]
+    },
+    {
+      "id": "C12",
+      "category": "capability",
+      "title": "HPC/RDMA and preemptible fallback",
+      "item_ids": [
+        "BASE",
+        "DOC-RDMA",
+        "ACCEPT-HPC",
+        "ACCEPT-AUTH-SHAPES"
+      ]
+    },
+    {
+      "id": "P01",
+      "category": "priority",
+      "title": "Correct stale RDMA documentation",
+      "item_ids": [
+        "DOC-RDMA"
+      ]
+    },
+    {
+      "id": "P02",
+      "category": "priority",
+      "title": "Correct advertised HostFactory capacity",
+      "item_ids": [
+        "HF-FACTS",
+        "HF-SHARED",
+        "HF-OCI",
+        "ACCEPT-SYMPHONY"
+      ]
+    },
+    {
+      "id": "P03",
+      "category": "priority",
+      "title": "Add live launch preflight",
+      "item_ids": [
+        "PREFLIGHT"
+      ]
+    },
+    {
+      "id": "P04",
+      "category": "priority",
+      "title": "Add optional placement/network/tag/boot-performance controls",
+      "item_ids": [
+        "PLACEMENT",
+        "NETWORK",
+        "TAGS",
+        "BOOT-PERF"
+      ]
+    },
+    {
+      "id": "P05",
+      "category": "priority",
+      "title": "Adapt portable OKE deployment",
+      "item_ids": [
+        "OKE-DEPLOY",
+        "DOC-RUNBOOKS"
+      ]
+    },
+    {
+      "id": "P06",
+      "category": "priority",
+      "title": "Design optional SDK and workload identity",
+      "item_ids": [
+        "SDK",
+        "OKE-AUTH"
+      ]
+    },
+    {
+      "id": "P07",
+      "category": "priority",
+      "title": "Add owned secondary volumes",
+      "item_ids": [
+        "VOLUMES"
+      ]
+    },
+    {
+      "id": "P08",
+      "category": "priority",
+      "title": "Design pools then scheduled scaling",
+      "item_ids": [
+        "POOL-SHARED",
+        "POOL-OCI",
+        "SCHEDULES"
+      ]
+    },
+    {
+      "id": "K01",
+      "category": "compatibility",
+      "title": "Provider API and persisted identifiers",
+      "item_ids": [
+        "BASE",
+        "SDK",
+        "POOL-SHARED",
+        "POOL-OCI",
+        "DOC-RUNBOOKS"
+      ]
+    },
+    {
+      "id": "K02",
+      "category": "compatibility",
+      "title": "Placement/defaults and current auth modes",
+      "item_ids": [
+        "BASE",
+        "PLACEMENT",
+        "NETWORK",
+        "SDK",
+        "OKE-AUTH"
+      ]
+    },
+    {
+      "id": "K03",
+      "category": "compatibility",
+      "title": "Shape/OCPU/memory aliases and sizing",
+      "item_ids": [
+        "BASE",
+        "HF-FACTS",
+        "HF-OCI",
+        "PREFLIGHT",
+        "DOC-RUNBOOKS"
+      ]
+    },
+    {
+      "id": "K04",
+      "category": "compatibility",
+      "title": "Inline keys and encoded bootstrap versus path/raw inputs",
+      "item_ids": [
+        "BASE",
+        "SDK",
+        "DOC-RUNBOOKS"
+      ]
+    },
+    {
+      "id": "K05",
+      "category": "compatibility",
+      "title": "NSG/boot-size/volume ownership and return mapping",
+      "item_ids": [
+        "BASE",
+        "NETWORK",
+        "BOOT-PERF",
+        "VOLUMES",
+        "DOC-RUNBOOKS"
+      ]
+    },
+    {
+      "id": "S01",
+      "category": "safety",
+      "title": "Preserve retries/reconciliation/rollback/returns/redaction",
+      "item_ids": [
+        "BASE",
+        "SDK",
+        "VOLUMES",
+        "POOL-OCI"
+      ]
+    },
+    {
+      "id": "S02",
+      "category": "safety",
+      "title": "Pool ambiguity/pagination/ownership/count limits/scale-in",
+      "item_ids": [
+        "POOL-SHARED",
+        "POOL-OCI",
+        "SCHEDULES",
+        "ACCEPT-AUTH-SHAPES"
+      ]
+    },
+    {
+      "id": "S03",
+      "category": "safety",
+      "title": "Portable deployment, image health, API auth and storage security",
+      "item_ids": [
+        "OKE-DEPLOY",
+        "OKE-AUTH",
+        "ACCEPT-PLATFORM",
+        "DOC-RUNBOOKS"
+      ]
+    },
+    {
+      "id": "E01",
+      "category": "evidence",
+      "title": "Auth modes and representative all-family sizing acceptance",
+      "item_ids": [
+        "ACCEPT-AUTH-SHAPES",
+        "HF-FACTS",
+        "HF-OCI"
+      ]
+    },
+    {
+      "id": "E02",
+      "category": "evidence",
+      "title": "Live preemptible interruption/fallback/retention",
+      "item_ids": [
+        "BASE",
+        "ACCEPT-AUTH-SHAPES"
+      ]
+    },
+    {
+      "id": "E03",
+      "category": "evidence",
+      "title": "Beyond-evaluation pool size and pagination",
+      "item_ids": [
+        "POOL-SHARED",
+        "POOL-OCI"
+      ]
+    },
+    {
+      "id": "E04",
+      "category": "evidence",
+      "title": "Real scale-out and unverified scale-in",
+      "item_ids": [
+        "POOL-SHARED",
+        "SCHEDULES"
+      ]
+    },
+    {
+      "id": "E05",
+      "category": "evidence",
+      "title": "REST fixtures, pool member percentages and nested lifecycle freshness",
+      "item_ids": [
+        "POOL-SHARED",
+        "POOL-OCI",
+        "ACCEPT-PLATFORM"
+      ]
+    },
+    {
+      "id": "E06",
+      "category": "evidence",
+      "title": "Multi-node RDMA transport/workload measurement",
+      "item_ids": [
+        "DOC-RDMA",
+        "ACCEPT-HPC"
+      ]
+    },
+    {
+      "id": "E07",
+      "category": "evidence",
+      "title": "Real Symphony bootstrap/registration/task execution",
+      "item_ids": [
+        "HF-SHARED",
+        "HF-OCI",
+        "ACCEPT-SYMPHONY"
+      ]
+    },
+    {
+      "id": "E08",
+      "category": "evidence",
+      "title": "OKE identity/restart/persistence/HA/database limits",
+      "item_ids": [
+        "OKE-DEPLOY",
+        "OKE-AUTH",
+        "ACCEPT-PLATFORM"
+      ]
+    },
+    {
+      "id": "E09",
+      "category": "evidence",
+      "title": "Fresh OCI-capable image, package privacy and API/dependency security",
+      "item_ids": [
+        "BASE",
+        "OKE-DEPLOY",
+        "ACCEPT-PLATFORM"
+      ]
+    },
+    {
+      "id": "E10",
+      "category": "evidence",
+      "title": "Reproducible current test provenance and portable runbooks",
+      "item_ids": [
+        "BASE",
+        "HF-FACTS",
+        "ACCEPT-AUTH-SHAPES",
+        "DOC-RUNBOOKS"
+      ]
+    },
+    {
+      "id": "E11",
+      "category": "evidence",
+      "title": "Reuse permission/attribution/confidential-source boundaries",
+      "item_ids": [
+        "DOC-RUNBOOKS",
+        "ACCEPT-PLATFORM"
+      ]
+    }
+  ],
+  "release_gates": [
+    "A branch marked starter contains no feature implementation; branch existence is not acceptance or a ready upstream PR.",
+    "Provider follow-ups must rebase onto main containing OCI before upstream review. Shared contracts remain independent provider-neutral PRs.",
+    "Run final scope/content review and required CI on the exact tested commit; no OCI-name branches or imports in shared runtime.",
+    "Preserve current auth/default/template/persisted-ID/retry/reconciliation/rollback/return/redaction contracts across each feature.",
+    "Use focused unit/mocked and required cross-provider tests, then separately authorized bounded live acceptance with independent cleanup verification.",
+    "Close applicable image/container/API security, persistence and scheduler/workload checks before production/HA/all-shape/RDMA claims.",
+    "Track maintainer review/workflow approval and existing follow-ups as dependencies; do not duplicate unrelated implementation.",
+    "Keep confidential source and deployment records out of public changes/release inputs; retain provenance and actual evidence limits."
+  ],
+  "decisions": [
+    "Keep the current direct-instance provider baseline and adopt capabilities selectively rather than replacing transport/configuration contracts.",
+    "The initial explicit-template-attribute suggestion is insufficient alone because conversion/output paths can drop or overwrite values; HF-SHARED must establish preservation before HF-OCI.",
+    "Hardware facts are implemented; Symphony CPU policy/type labels/RAM units are design/deployment choices. No HostFactory production claim is made.",
+    "SDK is optional: preflight, placement, networking, tags, boot performance, secondary volumes and pools can use current CLI transport.",
+    "OKE manifests may advance in parallel. Live acceptance needs the chosen image/transport/auth model; SDK workload identity depends on SDK and OKE deployment foundations.",
+    "Generic identity/pool contracts are separate from OCI consumers. Scale authority/draining is mandatory; add another shared branch only when the design demonstrates a need.",
+    "Existing NSGs, Compute Cluster placement, capacity-only preemptible fallback and auth modes are preserved rather than reimplemented as gaps.",
+    "25 examples across 23 shapes mean authoring coverage. A prior single-worker canary does not establish all-shape/RDMA/OKE/Symphony acceptance.",
+    "Existing Azure/package PRs and maintainer-owned release follow-ups remain external; this roadmap does not duplicate their fixes.",
+    "All owners are unassigned roles; no dates or accountable people are invented. Rough single-engineer estimates overlap, exclude external waits/live costs and must not be summed.",
+    "Optional P2/P3 capabilities and their production gates do not become prerequisites for merging the bounded direct-instance contribution."
+  ]
+}
