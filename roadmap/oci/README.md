@@ -4,7 +4,8 @@ This fork roadmap turns the **OCI Implementation Gap Assessment** of 27 October
 2026 into separate, reviewable workstreams. The canonical backlog is
 [backlog.json](backlog.json): 25 cards, 19 feature branches, and 39 coverage
 entries. It records dependencies, design decisions, acceptance criteria, rough
-effort, and unassigned owner roles. Snapshot date: **28 October 2026**.
+effort, and unassigned owner roles. Plan opened **28 October 2026**; delivery status reconciled **12 November 2026**.
+Start with [CURRENT.md](CURRENT.md) and the [iteration history](iterations.json).
 
 Keep the current direct-instance provider and adopt useful capabilities
 selectively. Creating a branch does not implement its feature or make an
@@ -13,22 +14,30 @@ merging the bounded direct-instance contribution.
 
 ## Current status
 
-| Card | Status | Evidence and limit |
-| --- | --- | --- |
-| `BASE` | Implemented, pending merge | [OCI PR #234](https://github.com/finos/open-resource-broker/pull/234), revision `21b3bd05`; local installed-wheel selection: 591 tests passed. Required upstream CI/review remain separate. |
-| `DOC-RDMA` | Implemented, pending merge | Signed launch JSON and existing field mappings are documented in the OCI contribution. This does not demonstrate RDMA performance. |
-| `HF-FACTS` | Implemented, pending integration | Helper `1befd18b`: 381 offline OCI unit/mocked tests passed, including 103 helper tests. Hardware facts are not yet connected to HostFactory output. |
-| Other 22 cards | Design, planned, or validation pending | Their branches are starters, with no feature implementation. See each card's acceptance and design gates. |
+Implementation, fork publication, upstream merge and live acceptance are separate.
+The canonical JSON records all four dimensions for every card.
 
-Baseline revisions are pinned in the JSON: main `2a772479`, OCI `21b3bd05`, and
-capacity helper `1befd18b`. Recheck upstream state before development or review.
-The catalog's **25 examples across 23 shapes** are template coverage, not tested
-regional availability or live acceptance of every shape.
+| Work | Current delivery | Evidence and limit |
+| --- | --- | --- |
+| `BASE`, `DOC-RDMA` | Merged | OCI #234 merged 29 October; historical principal E5 lifecycle passed 22 October. Current launch incident remains open; RDMA throughput is unmeasured. |
+| `PREFLIGHT` | Implemented and pushed; upstream review pending | `0dbc17f6`, 501 offline OCI tests; fresh-wheel checks and live metadata/negative probe passed. Full current principal lifecycle is on hold. |
+| `HF-FACTS` | Implemented, rebased and pushed; integration pending | `60a511cc`, 502 offline OCI tests; hardware facts only, not live stock/pricing or HostFactory integration. |
+| Other 21 cards | 11 design-required, 6 planned, 4 acceptance workstreams | Starter branches do not implement their features. Use each card's next action and design gates. |
+
+The suites share a 399-test baseline; 501 + 502 is not 1,003 unique tests. See
+[CURRENT.md](CURRENT.md) for the failed launch comparison and immediate next step.
+
+Active follow-ups were tested on main `071f4596`; latest main was observed at
+`7b356262` on 12 November, 34 commits newer. Review the shared HostFactory/DTO/format
+changes and refresh each active branch before publication. Older branch starting
+points remain historical preparation, not a claim that every starter is current.
+The 25 examples across 23 shapes are template coverage, not tested regional stock or
+live acceptance of every shape.
 
 ## Priority and dependency order
 
-1. Preserve and land the current OCI lifecycle/privacy fixes and RDMA guide.
-2. Develop CLI launch preflight independently. Agree the generic HostFactory
+1. Preserve the merged OCI lifecycle/privacy work and RDMA guide; resolve the current broker-principal launch incident.
+2. Finish acceptance/review of the implemented CLI preflight. Agree the generic HostFactory
    attribute representation/persistence contract before integrating OCI capacity.
 3. Add optional placement, public-IP, tagging, and boot-performance controls in
    their own provider branches; maintain old templates and defaults.
@@ -59,9 +68,9 @@ created now and still require an accepted interface before implementation.
 | Fork branch | Starting point | Scope | State |
 | --- | --- | --- | --- |
 | [codex/hostfactory-template-attributes](https://github.com/oci-fsi-pursuits/open-resource-broker/tree/codex/hostfactory-template-attributes) | main | Shared attribute contract | Existing starter |
-| [codex/oci-capacity-helper](https://github.com/oci-fsi-pursuits/open-resource-broker/tree/codex/oci-capacity-helper) | OCI | Provider hardware facts | Implemented foundation |
+| [codex/oci-capacity-helper](https://github.com/oci-fsi-pursuits/open-resource-broker/tree/codex/oci-capacity-helper) | Tested main `071f4596` | Provider hardware facts | Implemented, rebased, pushed |
 | [codex/oci-hostfactory-capacity](https://github.com/oci-fsi-pursuits/open-resource-broker/tree/codex/oci-hostfactory-capacity) | Capacity helper | Provider scheduler adapter | Existing starter |
-| [codex/oci-launch-preflight](https://github.com/oci-fsi-pursuits/open-resource-broker/tree/codex/oci-launch-preflight) | OCI | Provider launch validation | Existing starter |
+| [codex/oci-launch-preflight](https://github.com/oci-fsi-pursuits/open-resource-broker/tree/codex/oci-launch-preflight) | Tested main `071f4596` | Provider launch validation | Implemented, pushed; live hold |
 | [codex/oci-placement-controls](https://github.com/oci-fsi-pursuits/open-resource-broker/tree/codex/oci-placement-controls) | OCI | Fault domains/reservations | Starter |
 | [codex/oci-network-controls](https://github.com/oci-fsi-pursuits/open-resource-broker/tree/codex/oci-network-controls) | OCI | Public-IP controls | Starter |
 | [codex/oci-defined-tags](https://github.com/oci-fsi-pursuits/open-resource-broker/tree/codex/oci-defined-tags) | OCI | Defined tags | Starter |
@@ -166,10 +175,12 @@ The JSON `coverage` array maps every entry below to card IDs, and each card's
 
 [OCI #234](https://github.com/finos/open-resource-broker/pull/234),
 [Azure #588](https://github.com/finos/open-resource-broker/pull/588), and
-[packaging #589](https://github.com/finos/open-resource-broker/pull/589) are open in
-this snapshot. [Issue #622](https://github.com/finos/open-resource-broker/issues/622)
-tracks maintainer-owned follow-ups; it is a reference, not a request to duplicate
-their implementation. Waiting workflows or reviews are not passing CI.
+[packaging #589](https://github.com/finos/open-resource-broker/pull/589) merged on
+29 October, confirmed through the public API on 12 November. [Issue #622](https://github.com/finos/open-resource-broker/issues/622)
+was recorded closed on 10 November; landed work is listed in the JSON.
+[Issue #677](https://github.com/finos/open-resource-broker/issues/677) remains open
+as verified 12 November and needs a real sanitized capacity-error fixture. Waiting
+workflows or reviews are not passing CI.
 
 Use the repository's [provider guide](../../docs/root/developer_guide/adding_a_provider.md)
 and [multi-provider design](../../docs/root/architecture/multi-provider-design.md).
@@ -192,3 +203,26 @@ python roadmap/oci/validate_roadmap.py --check-refs --repo /path/to/checkout
 
 This check reads local refs. Fetch or prepare the named refs before using it in a
 fresh clone; it does not fetch branches or create them automatically.
+
+## Codex iteration handoff
+
+[CURRENT.md](CURRENT.md) is the readable current focus; `backlog.json` is the
+structured source of truth; `iterations.json` preserves meaningful checkpoints.
+The fork-only root [AGENTS.md](../../AGENTS.md) tells Codex to read those first
+and update them at handoff. Historical entries identify their evidence and are
+reconstructed milestones, not invented original chat boundaries.
+
+Every substantive iteration records its objective/work IDs, source heads and
+dirty state, checks/results, facts versus hypotheses, cleanup and next action.
+Completion requires the corresponding acceptance evidence. A generic frontend
+`Unknown error` is not a provider diagnosis; capture the stored detail before
+closing access. Raw configs, keys, account/network IDs and live reports remain
+under ignored `work/`; only sanitized summaries are committed here.
+
+Use one active investigation or feature at a time; independent review can proceed
+in parallel. Preserve recorded authorizations and their exact limits. This
+workflow follows the [OpenAI iteration guidance](https://developers.openai.com/cookbook/examples/codex/iterating-development-workflows-with-codex).
+
+The structural validator does not prove all starter refs are current. The optional
+Git-ref check may identify old starters; refresh the selected branch before work
+rather than treating branch creation as delivery.

@@ -1,0 +1,264 @@
+{
+  "version": 1,
+  "updated_at": "2026-11-12",
+  "timezone": "America/Los_Angeles",
+  "purpose": "Sanitized, append-only meaningful work iterations; raw deployment evidence remains ignored.",
+  "current_focus": "INC-OCI-LAUNCH-001",
+  "entries": [
+    {
+      "id": "OCI-20261022-BASELINE",
+      "date": "2026-10-22",
+      "record_origin": "reconstructed_from_recorded_evidence",
+      "objective": "Validate the scoped OCI release using broker instance principals",
+      "work_ids": [
+        "BASE",
+        "ACCEPT-AUTH-SHAPES"
+      ],
+      "source": {
+        "commit": "7f6f13c568d14785fa76d673ce1f4513ea1fcc79",
+        "auth": "instance_principal"
+      },
+      "outcome": "passed",
+      "observed_facts": [
+        "One E5 worker acquired and reached the expected running state; return and termination were confirmed.",
+        "No user OCI profile was present on the broker; this was genuine broker-principal validation.",
+        "The original parent compartment was used. A retained historical IAM snapshot has four broad statements, but is not a timestamped policy audit of this run.",
+        "The preceding failure was followed by the signed launch retry-token fix and this successful run."
+      ],
+      "evidence": [
+        "work/oci-manual-broker/scope-20261022-7f6f13c5/scoped-canary-summary.json",
+        "work/oci-manual-broker/scope-20261022-7f6f13c5/scoped-canary-report.json"
+      ],
+      "next_action": "Preserve this exact last-good checkpoint when comparing later deployments.",
+      "cleanup": {
+        "worker_terminated": true,
+        "new_persistent_boot_volumes": 0,
+        "broker_prior_state_restored": true
+      },
+      "limits": [
+        "Historical acceptance does not prove the current source, policy and child-compartment setup."
+      ]
+    },
+    {
+      "id": "OCI-20261110-PREFLIGHT",
+      "date": "2026-11-10",
+      "record_origin": "reconstructed_from_recorded_evidence",
+      "objective": "Implement isolated, opt-in OCI launch compatibility preflight",
+      "work_ids": [
+        "PREFLIGHT"
+      ],
+      "source": {
+        "branch": "codex/oci-launch-preflight",
+        "commit": "0dbc17f6bdf9d3f00b716d72f3aa7572f6651c2e",
+        "base_commit": "071f4596ac7983ac0a7954998c10ed106c0a2bee",
+        "dirty": false
+      },
+      "outcome": "implemented_pushed_live_hold",
+      "observed_facts": [
+        "501 offline OCI tests passed, including 102 new focused cases; lint/security/type checks and core package builds passed.",
+        "Fresh wheel default and HostFactory CLI workflows passed in dry-run mode with zero OCI calls.",
+        "Real metadata reads and the oversized-memory rejection passed on the fresh Linux installation.",
+        "Current broker-principal acquisition did not pass; the early native CLI control also returned 404."
+      ],
+      "evidence": [
+        "work/oci-review-20261110/validation.json",
+        "work/oci-review-20261110/scope-committed.json",
+        "work/oci-review-20261110/live-canary/summary.json"
+      ],
+      "next_action": "Resolve INC-OCI-LAUNCH-001, refresh the branch base, complete current lifecycle acceptance and obtain upstream review.",
+      "artifacts": {
+        "orb_py-1.10.0-py3-none-any.whl": {
+          "bytes": 2524573,
+          "sha256": "a795af14f928867288015d876c6053efe21dfffc9baa7de880a3dd180783bf7e"
+        },
+        "orb_py-1.10.0.tar.gz": {
+          "bytes": 2015577,
+          "sha256": "3fe3a50600812d3ffcbc458031c2ad03abdc055193e5da0ee0baa734c517d484"
+        }
+      },
+      "limits": [
+        "501 is one branch suite, sharing the 399-test baseline with the helper suite.",
+        "No Docker or full Symphony acceptance."
+      ]
+    },
+    {
+      "id": "OCI-20261110-CAPACITY",
+      "date": "2026-11-10",
+      "record_origin": "reconstructed_from_recorded_evidence",
+      "objective": "Refresh and validate the nominal OCI hardware helper",
+      "work_ids": [
+        "HF-FACTS",
+        "HF-SHARED",
+        "HF-OCI"
+      ],
+      "source": {
+        "branch": "codex/oci-capacity-helper",
+        "commit": "60a511cc7f2bbfd0495dacff25a4735bb07d58f0",
+        "base_commit": "071f4596ac7983ac0a7954998c10ed106c0a2bee",
+        "dirty": false
+      },
+      "outcome": "implemented_pushed_integration_pending",
+      "observed_facts": [
+        "Rebased the existing two-file helper onto the tested main baseline and pushed the updated fork branch.",
+        "502 offline OCI tests and the recorded quality/type checks passed.",
+        "Hardware facts are not connected to HostFactory; resolved-template attributes and persistence still need a generic contract."
+      ],
+      "evidence": [
+        "work/oci-review-20261110/capacity-helper/validation.json",
+        "work/oci-review-20261110/hostfactory-contract-proposal.json"
+      ],
+      "next_action": "Review the helper separately; refresh the shared-contract proposal before its OCI consumer.",
+      "limits": [
+        "Nominal CPU/RAM facts do not query live host availability or current prices.",
+        "Do not add the overlapping 501 and 502 branch suites as unique tests."
+      ]
+    },
+    {
+      "id": "OCI-20261110-IAM",
+      "date": "2026-11-10",
+      "record_origin": "reconstructed_from_recorded_evidence",
+      "objective": "Test the approved ten-minute standard launch grants in the corrected worker scope",
+      "work_ids": [
+        "INC-OCI-LAUNCH-001",
+        "PREFLIGHT",
+        "ACCEPT-AUTH-SHAPES"
+      ],
+      "source": {
+        "commit": "0dbc17f6bdf9d3f00b716d72f3aa7572f6651c2e",
+        "auth": "instance_principal"
+      },
+      "outcome": "launch_404_unresolved",
+      "observed_facts": [
+        "The stale parent-compartment deployment input was corrected to the dedicated worker child compartment.",
+        "Three user-approved, time-bounded launch/network/volume grants did not resolve the observed 404.",
+        "The original eleven policy statements were verified restored."
+      ],
+      "evidence": [
+        "work/oci-review-20261110/live-canary/iam-diagnostic-result.json",
+        "work/oci-review-20261110/live-canary/scope-diagnosis.json"
+      ],
+      "next_action": "Use a paired operator control to distinguish resource validity from broker-principal access.",
+      "cleanup": {
+        "temporary_grants_removed": true,
+        "original_policy_restored": true
+      },
+      "unknowns": [
+        "The hardening date/actor and exact denied permission were not established."
+      ]
+    },
+    {
+      "id": "OCI-20261112-OPERATOR",
+      "date": "2026-11-12",
+      "record_origin": "reconstructed_from_recorded_evidence",
+      "objective": "Compare native operator launch with the broker-principal failure",
+      "work_ids": [
+        "INC-OCI-LAUNCH-001"
+      ],
+      "source": {
+        "auth": "operator_security_token",
+        "shape": "VM.Standard.E5.Flex",
+        "ocpus": 1,
+        "memory_gbs": 8,
+        "boot_volume_gbs": 100
+      },
+      "outcome": "operator_control_passed",
+      "observed_facts": [
+        "An equivalent stock-Ubuntu E5 launch using operator credentials reached RUNNING.",
+        "The worker and boot volume were removed afterward.",
+        "The inherited Security Zone has one enabled load-balancer SSL rule, unrelated to this Compute launch."
+      ],
+      "evidence": [
+        "work/oci-review-20261110/live-canary/latest-operator-control.json",
+        "work/oci-review-20261110/live-canary/discovered-security-zone.json"
+      ],
+      "next_action": "Investigate broker authorization/context; do not count this operator run as broker-principal acceptance.",
+      "cleanup": {
+        "active_owned_instances": 0,
+        "active_worker_boot_volumes": 0
+      },
+      "hypotheses": [
+        "The paired result points toward broker-principal access, but does not identify a specific missing permission."
+      ]
+    },
+    {
+      "id": "OCI-20261112-CATALOG",
+      "date": "2026-11-12",
+      "record_origin": "reconstructed_from_recorded_evidence",
+      "objective": "Run the separately approved ten-minute catalog-read diagnostic",
+      "work_ids": [
+        "INC-OCI-LAUNCH-001",
+        "PREFLIGHT",
+        "ACCEPT-AUTH-SHAPES"
+      ],
+      "source": {
+        "commit": "0dbc17f6bdf9d3f00b716d72f3aa7572f6651c2e",
+        "auth": "instance_principal",
+        "stock_image_matches_operator_control": true
+      },
+      "outcome": "hold_provider_detail_pending",
+      "observed_facts": [
+        "The approved Phoenix-only catalog-read grant was applied to the same broker dynamic group.",
+        "The one-worker canary failed with frontend Unknown error; its underlying provider message remains unread.",
+        "Operator access expired before the follow-up stored-error read; it is separate from broker authentication."
+      ],
+      "evidence": [
+        "work/oci-review-20261110/live-canary/catalog-diagnostic-271e511d53.json",
+        "work/oci-review-20261110/live-canary/canary-report.json"
+      ],
+      "next_action": "Read the stored provider error in the same short access session before making another change.",
+      "cleanup": {
+        "temporary_policy_removed": true,
+        "original_policy_unchanged": true,
+        "local_worker_state_restored": true,
+        "active_worker_instances": 0,
+        "active_worker_boot_volumes": 0,
+        "temporary_sessions_closed": true
+      },
+      "unknowns": [
+        "Do not assume this latest failure is the earlier 404.",
+        "Catalog access has not been proved to be the cause or the complete fix."
+      ]
+    },
+    {
+      "id": "OCI-20261112-TRACKING",
+      "date": "2026-11-12",
+      "record_origin": "current_iteration",
+      "objective": "Reconcile delivery status and install a persistent Codex iteration handoff",
+      "work_ids": [
+        "INC-OCI-LAUNCH-001",
+        "ISS-CLI-ERROR-001",
+        "PREFLIGHT",
+        "HF-FACTS",
+        "HF-SHARED",
+        "HF-OCI"
+      ],
+      "source": {
+        "branch": "codex/oci-feature-roadmap",
+        "starting_commit": "4a412df1df76f55f6cfc331a82e72f0aae42b867",
+        "revision_anchor": "Git commit containing this entry",
+        "runtime_source_changed": false
+      },
+      "outcome": "tracking_reconciled",
+      "observed_facts": [
+        "The Oct28 canonical roadmap had drifted behind the Nov12 ignored test notes; canonical status and history were refreshed.",
+        "Public GitHub API recheck confirmed PR234/588/589 merged and issue677 open.",
+        "Upstream main was observed at 7b356262, 34 commits beyond the tested baseline; no OCI-provider files changed in that comparison.",
+        "Shared HostFactory/DTO/formatting changes require proposal and branch refresh; neither existing shared proposal is superseded.",
+        "Added Codex start/end instructions and separate implementation, publication, offline and live status."
+      ],
+      "evidence": [
+        "work/oci-review-20261110/github-refresh-20261112.json",
+        "work/oci-review-20261110/upstream-delta-20261112.json",
+        "roadmap/oci/backlog.json",
+        "roadmap/oci/CURRENT.md"
+      ],
+      "next_action": "Resume INC-OCI-LAUNCH-001 with the stored provider-error read; review refreshed main before changing code.",
+      "cleanup": {
+        "cloud_changes_in_this_iteration": false
+      },
+      "limits": [
+        "Historical checkpoints were reconstructed from recorded evidence, not invented as original chat boundaries."
+      ]
+    }
+  ]
+}

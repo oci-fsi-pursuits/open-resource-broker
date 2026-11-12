@@ -1,35 +1,43 @@
 {
   "version": 1,
-  "as_of": "2026-10-28",
+  "as_of": "2026-11-12",
   "source": {
     "title": "OCI Implementation Gap Assessment",
     "date": "2026-10-27"
   },
   "baselines": {
-    "main": "2a7724796318d85eb171f50ad2f2bbba886187ec",
+    "main": "071f4596ac7983ac0a7954998c10ed106c0a2bee",
     "oci": "21b3bd05878850c3ee2adca62d83ea56ddfd0748",
-    "capacity_helper": "1befd18bc567e29e9c8cfd7edc93ef4315a85233"
+    "capacity_helper": "60a511cc7f2bbfd0495dacff25a4735bb07d58f0"
   },
   "external_dependencies": [
     {
       "id": "EXT-OCI234",
       "url": "https://github.com/finos/open-resource-broker/pull/234",
-      "state": "open"
+      "state": "merged",
+      "historical_state": "open",
+      "last_verified_on": "2026-11-12"
     },
     {
       "id": "EXT-AZURE588",
       "url": "https://github.com/finos/open-resource-broker/pull/588",
-      "state": "open"
+      "state": "merged",
+      "historical_state": "open",
+      "last_verified_on": "2026-11-12"
     },
     {
       "id": "EXT-PACKAGING589",
       "url": "https://github.com/finos/open-resource-broker/pull/589",
-      "state": "open"
+      "state": "merged",
+      "historical_state": "open",
+      "last_verified_on": "2026-11-12"
     },
     {
       "id": "EXT-RELEASE622",
       "url": "https://github.com/finos/open-resource-broker/issues/622",
-      "state": "tracking"
+      "state": "closed",
+      "historical_state": "tracking",
+      "last_verified_on": "2026-11-10"
     }
   ],
   "branches": {
@@ -41,11 +49,14 @@
       "description": "Generic explicit-attribute preservation and optional resolved-template derivation."
     },
     "codex/oci-capacity-helper": {
-      "base_ref": "pr/oci-provider-scoped",
+      "base_ref": "071f4596ac7983ac0a7954998c10ed106c0a2bee",
       "scope": "provider",
       "existing": true,
       "state": "implemented",
-      "description": "Implemented hardware facts and tests; not connected to HostFactory."
+      "description": "Implemented hardware facts and tests; not connected to HostFactory.",
+      "historical_base_ref": "pr/oci-provider-scoped",
+      "head_commit": "60a511cc7f2bbfd0495dacff25a4735bb07d58f0",
+      "refresh_required_before_publication": true
     },
     "codex/oci-hostfactory-capacity": {
       "base_ref": "codex/oci-capacity-helper",
@@ -55,11 +66,14 @@
       "description": "OCI consumer of the accepted generic attribute extension and hardware helper."
     },
     "codex/oci-launch-preflight": {
-      "base_ref": "pr/oci-provider-scoped",
+      "base_ref": "071f4596ac7983ac0a7954998c10ed106c0a2bee",
       "scope": "provider",
       "existing": true,
-      "state": "starter",
-      "description": "CLI-based image, subnet, shape and live Flex-limit validation."
+      "state": "implemented",
+      "description": "CLI-based image, subnet, shape and live Flex-limit validation.",
+      "historical_base_ref": "pr/oci-provider-scoped",
+      "head_commit": "0dbc17f6bdf9d3f00b716d72f3aa7572f6651c2e",
+      "refresh_required_before_publication": true
     },
     "codex/oci-placement-controls": {
       "base_ref": "pr/oci-provider-scoped",
@@ -173,7 +187,7 @@
       "title": "Land and preserve the current OCI Compute provider",
       "phase": 0,
       "priority": "P0",
-      "status": "implemented_pending_merge",
+      "status": "complete",
       "scope": "baseline",
       "branch": "pr/oci-provider-scoped",
       "depends_on": [
@@ -207,16 +221,46 @@
       "owner_role": "OCI provider engineering",
       "owner": "unassigned",
       "evidence": [
+        "OCI PR234 merged on 2026-10-29; historical principal E5 lifecycle passed at 7f6f13c5; current deployment regression is tracked separately."
+      ],
+      "historical_status_2026_10_28": "implemented_pending_merge",
+      "historical_evidence": [
         "OCI revision 21b3bd05 has a local installed-wheel regression selection with 591 passing tests; this is not an upstream CI or live-cloud pass.",
         "The catalog has 25 portable examples across 23 shapes; examples are not live shape acceptance."
-      ]
+      ],
+      "progress": {
+        "implementation": {
+          "state": "complete",
+          "commit": "21b3bd05878850c3ee2adca62d83ea56ddfd0748"
+        },
+        "publication": {
+          "state": "merged",
+          "branch": "pr/oci-provider-scoped",
+          "url": "https://github.com/finos/open-resource-broker/pull/234",
+          "merged_at": "2026-10-29T14:59:13Z"
+        },
+        "validation": {
+          "offline": {
+            "state": "historical_evidence"
+          },
+          "live": {
+            "state": "historical_pass_current_environment_blocked",
+            "commit": "7f6f13c568d14785fa76d673ce1f4513ea1fcc79",
+            "evidence": "work/oci-manual-broker/scope-20261022-7f6f13c5/scoped-canary-summary.json"
+          }
+        },
+        "blocker": null,
+        "next_action": "Preserve merged lifecycle/privacy behavior; track the current deployment regression separately.",
+        "updated_at": "2026-11-12",
+        "last_iteration_id": "OCI-20261112-TRACKING"
+      }
     },
     {
       "id": "DOC-RDMA",
       "title": "Correct the signed RDMA launch documentation",
       "phase": 0,
       "priority": "P0",
-      "status": "implemented_pending_merge",
+      "status": "complete",
       "scope": "documentation",
       "branch": "pr/oci-provider-scoped",
       "depends_on": [
@@ -236,9 +280,37 @@
       "owner_role": "OCI documentation engineering",
       "owner": "unassigned",
       "evidence": [
+        "RDMA placement documentation is merged; no measured throughput claim."
+      ],
+      "historical_status_2026_10_28": "implemented_pending_merge",
+      "historical_evidence": [
         "The signed RDMA guide correction is included in OCI revision 21b3bd05; documentation build passed.",
         "No multi-node throughput or real Symphony acceptance is claimed."
-      ]
+      ],
+      "progress": {
+        "implementation": {
+          "state": "complete",
+          "commit": "21b3bd05878850c3ee2adca62d83ea56ddfd0748"
+        },
+        "publication": {
+          "state": "merged",
+          "branch": "pr/oci-provider-scoped",
+          "url": "https://github.com/finos/open-resource-broker/pull/234",
+          "merged_at": "2026-10-29T14:59:13Z"
+        },
+        "validation": {
+          "offline": {
+            "state": "documentation_merged"
+          },
+          "live": {
+            "state": "not_applicable_documentation_only"
+          }
+        },
+        "blocker": null,
+        "next_action": "Preserve placement documentation; measured multi-node RDMA remains ACCEPT-HPC.",
+        "updated_at": "2026-11-12",
+        "last_iteration_id": "OCI-20261112-TRACKING"
+      }
     },
     {
       "id": "HF-FACTS",
@@ -268,10 +340,40 @@
       "owner_role": "OCI compute engineering",
       "owner": "unassigned",
       "evidence": [
+        "Fork commit 60a511cc rebased onto 071f4596; 502 offline tests and quality/type checks; not integrated with HostFactory."
+      ],
+      "historical_status_2026_10_28": "implemented_pending_integration",
+      "historical_evidence": [
         "Capacity helper 1befd18b passed 381 offline OCI unit/mocked tests, including 103 helper tests.",
         "Validation used a clean checkout with explicit source imports; both helper files match their original implementation after line-ending normalization.",
         "The helper is not wired into HostFactory output and establishes no production scheduler acceptance."
-      ]
+      ],
+      "progress": {
+        "implementation": {
+          "state": "complete",
+          "commit": "60a511cc7f2bbfd0495dacff25a4735bb07d58f0"
+        },
+        "publication": {
+          "state": "pushed_to_fork",
+          "branch": "codex/oci-capacity-helper"
+        },
+        "validation": {
+          "offline": {
+            "state": "passed",
+            "passed_tests": 502,
+            "shared_baseline_tests": 399,
+            "commit": "60a511cc7f2bbfd0495dacff25a4735bb07d58f0",
+            "evidence": "work/oci-review-20261110/capacity-helper/validation.json"
+          },
+          "live": {
+            "state": "not_applicable_nominal_facts_only"
+          }
+        },
+        "blocker": "Acceptance and design gates remain open",
+        "next_action": "Refresh from tested 071f4596 to observed 7b356262, rerun scoped checks, then review/merge the isolated helper; integrate after the generic contract.",
+        "updated_at": "2026-11-12",
+        "last_iteration_id": "OCI-20261112-TRACKING"
+      }
     },
     {
       "id": "HF-SHARED",
@@ -300,7 +402,30 @@
       ],
       "estimate": "3-5 engineering days plus persistence/design review.",
       "owner_role": "Shared scheduler architecture",
-      "owner": "unassigned"
+      "owner": "unassigned",
+      "historical_status_2026_10_28": "design_required",
+      "progress": {
+        "implementation": {
+          "state": "not_started",
+          "commit": null
+        },
+        "publication": {
+          "state": "not_started",
+          "branch": "codex/hostfactory-template-attributes"
+        },
+        "validation": {
+          "offline": {
+            "state": "not_run"
+          },
+          "live": {
+            "state": "not_run"
+          }
+        },
+        "blocker": "Acceptance and design gates remain open",
+        "next_action": "Refresh the proposal against current HostFactory formats; agree authored attributes, persistence and the resolved-template hook.",
+        "updated_at": "2026-11-12",
+        "last_iteration_id": "OCI-20261112-TRACKING"
+      }
     },
     {
       "id": "HF-OCI",
@@ -334,14 +459,37 @@
       ],
       "estimate": "1-2 engineering days for explicit mapping/tests after the shared interface; automatic integration review additional.",
       "owner_role": "OCI scheduler integration",
-      "owner": "unassigned"
+      "owner": "unassigned",
+      "historical_status_2026_10_28": "design_required",
+      "progress": {
+        "implementation": {
+          "state": "not_started",
+          "commit": null
+        },
+        "publication": {
+          "state": "not_started",
+          "branch": "codex/oci-hostfactory-capacity"
+        },
+        "validation": {
+          "offline": {
+            "state": "not_run"
+          },
+          "live": {
+            "state": "not_run"
+          }
+        },
+        "blocker": "Acceptance and design gates remain open",
+        "next_action": "Agree CPU/RAM policy and consume the accepted generic hook plus the already validated hardware helper.",
+        "updated_at": "2026-11-12",
+        "last_iteration_id": "OCI-20261112-TRACKING"
+      }
     },
     {
       "id": "PREFLIGHT",
       "title": "Add live launch compatibility and Flex-bound validation",
       "phase": 1,
       "priority": "P1",
-      "status": "planned",
+      "status": "implemented_pending_merge",
       "scope": "provider",
       "branch": "codex/oci-launch-preflight",
       "depends_on": [
@@ -364,7 +512,38 @@
       ],
       "estimate": "2-4 engineering days; live IAM/shape acceptance additional.",
       "owner_role": "OCI provider engineering",
-      "owner": "unassigned"
+      "owner": "unassigned",
+      "historical_status_2026_10_28": "planned",
+      "historical_evidence": [],
+      "evidence": [
+        "Fork commit 0dbc17f6; 501 offline tests, quality/type/package checks; live metadata/negative check passed; current lifecycle hold."
+      ],
+      "progress": {
+        "implementation": {
+          "state": "complete",
+          "commit": "0dbc17f6bdf9d3f00b716d72f3aa7572f6651c2e"
+        },
+        "publication": {
+          "state": "pushed_to_fork",
+          "branch": "codex/oci-launch-preflight"
+        },
+        "validation": {
+          "offline": {
+            "state": "passed",
+            "passed_tests": 501,
+            "shared_baseline_tests": 399,
+            "commit": "0dbc17f6bdf9d3f00b716d72f3aa7572f6651c2e",
+            "evidence": "work/oci-review-20261110/validation.json"
+          },
+          "live": {
+            "state": "hold_provider_detail_pending"
+          }
+        },
+        "blocker": "INC-OCI-LAUNCH-001",
+        "next_action": "Retrieve the latest stored provider error, resolve its cause, finish principal lifecycle acceptance, refresh main and obtain upstream review.",
+        "updated_at": "2026-11-12",
+        "last_iteration_id": "OCI-20261112-TRACKING"
+      }
     },
     {
       "id": "PLACEMENT",
@@ -393,7 +572,30 @@
       ],
       "estimate": "1-3 engineering days per option plus live placement/reservation tests.",
       "owner_role": "OCI compute engineering",
-      "owner": "unassigned"
+      "owner": "unassigned",
+      "historical_status_2026_10_28": "planned",
+      "progress": {
+        "implementation": {
+          "state": "not_started",
+          "commit": null
+        },
+        "publication": {
+          "state": "not_started",
+          "branch": "codex/oci-placement-controls"
+        },
+        "validation": {
+          "offline": {
+            "state": "not_run"
+          },
+          "live": {
+            "state": "not_run"
+          }
+        },
+        "blocker": "Acceptance and design gates remain open",
+        "next_action": "Add optional existing fault-domain/capacity-reservation mappings and validation.",
+        "updated_at": "2026-11-12",
+        "last_iteration_id": "OCI-20261112-TRACKING"
+      }
     },
     {
       "id": "NETWORK",
@@ -422,7 +624,30 @@
       ],
       "estimate": "1-3 engineering days plus subnet acceptance.",
       "owner_role": "OCI networking integration",
-      "owner": "unassigned"
+      "owner": "unassigned",
+      "historical_status_2026_10_28": "planned",
+      "progress": {
+        "implementation": {
+          "state": "not_started",
+          "commit": null
+        },
+        "publication": {
+          "state": "not_started",
+          "branch": "codex/oci-network-controls"
+        },
+        "validation": {
+          "offline": {
+            "state": "not_run"
+          },
+          "live": {
+            "state": "not_run"
+          }
+        },
+        "blocker": "Acceptance and design gates remain open",
+        "next_action": "Agree omitted/default public-IP semantics; implement the optional control.",
+        "updated_at": "2026-11-12",
+        "last_iteration_id": "OCI-20261112-TRACKING"
+      }
     },
     {
       "id": "TAGS",
@@ -449,7 +674,30 @@
       ],
       "estimate": "1-3 engineering days plus tag-policy acceptance.",
       "owner_role": "OCI governance integration",
-      "owner": "unassigned"
+      "owner": "unassigned",
+      "historical_status_2026_10_28": "planned",
+      "progress": {
+        "implementation": {
+          "state": "not_started",
+          "commit": null
+        },
+        "publication": {
+          "state": "not_started",
+          "branch": "codex/oci-defined-tags"
+        },
+        "validation": {
+          "offline": {
+            "state": "not_run"
+          },
+          "live": {
+            "state": "not_run"
+          }
+        },
+        "blocker": "Acceptance and design gates remain open",
+        "next_action": "Add defined tags while preserving freeform and reserved ownership tags.",
+        "updated_at": "2026-11-12",
+        "last_iteration_id": "OCI-20261112-TRACKING"
+      }
     },
     {
       "id": "BOOT-PERF",
@@ -477,7 +725,30 @@
       ],
       "estimate": "1-3 engineering days plus storage acceptance.",
       "owner_role": "OCI storage integration",
-      "owner": "unassigned"
+      "owner": "unassigned",
+      "historical_status_2026_10_28": "planned",
+      "progress": {
+        "implementation": {
+          "state": "not_started",
+          "commit": null
+        },
+        "publication": {
+          "state": "not_started",
+          "branch": "codex/oci-boot-performance"
+        },
+        "validation": {
+          "offline": {
+            "state": "not_run"
+          },
+          "live": {
+            "state": "not_run"
+          }
+        },
+        "blocker": "Acceptance and design gates remain open",
+        "next_action": "Verify service values and add the optional boot performance control.",
+        "updated_at": "2026-11-12",
+        "last_iteration_id": "OCI-20261112-TRACKING"
+      }
     },
     {
       "id": "VOLUMES",
@@ -509,7 +780,30 @@
       ],
       "estimate": "5-10 engineering days; guest/live failure scenarios additional.",
       "owner_role": "OCI storage engineering",
-      "owner": "unassigned"
+      "owner": "unassigned",
+      "historical_status_2026_10_28": "design_required",
+      "progress": {
+        "implementation": {
+          "state": "not_started",
+          "commit": null
+        },
+        "publication": {
+          "state": "not_started",
+          "branch": "codex/oci-secondary-volumes"
+        },
+        "validation": {
+          "offline": {
+            "state": "not_run"
+          },
+          "live": {
+            "state": "not_run"
+          }
+        },
+        "blocker": "Acceptance and design gates remain open",
+        "next_action": "Agree volume ownership, retention, attachment cleanup and restart recovery.",
+        "updated_at": "2026-11-12",
+        "last_iteration_id": "OCI-20261112-TRACKING"
+      }
     },
     {
       "id": "SDK",
@@ -544,7 +838,30 @@
       ],
       "estimate": "SDK plus workload identity roughly 7-14 engineering days; overlapping estimates must not be summed.",
       "owner_role": "OCI transport architecture",
-      "owner": "unassigned"
+      "owner": "unassigned",
+      "historical_status_2026_10_28": "design_required",
+      "progress": {
+        "implementation": {
+          "state": "not_started",
+          "commit": null
+        },
+        "publication": {
+          "state": "not_started",
+          "branch": "codex/oci-sdk-transport"
+        },
+        "validation": {
+          "offline": {
+            "state": "not_run"
+          },
+          "live": {
+            "state": "not_run"
+          }
+        },
+        "blocker": "Acceptance and design gates remain open",
+        "next_action": "Define an optional transport/parity boundary preserving CLI and authentication modes.",
+        "updated_at": "2026-11-12",
+        "last_iteration_id": "OCI-20261112-TRACKING"
+      }
     },
     {
       "id": "OKE-DEPLOY",
@@ -577,7 +894,30 @@
       ],
       "estimate": "2-4 engineering days for scaffolding; auth, image/security and production acceptance additional.",
       "owner_role": "Kubernetes platform engineering",
-      "owner": "unassigned"
+      "owner": "unassigned",
+      "historical_status_2026_10_28": "design_required",
+      "progress": {
+        "implementation": {
+          "state": "not_started",
+          "commit": null
+        },
+        "publication": {
+          "state": "not_started",
+          "branch": "codex/oci-oke-deployment"
+        },
+        "validation": {
+          "offline": {
+            "state": "not_run"
+          },
+          "live": {
+            "state": "not_run"
+          }
+        },
+        "blocker": "Acceptance and design gates remain open",
+        "next_action": "Select the OCI-capable image, identity, transport and persistence before deployment.",
+        "updated_at": "2026-11-12",
+        "last_iteration_id": "OCI-20261112-TRACKING"
+      }
     },
     {
       "id": "OKE-AUTH",
@@ -610,7 +950,30 @@
       ],
       "estimate": "Part of the overlapping 7-14 day SDK/identity estimate; IAM/pod tests additional.",
       "owner_role": "OCI IAM and platform engineering",
-      "owner": "unassigned"
+      "owner": "unassigned",
+      "historical_status_2026_10_28": "design_required",
+      "progress": {
+        "implementation": {
+          "state": "not_started",
+          "commit": null
+        },
+        "publication": {
+          "state": "not_started",
+          "branch": "codex/oci-oke-workload-identity"
+        },
+        "validation": {
+          "offline": {
+            "state": "not_run"
+          },
+          "live": {
+            "state": "not_run"
+          }
+        },
+        "blocker": "Acceptance and design gates remain open",
+        "next_action": "Define workload signer and refresh/IAM behavior after SDK/deployment foundations.",
+        "updated_at": "2026-11-12",
+        "last_iteration_id": "OCI-20261112-TRACKING"
+      }
     },
     {
       "id": "IDENTITY-SHARED",
@@ -635,7 +998,30 @@
       ],
       "estimate": "3-5 engineering days for generic identity/persistence; scheduler acceptance additional.",
       "owner_role": "Shared machine identity architecture",
-      "owner": "unassigned"
+      "owner": "unassigned",
+      "historical_status_2026_10_28": "design_required",
+      "progress": {
+        "implementation": {
+          "state": "not_started",
+          "commit": null
+        },
+        "publication": {
+          "state": "not_started",
+          "branch": "codex/machine-identity-aliases"
+        },
+        "validation": {
+          "offline": {
+            "state": "not_run"
+          },
+          "live": {
+            "state": "not_run"
+          }
+        },
+        "blocker": "Acceptance and design gates remain open",
+        "next_action": "Agree generic persisted aliases and whole-batch resolution.",
+        "updated_at": "2026-11-12",
+        "last_iteration_id": "OCI-20261112-TRACKING"
+      }
     },
     {
       "id": "IDENTITY-OCI",
@@ -662,7 +1048,30 @@
       ],
       "estimate": "Size provider work after generic design; live acceptance additional.",
       "owner_role": "OCI identity integration",
-      "owner": "unassigned"
+      "owner": "unassigned",
+      "historical_status_2026_10_28": "planned",
+      "progress": {
+        "implementation": {
+          "state": "not_started",
+          "commit": null
+        },
+        "publication": {
+          "state": "not_started",
+          "branch": "codex/oci-identity-aliases"
+        },
+        "validation": {
+          "offline": {
+            "state": "not_run"
+          },
+          "live": {
+            "state": "not_run"
+          }
+        },
+        "blocker": "Acceptance and design gates remain open",
+        "next_action": "Consume the accepted provider-neutral identity resolver.",
+        "updated_at": "2026-11-12",
+        "last_iteration_id": "OCI-20261112-TRACKING"
+      }
     },
     {
       "id": "POWER",
@@ -689,7 +1098,30 @@
       ],
       "estimate": "2-4 engineering days plus stopped-worker acceptance.",
       "owner_role": "OCI lifecycle engineering",
-      "owner": "unassigned"
+      "owner": "unassigned",
+      "historical_status_2026_10_28": "design_required",
+      "progress": {
+        "implementation": {
+          "state": "not_started",
+          "commit": null
+        },
+        "publication": {
+          "state": "not_started",
+          "branch": "codex/oci-power-actions"
+        },
+        "validation": {
+          "offline": {
+            "state": "not_run"
+          },
+          "live": {
+            "state": "not_run"
+          }
+        },
+        "blocker": "Acceptance and design gates remain open",
+        "next_action": "Agree stopped-worker accounting and ownership; use the existing action interface.",
+        "updated_at": "2026-11-12",
+        "last_iteration_id": "OCI-20261112-TRACKING"
+      }
     },
     {
       "id": "POOL-SHARED",
@@ -722,7 +1154,30 @@
       ],
       "estimate": "Design/review portion of overlapping 1-3 week pool effort.",
       "owner_role": "Shared orchestration architecture",
-      "owner": "unassigned"
+      "owner": "unassigned",
+      "historical_status_2026_10_28": "design_required",
+      "progress": {
+        "implementation": {
+          "state": "not_started",
+          "commit": null
+        },
+        "publication": {
+          "state": "not_started",
+          "branch": "codex/pool-lifecycle-contracts"
+        },
+        "validation": {
+          "offline": {
+            "state": "not_run"
+          },
+          "live": {
+            "state": "not_run"
+          }
+        },
+        "blocker": "Acceptance and design gates remain open",
+        "next_action": "Agree controller/member ownership, returns, scheduler authority and persistence.",
+        "updated_at": "2026-11-12",
+        "last_iteration_id": "OCI-20261112-TRACKING"
+      }
     },
     {
       "id": "POOL-OCI",
@@ -759,7 +1214,30 @@
       ],
       "estimate": "Roughly 1-3 engineering weeks after contracts; large-scale/live tests additional.",
       "owner_role": "OCI compute management engineering",
-      "owner": "unassigned"
+      "owner": "unassigned",
+      "historical_status_2026_10_28": "design_required",
+      "progress": {
+        "implementation": {
+          "state": "not_started",
+          "commit": null
+        },
+        "publication": {
+          "state": "not_started",
+          "branch": "codex/oci-instance-pools"
+        },
+        "validation": {
+          "offline": {
+            "state": "not_run"
+          },
+          "live": {
+            "state": "not_run"
+          }
+        },
+        "blocker": "Acceptance and design gates remain open",
+        "next_action": "Implement against the accepted shared pool contracts.",
+        "updated_at": "2026-11-12",
+        "last_iteration_id": "OCI-20261112-TRACKING"
+      }
     },
     {
       "id": "SCHEDULES",
@@ -791,7 +1269,30 @@
       ],
       "estimate": "3-7 engineering days after pools; live timed-event/scale-in acceptance additional.",
       "owner_role": "OCI scaling and scheduler integration",
-      "owner": "unassigned"
+      "owner": "unassigned",
+      "historical_status_2026_10_28": "design_required",
+      "progress": {
+        "implementation": {
+          "state": "not_started",
+          "commit": null
+        },
+        "publication": {
+          "state": "not_started",
+          "branch": "codex/oci-scheduled-scaling"
+        },
+        "validation": {
+          "offline": {
+            "state": "not_run"
+          },
+          "live": {
+            "state": "not_run"
+          }
+        },
+        "blocker": "Acceptance and design gates remain open",
+        "next_action": "Follow pools; agree draining, scale-in and scheduling authority first.",
+        "updated_at": "2026-11-12",
+        "last_iteration_id": "OCI-20261112-TRACKING"
+      }
     },
     {
       "id": "ACCEPT-AUTH-SHAPES",
@@ -824,7 +1325,30 @@
       ],
       "estimate": "Matrix-dependent live validation; no fixed duration or cloud cost assumed.",
       "owner_role": "OCI validation engineering",
-      "owner": "unassigned"
+      "owner": "unassigned",
+      "historical_status_2026_10_28": "validation_pending",
+      "progress": {
+        "implementation": {
+          "state": "not_applicable",
+          "commit": null
+        },
+        "publication": {
+          "state": "not_started",
+          "branch": "codex/oci-validation-runbooks"
+        },
+        "validation": {
+          "offline": {
+            "state": "not_run"
+          },
+          "live": {
+            "state": "pending"
+          }
+        },
+        "blocker": "INC-OCI-LAUNCH-001",
+        "next_action": "Finish current principal lifecycle, then representative auth/shape/preemption cases.",
+        "updated_at": "2026-11-12",
+        "last_iteration_id": "OCI-20261112-TRACKING"
+      }
     },
     {
       "id": "ACCEPT-HPC",
@@ -852,7 +1376,30 @@
       ],
       "estimate": "Capacity/image dependent; size after test design.",
       "owner_role": "HPC validation engineering",
-      "owner": "unassigned"
+      "owner": "unassigned",
+      "historical_status_2026_10_28": "validation_pending",
+      "progress": {
+        "implementation": {
+          "state": "not_applicable",
+          "commit": null
+        },
+        "publication": {
+          "state": "not_started",
+          "branch": "codex/oci-validation-runbooks"
+        },
+        "validation": {
+          "offline": {
+            "state": "not_run"
+          },
+          "live": {
+            "state": "pending"
+          }
+        },
+        "blocker": "Acceptance and design gates remain open",
+        "next_action": "Authorize and measure a compatible multi-node RDMA workload with cleanup.",
+        "updated_at": "2026-11-12",
+        "last_iteration_id": "OCI-20261112-TRACKING"
+      }
     },
     {
       "id": "ACCEPT-SYMPHONY",
@@ -882,7 +1429,30 @@
       ],
       "estimate": "Environment-dependent; implementation estimates exclude scheduler acceptance.",
       "owner_role": "Symphony integration engineering",
-      "owner": "unassigned"
+      "owner": "unassigned",
+      "historical_status_2026_10_28": "validation_pending",
+      "progress": {
+        "implementation": {
+          "state": "not_applicable",
+          "commit": null
+        },
+        "publication": {
+          "state": "not_started",
+          "branch": "codex/oci-validation-runbooks"
+        },
+        "validation": {
+          "offline": {
+            "state": "not_run"
+          },
+          "live": {
+            "state": "pending"
+          }
+        },
+        "blocker": "Acceptance and design gates remain open",
+        "next_action": "After capacity integration, verify bootstrap/registration/tasks/drain/return.",
+        "updated_at": "2026-11-12",
+        "last_iteration_id": "OCI-20261112-TRACKING"
+      }
     },
     {
       "id": "ACCEPT-PLATFORM",
@@ -919,7 +1489,30 @@
       ],
       "estimate": "Depends on selected backend/platform/features; not a fixed production-readiness estimate.",
       "owner_role": "Platform security and validation engineering",
-      "owner": "unassigned"
+      "owner": "unassigned",
+      "historical_status_2026_10_28": "validation_pending",
+      "progress": {
+        "implementation": {
+          "state": "not_applicable",
+          "commit": null
+        },
+        "publication": {
+          "state": "not_started",
+          "branch": "codex/oci-validation-runbooks"
+        },
+        "validation": {
+          "offline": {
+            "state": "not_run"
+          },
+          "live": {
+            "state": "pending"
+          }
+        },
+        "blocker": "Acceptance and design gates remain open",
+        "next_action": "Validate the selected container/API/auth/storage/restart deployment.",
+        "updated_at": "2026-11-12",
+        "last_iteration_id": "OCI-20261112-TRACKING"
+      }
     },
     {
       "id": "DOC-RUNBOOKS",
@@ -956,7 +1549,30 @@
       ],
       "estimate": "0.5-1.5 engineering days for initial adaptation; feature updates add work.",
       "owner_role": "OCI documentation engineering",
-      "owner": "unassigned"
+      "owner": "unassigned",
+      "historical_status_2026_10_28": "planned",
+      "progress": {
+        "implementation": {
+          "state": "not_started",
+          "commit": null
+        },
+        "publication": {
+          "state": "not_started",
+          "branch": "codex/oci-validation-runbooks"
+        },
+        "validation": {
+          "offline": {
+            "state": "not_run"
+          },
+          "live": {
+            "state": "not_run"
+          }
+        },
+        "blocker": "Acceptance and design gates remain open",
+        "next_action": "Publish portable instructions as features land, with exact acceptance limits.",
+        "updated_at": "2026-11-12",
+        "last_iteration_id": "OCI-20261112-TRACKING"
+      }
     }
   ],
   "coverage": [
@@ -1372,5 +1988,214 @@
     "Existing Azure/package PRs and maintainer-owned release follow-ups remain external; this roadmap does not duplicate their fixes.",
     "All owners are unassigned roles; no dates or accountable people are invented. Rough single-engineer estimates overlap, exclude external waits/live costs and must not be summed.",
     "Optional P2/P3 capabilities and their production gates do not become prerequisites for merging the bounded direct-instance contribution."
+  ],
+  "history": {
+    "initial_snapshot": {
+      "as_of": "2026-10-28",
+      "baselines": {
+        "main": "2a7724796318d85eb171f50ad2f2bbba886187ec",
+        "oci": "21b3bd05878850c3ee2adca62d83ea56ddfd0748",
+        "capacity_helper": "1befd18bc567e29e9c8cfd7edc93ef4315a85233"
+      },
+      "external_dependencies": [
+        {
+          "id": "EXT-OCI234",
+          "url": "https://github.com/finos/open-resource-broker/pull/234",
+          "state": "open"
+        },
+        {
+          "id": "EXT-AZURE588",
+          "url": "https://github.com/finos/open-resource-broker/pull/588",
+          "state": "open"
+        },
+        {
+          "id": "EXT-PACKAGING589",
+          "url": "https://github.com/finos/open-resource-broker/pull/589",
+          "state": "open"
+        },
+        {
+          "id": "EXT-RELEASE622",
+          "url": "https://github.com/finos/open-resource-broker/issues/622",
+          "state": "tracking"
+        }
+      ]
+    }
+  },
+  "last_updated": "2026-11-12",
+  "observed_upstream": {
+    "checked_on": "2026-11-12",
+    "main_commit": "7b356262d0154db90b312deae6ff64f5bdbbd9b5",
+    "commits_ahead_of_tested_main": 34,
+    "oci_provider_files_changed_in_comparison": false,
+    "shared_hostfactory_dto_formatter_changes": true,
+    "source": "https://github.com/finos/open-resource-broker/compare/071f4596ac7983ac0a7954998c10ed106c0a2bee...7b356262d0154db90b312deae6ff64f5bdbbd9b5"
+  },
+  "tracking": {
+    "current_summary": "CURRENT.md",
+    "iterations": "iterations.json",
+    "instructions": "../../AGENTS.md",
+    "last_iteration_id": "OCI-20261112-TRACKING",
+    "rule": "Keep implementation, publication, offline validation and live acceptance separate; append meaningful iteration results."
+  },
+  "upstream_integrations": [
+    {
+      "id": "BASE",
+      "status": "complete",
+      "url": "https://github.com/finos/open-resource-broker/pull/234",
+      "merged_at": "2026-10-29T14:59:13Z"
+    },
+    {
+      "id": "DOC-RDMA",
+      "status": "complete",
+      "evidence": [
+        "Signed RDMA launch documentation is included in merged OCI contribution 21b3bd05."
+      ],
+      "limit": "Existing Compute Cluster placement documentation; no throughput result."
+    },
+    {
+      "id": "EXT-AZURE588",
+      "status": "complete",
+      "url": "https://github.com/finos/open-resource-broker/pull/588",
+      "merged_at": "2026-10-29T14:57:59Z"
+    },
+    {
+      "id": "EXT-PACKAGING589",
+      "status": "complete",
+      "url": "https://github.com/finos/open-resource-broker/pull/589",
+      "merged_at": "2026-10-29T14:58:16Z"
+    },
+    {
+      "id": "UPSTREAM-HARDENING",
+      "status": "complete",
+      "evidence": [
+        {
+          "commit": "af32b085",
+          "subject": "Restrict launch realm suffix to known realms and harden provider naming."
+        },
+        {
+          "commit": "f663045a",
+          "subject": "Isolate not-found machines in status polling and report region mismatch distinctly."
+        }
+      ],
+      "tracking_issue": {
+        "number": 622,
+        "state": "closed",
+        "url": "https://github.com/finos/open-resource-broker/issues/622"
+      },
+      "limit": "Do not reopen the completed hardening work or infer every item in the old issue body remains open; capacity classification is separately tracked by 677."
+    },
+    {
+      "id": "UPSTREAM-OFFLINE-VALIDATOR",
+      "status": "complete",
+      "evidence": [
+        {
+          "commit": "c3e058be",
+          "subject": "Validate OCI templates at registration."
+        },
+        {
+          "commit": "7489d508",
+          "subject": "Merge provider configuration and validation fixes in PR784."
+        }
+      ],
+      "tracking_issue": {
+        "number": 732,
+        "state": "closed",
+        "url": "https://github.com/finos/open-resource-broker/issues/732"
+      },
+      "limit": "Registration validation is offline and distinct from live image/subnet/shape preflight."
+    },
+    {
+      "id": "UPSTREAM-OPERATOR-CONFIRM",
+      "status": "complete",
+      "evidence": [
+        {
+          "commit": "934ad3e6",
+          "subject": "Merge PR740 OCI confirm-terminated work."
+        },
+        {
+          "commit": "8e46fcdf",
+          "subject": "Provider-neutral confirm-terminated with verified and operator-attested records."
+        },
+        {
+          "commit": "19591aa8",
+          "subject": "Treat search-missing instances as unverified and document confirm-terminated errors."
+        }
+      ],
+      "tracking_issue": {
+        "number": 678,
+        "state": "closed",
+        "url": "https://github.com/finos/open-resource-broker/issues/678"
+      },
+      "limit": "Operator attestation is explicit and audited; an ambiguous 404 is not automatic evidence of deletion."
+    }
+  ],
+  "open_issues": [
+    {
+      "id": "ISSUE-677",
+      "number": 677,
+      "state": "open",
+      "last_verified_on": "2026-11-12",
+      "url": "https://github.com/finos/open-resource-broker/issues/677",
+      "next_action": "Capture a real sanitized OutOfHostCapacity response before altering ambiguity/fallback classification."
+    }
+  ],
+  "incidents": [
+    {
+      "id": "INC-OCI-LAUNCH-001",
+      "state": "blocked_evidence",
+      "linked_cards": [
+        "PREFLIGHT",
+        "ACCEPT-AUTH-SHAPES"
+      ],
+      "owner": "Codex investigation; operator access needed for the next read",
+      "last_iteration_id": "OCI-20261112-TRACKING",
+      "last_good_commit": "7f6f13c568d14785fa76d673ce1f4513ea1fcc79",
+      "last_good_date": "2026-10-22",
+      "current_tested_commit": "0dbc17f6bdf9d3f00b716d72f3aa7572f6651c2e",
+      "known_facts": [
+        "Earlier broker-principal native and ORB launches returned 404; equivalent operator stock-image E5 reached RUNNING and was cleaned up.",
+        "Historical IAM snapshot has four broad statements; current policy has eleven restrictions and workers target a child compartment. Exact change date/actor is unknown.",
+        "Latest approved catalog test returned frontend Unknown error; underlying provider detail is unread.",
+        "Temporary grants removed, original policy/config restored, zero active test workers/boot volumes, owned sessions closed."
+      ],
+      "hypothesis": "Broker authorization/context is implicated; a specific missing permission is not established.",
+      "next_action": "Read the latest stored provider error in the same short access session; no new IAM grant is needed. If an unexplained denial persists, obtain tenancy IAM/Compute tracing.",
+      "evidence": [
+        "work/oci-review-20261110/LIVE_DIAGNOSTIC_HANDOFF.txt",
+        "work/oci-review-20261110/live-canary/catalog-diagnostic-271e511d53.json"
+      ]
+    },
+    {
+      "id": "ISS-CLI-ERROR-001",
+      "state": "diagnosed_not_implemented",
+      "linked_cards": [
+        "PREFLIGHT"
+      ],
+      "owner": "Separate generic shared fix",
+      "last_iteration_id": "OCI-20261112-TRACKING",
+      "known_facts": [
+        "Acquire output omits the existing stored request message, producing frontend Unknown error.",
+        "The Nov12 upstream request-status enrichment is a different path and does not fix acquire output."
+      ],
+      "next_action": "Refresh and scope the provider-neutral message propagation change in a separate PR; preserve sanitized messages and current formatter contracts.",
+      "evidence": [
+        "work/oci-review-20261110/acquire-message-proposal.json"
+      ]
+    }
+  ],
+  "current_focus": "INC-OCI-LAUNCH-001",
+  "next_work_order": [
+    "INC-OCI-LAUNCH-001",
+    "ISS-CLI-ERROR-001",
+    "PREFLIGHT",
+    "HF-FACTS",
+    "HF-SHARED",
+    "HF-OCI"
+  ],
+  "validation_limits": [
+    "These are separate branch suites sharing a 399-test baseline; do not add 501 and 502 as unique tests.",
+    "Current principal acquisition/return has not passed. Operator control is a separate identity.",
+    "Existing starter branches and estimates are plans, not implemented features or delivery dates.",
+    "Active follow-ups must be refreshed from tested 071f4596 to observed main 7b356262 before publication."
   ]
 }
