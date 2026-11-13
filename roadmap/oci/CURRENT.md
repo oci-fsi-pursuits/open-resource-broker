@@ -1,6 +1,6 @@
 # OCI work status and next Codex iteration
 
-Updated **12 November 2026**. This is the readable handoff for the fork's
+Updated **13 November 2026**. This is the readable handoff for the fork's
 [canonical backlog](backlog.json) and [iteration history](iterations.json).
 Runtime changes remain on their individual branches.
 
@@ -28,15 +28,19 @@ These are observed differences, **not a proven root cause**:
   installed build. The negative probe made zero launch calls.
 - The inherited Security Zone's only enabled rule concerns load-balancer SSL;
   it does not apply to this Compute launch.
-- The approved scoped IAM test returned the earlier 404. The later catalog-read
-  test failed with frontend `Unknown error`; its stored provider detail remains
-  unread. Do not label that latest result another 404 or a confirmed catalog fix.
+- The approved scoped IAM test returned the earlier 404. On 13 November, the
+  later catalog test's stored message and matching audit were recovered: its
+  `LaunchInstance` also returned 404 / `NotAuthorizedOrNotFound` under the broker
+  principal. The catalog-read grant did not resolve that recorded failure.
+  The audit does not identify the exact denied permission or resource check.
 - Temporary grants were removed, the original policy and local configuration were
   restored, and post-test inventory found zero active test workers/boot volumes.
   Owned temporary Bastion sessions were closed; the broker was retained.
 
-Workstation token expiry interrupted the final diagnostic read. It is separate
-from the broker's instance-principal authentication.
+Workstation access was renewed through browser SSO and verified as the same
+identity and tenancy. The read-only lookup and audit correlation are complete;
+owned temporary access was closed. No worker or IAM grant was created during
+this iteration. Workstation authentication is separate from broker principals.
 
 ## Feature delivery
 
@@ -57,21 +61,20 @@ Branch starters are not completed features.
 
 ## Next iteration: `INC-OCI-LAUNCH-001`
 
-**Objective:** retrieve the actual stored provider error from the latest catalog
-canary, then identify its failing operation. No further IAM grant is needed for
-the read. The exact request and private evidence are in the ignored local
-`work/oci-review-20261110/` records.
+**Objective:** obtain the exact failed authorization/resource check from tenancy
+IAM or Oracle Compute tracing. The sanitized operation/code is now known; the
+audit exposes no denied-permission detail. A private trace-request draft is ready
+at `work/oci-review-20261110/OCI_IAM_TRACE_REQUEST.txt`; it has not been submitted.
 
-1. Use renewed operator access to read that stored request and capture its
-   provider detail in the same short access session. Close the owned session.
-2. If it remains an unexplained authorization denial, request tenancy IAM/Compute
-   tracing of the exact failed permission/resource check, using the successful
-   operator control and the last-good broker-principal comparison. Further IAM
-   experiments need a specific new hypothesis and appropriate authorization.
-3. If it is capacity, capture the real sanitized response for issue #677. If it
-   is another error, follow that evidence before launching again.
-4. Complete the current broker-principal lifecycle and verify cleanup before
-   marking live acceptance passed.
+1. Route the prepared request to the tenancy IAM owner or Oracle Compute support
+   with the user's authorization. Keep its deployment identifiers private.
+2. Identify the failed permission and target resource/compartment, evaluated
+   dynamic-group membership, and region/operation conditions before changing IAM.
+3. Apply only an evidenced narrow correction with appropriate authorization.
+4. Complete the current broker-principal acquire/status/return lifecycle and
+   independently verify cleanup before marking live acceptance passed.
+
+This is not an `OutOfHostCapacity` response and supplies no fixture for #677.
 
 Independent work may proceed on the hardware-helper review and the generic
 HostFactory contract. The shared CLI error-detail loss is diagnosed but has no

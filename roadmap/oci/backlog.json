@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "as_of": "2026-11-12",
+  "as_of": "2026-11-13",
   "source": {
     "title": "OCI Implementation Gap Assessment",
     "date": "2026-10-27"
@@ -536,13 +536,13 @@
             "evidence": "work/oci-review-20261110/validation.json"
           },
           "live": {
-            "state": "hold_provider_detail_pending"
+            "state": "hold_launch_404"
           }
         },
         "blocker": "INC-OCI-LAUNCH-001",
-        "next_action": "Retrieve the latest stored provider error, resolve its cause, finish principal lifecycle acceptance, refresh main and obtain upstream review.",
-        "updated_at": "2026-11-12",
-        "last_iteration_id": "OCI-20261112-TRACKING"
+        "next_action": "Obtain the captured LaunchInstance 404 authorization/resource trace, resolve the evidenced cause, then complete the broker-principal lifecycle and cleanup.",
+        "updated_at": "2026-11-13",
+        "last_iteration_id": "OCI-20261113-ERROR-READ"
       }
     },
     {
@@ -1345,9 +1345,9 @@
           }
         },
         "blocker": "INC-OCI-LAUNCH-001",
-        "next_action": "Finish current principal lifecycle, then representative auth/shape/preemption cases.",
-        "updated_at": "2026-11-12",
-        "last_iteration_id": "OCI-20261112-TRACKING"
+        "next_action": "Obtain the captured LaunchInstance 404 authorization/resource trace, resolve the evidenced cause, then complete the broker-principal lifecycle and cleanup.",
+        "updated_at": "2026-11-13",
+        "last_iteration_id": "OCI-20261113-ERROR-READ"
       }
     },
     {
@@ -2021,7 +2021,7 @@
       ]
     }
   },
-  "last_updated": "2026-11-12",
+  "last_updated": "2026-11-13",
   "observed_upstream": {
     "checked_on": "2026-11-12",
     "main_commit": "7b356262d0154db90b312deae6ff64f5bdbbd9b5",
@@ -2034,7 +2034,7 @@
     "current_summary": "CURRENT.md",
     "iterations": "iterations.json",
     "instructions": "../../AGENTS.md",
-    "last_iteration_id": "OCI-20261112-TRACKING",
+    "last_iteration_id": "OCI-20261113-ERROR-READ",
     "rule": "Keep implementation, publication, offline validation and live acceptance separate; append meaningful iteration results."
   },
   "upstream_integrations": [
@@ -2142,27 +2142,30 @@
   "incidents": [
     {
       "id": "INC-OCI-LAUNCH-001",
-      "state": "blocked_evidence",
+      "state": "blocked_external_authorization_trace",
       "linked_cards": [
         "PREFLIGHT",
         "ACCEPT-AUTH-SHAPES"
       ],
       "owner": "Codex investigation; operator access needed for the next read",
-      "last_iteration_id": "OCI-20261112-TRACKING",
+      "last_iteration_id": "OCI-20261113-ERROR-READ",
       "last_good_commit": "7f6f13c568d14785fa76d673ce1f4513ea1fcc79",
       "last_good_date": "2026-10-22",
       "current_tested_commit": "0dbc17f6bdf9d3f00b716d72f3aa7572f6651c2e",
       "known_facts": [
         "Earlier broker-principal native and ORB launches returned 404; equivalent operator stock-image E5 reached RUNNING and was cleaned up.",
         "Historical IAM snapshot has four broad statements; current policy has eleven restrictions and workers target a child compartment. Exact change date/actor is unknown.",
-        "Latest approved catalog test returned frontend Unknown error; underlying provider detail is unread.",
+        "The latest catalog test stored error and matching audit now confirm LaunchInstance 404 NotAuthorizedOrNotFound; the exact denied check is not exposed.",
         "Temporary grants removed, original policy/config restored, zero active test workers/boot volumes, owned sessions closed."
       ],
       "hypothesis": "Broker authorization/context is implicated; a specific missing permission is not established.",
-      "next_action": "Read the latest stored provider error in the same short access session; no new IAM grant is needed. If an unexplained denial persists, obtain tenancy IAM/Compute tracing.",
+      "next_action": "Request tenancy IAM/Compute tracing of the captured OCI request; the private draft is ready. No further permission expansion is justified by the current evidence.",
       "evidence": [
         "work/oci-review-20261110/LIVE_DIAGNOSTIC_HANDOFF.txt",
-        "work/oci-review-20261110/live-canary/catalog-diagnostic-271e511d53.json"
+        "work/oci-review-20261110/live-canary/catalog-diagnostic-271e511d53.json",
+        "work/oci-review-20261110/live-canary/catalog-canary-stored-error.json",
+        "work/oci-review-20261110/live-canary/catalog-audit-match.json",
+        "work/oci-review-20261110/OCI_IAM_TRACE_REQUEST.txt"
       ]
     },
     {

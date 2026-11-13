@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-11-12",
+  "updated_at": "2026-11-13",
   "timezone": "America/Los_Angeles",
   "purpose": "Sanitized, append-only meaningful work iterations; raw deployment evidence remains ignored.",
   "current_focus": "INC-OCI-LAUNCH-001",
@@ -259,6 +259,48 @@
       "limits": [
         "Historical checkpoints were reconstructed from recorded evidence, not invented as original chat boundaries."
       ]
+    },
+    {
+      "id": "OCI-20261113-ERROR-READ",
+      "date": "2026-11-13",
+      "record_origin": "current_iteration",
+      "objective": "Retrieve and classify the latest failed canary without another grant or worker",
+      "work_ids": [
+        "INC-OCI-LAUNCH-001",
+        "ISS-CLI-ERROR-001",
+        "PREFLIGHT",
+        "ACCEPT-AUTH-SHAPES"
+      ],
+      "source": {
+        "runtime_commit": "0dbc17f6bdf9d3f00b716d72f3aa7572f6651c2e",
+        "planning_start_commit": "5e118a0ee1944ca5dbe6d0ade3e844e14b2fcea6",
+        "workstation_auth": "renewed browser security token; same identity/tenancy verified",
+        "runtime_source_changed": false
+      },
+      "outcome": "provider_404_confirmed_external_trace_needed",
+      "observed_facts": [
+        "Stored request message confirms LaunchInstance status 404 NotAuthorizedOrNotFound.",
+        "Matching OCI audit event confirms the retained broker instance principal and the 404.",
+        "Audit exposes no denied-permission detail; exact root cause is still unproved.",
+        "The earlier catalog-read grant did not resolve the recorded 404.",
+        "A private service-trace request was prepared locally and has not been submitted.",
+        "The local canary controller now captures the stored sanitized failure after worker cleanup and before closing Bastion access; syntax checked only, with no additional live run."
+      ],
+      "evidence": [
+        "work/oci-review-20261110/live-canary/catalog-canary-stored-error.json",
+        "work/oci-review-20261110/live-canary/catalog-audit-match.json",
+        "work/oci-review-20261110/live-canary/catalog-audit-lineage.json",
+        "work/oci-review-20261110/OCI_IAM_TRACE_REQUEST.txt"
+      ],
+      "cleanup": {
+        "temporary_access_closed": true,
+        "new_iam_grants": 0,
+        "new_workers": 0
+      },
+      "unknowns": [
+        "The exact failed IAM permission or resource-resolution check requires service tracing."
+      ],
+      "next_action": "Have the tenancy IAM owner or Oracle Compute support trace the captured request; apply only an evidenced narrow correction with appropriate authorization."
     }
   ]
 }
