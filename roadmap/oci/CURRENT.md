@@ -1,6 +1,6 @@
 # OCI work status and next Codex iteration
 
-Updated **13 November 2026**. This is the readable handoff for the fork's
+Updated **16 November 2026**. This is the readable handoff for the fork's
 [canonical backlog](backlog.json) and [iteration history](iterations.json).
 Runtime changes remain on their individual branches.
 
@@ -59,20 +59,42 @@ The 25 cards comprise **2 merged cards, 2 additional implemented follow-ups,
 preflight suites share a 399-test baseline; 501 + 502 is not 1,003 unique tests.
 Branch starters are not completed features.
 
+## Access review on 16 November
+
+Read-only inspection found the retained broker RUNNING and both local launchers
+pointing to the same ACTIVE Bastion. Its allowlist still contains the two
+historical single-address entries. Two matching successful operator API audit
+events show a current HTTPS source address outside that allowlist. This is an
+observed API-egress mismatch and a strong candidate for the workstation SSH
+problem; direct SSH egress remains unmeasured and can differ by route.
+
+The broker's eleven-statement policy is unchanged. The three checked policy
+scopes contain no IP/network-source conditions, and no IAM Network Sources were
+listed. No IP-based IAM restriction was found in those checks. External public-IP
+echo services timed out or returned a certificate-chain error; validation was not
+disabled. Successful Bastion access on 13 November has no saved client IP.
+
+A private proposal preserves the existing allowlist and adds one candidate `/32`.
+It has **not** been applied. No new SSH session, IAM grant or worker was created.
+The browser operator session was renewed and verified as the same identity and
+tenancy to perform these reads. Raw addresses, IDs and the proposal stay ignored.
+
+This access finding does not establish the cause of the broker-principal
+`LaunchInstance` 404, which originated on the broker rather than the workstation.
+
 ## Next iteration: `INC-OCI-LAUNCH-001`
 
-**Objective:** obtain the exact failed authorization/resource check from tenancy
-IAM or Oracle Compute tracing. The sanitized operation/code is now known; the
-audit exposes no denied-permission detail. A private trace-request draft is ready
-at `work/oci-review-20261110/OCI_IAM_TRACE_REQUEST.txt`; it has not been submitted.
+**User direction:** investigate the possible changed-IP restriction read-only;
+the user still plans to SSH and validate the existing installed build. Support
+submission is not authorized. Manual validation remains pending.
 
-1. Route the prepared request to the tenancy IAM owner or Oracle Compute support
-   with the user's authorization. Keep its deployment identifiers private.
-2. Identify the failed permission and target resource/compartment, evaluated
-   dynamic-group membership, and region/operation conditions before changing IAM.
-3. Apply only an evidenced narrow correction with appropriate authorization.
-4. Complete the current broker-principal acquire/status/return lifecycle and
-   independently verify cleanup before marking live acceptance passed.
+1. Review the proposed single-address Bastion correction and, if authorized,
+   re-read the allowlist/ETag, apply the narrow addition, and test a fresh session.
+   Verify the actual SSH route rather than treating API egress as proof.
+2. Enter the verified preflight checkout on the broker, activate its environment,
+   and run the existing one-worker lifecycle gate, which includes cleanup.
+3. Inspect the user's terminal output, report and stored provider error before
+   another experiment. No new launch or broader IAM grant is part of this review.
 
 This is not an `OutOfHostCapacity` response and supplies no fixture for #677.
 

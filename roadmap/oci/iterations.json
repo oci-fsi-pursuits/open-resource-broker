@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-11-13",
+  "updated_at": "2026-11-16",
   "timezone": "America/Los_Angeles",
   "purpose": "Sanitized, append-only meaningful work iterations; raw deployment evidence remains ignored.",
   "current_focus": "INC-OCI-LAUNCH-001",
@@ -301,6 +301,98 @@
         "The exact failed IAM permission or resource-resolution check requires service tracing."
       ],
       "next_action": "Have the tenancy IAM owner or Oracle Compute support trace the captured request; apply only an evidenced narrow correction with appropriate authorization."
+    },
+    {
+      "id": "OCI-20261113-MANUAL-HANDOFF",
+      "date": "2026-11-13",
+      "record_origin": "current_iteration",
+      "objective": "Hand interactive broker validation to the user",
+      "work_ids": [
+        "INC-OCI-LAUNCH-001",
+        "PREFLIGHT",
+        "ACCEPT-AUTH-SHAPES"
+      ],
+      "source": {
+        "planning_start_commit": "954d91d7001086095a1af4f9bc7dc9815af639ff",
+        "runtime_commit": "0dbc17f6bdf9d3f00b716d72f3aa7572f6651c2e",
+        "runtime_source_changed": false
+      },
+      "outcome": "waiting_for_user_manual_test",
+      "observed_facts": [
+        "User declined support submission and chose to SSH and test directly.",
+        "Existing SSH launcher and installed-build directory were inspected; the agent did not run another SSH session or canary."
+      ],
+      "evidence": [
+        "work/oci-manual-broker/ssh.ps1",
+        "work/oci-review-20261110/live-canary/summary.json"
+      ],
+      "cleanup": {
+        "new_agent_ssh_sessions": 0,
+        "new_iam_grants": 0,
+        "new_workers": 0
+      },
+      "next_action": "Wait for the user terminal output, then diagnose that result without assuming a new error or changing IAM."
+    },
+    {
+      "id": "OCI-20261116-IP-REVIEW",
+      "date": "2026-11-16",
+      "record_origin": "current_iteration",
+      "objective": "Investigate changed workstation IP restrictions without modifying cloud access",
+      "work_ids": [
+        "INC-OCI-LAUNCH-001",
+        "PREFLIGHT",
+        "ACCEPT-AUTH-SHAPES"
+      ],
+      "source": {
+        "planning_start_commit": "954d91d7001086095a1af4f9bc7dc9815af639ff",
+        "planning_started_dirty": [
+          "roadmap/oci/CURRENT.md",
+          "roadmap/oci/backlog.json",
+          "roadmap/oci/iterations.json"
+        ],
+        "preserved_prior_dirty_work": "Nov13 manual-handoff entry and status updates",
+        "runtime_commit": "0dbc17f6bdf9d3f00b716d72f3aa7572f6651c2e",
+        "runtime_checkout_clean": true,
+        "runtime_source_changed": false
+      },
+      "outcome": "api_egress_allowlist_mismatch_found_ssh_route_unverified",
+      "changes": [
+        "Appended sanitized access findings to the fork tracker.",
+        "Prepared ignored single-address allowlist proposal; did not execute it."
+      ],
+      "checks": {
+        "live_reads": "Bastion, broker, broker policy, three policy scopes, IAM Network Sources and matching GetBastion audit events",
+        "public_ip_echo": "Unsuccessful: timeouts and one certificate-chain error; TLS verification retained.",
+        "offline_tracker": "Roadmap and semantic snapshot validators run before checkpoint publication; see ignored validation records."
+      },
+      "observed_facts": [
+        "Nov16: retained broker RUNNING; both launchers reference the same ACTIVE Bastion with two historical /32 entries.",
+        "Two operator API audit events show a current HTTPS source outside the Bastion allowlist. Direct SSH source is unmeasured, so the SSH cause remains unconfirmed.",
+        "The eleven-statement broker policy is unchanged; no IP/network-source conditions in the three checked policy scopes, and no IAM Network Sources listed.",
+        "Read-only IP review renewed the same operator identity/tenancy and created no SSH sessions, IAM grants or workers. Candidate /32 proposal is private and unapplied.",
+        "Last successful saved Bastion route is Nov13; no source IP was retained for that session.",
+        "Current read-only checks do not identify the failed permission/resource check behind the broker LaunchInstance 404."
+      ],
+      "remaining_hypotheses": [
+        "Workstation SSH may use the same changed egress as the audited API calls, or follow a different route.",
+        "The broker launch denial remains a separate authorization/context issue."
+      ],
+      "evidence": [
+        "work/oci-review-20261116/ip-restriction-report.json",
+        "work/oci-review-20261116/operator-access-audit.json",
+        "work/oci-review-20261116/public-ip-alternatives.json",
+        "work/oci-review-20261116/bastion-allowlist-proposal.json"
+      ],
+      "cleanup": {
+        "cloud_changes": false,
+        "new_ssh_sessions": 0,
+        "new_iam_grants": 0,
+        "new_workers": 0,
+        "allowlist_changed": false,
+        "broker_retained_running": true,
+        "support_submitted": false
+      },
+      "next_action": "Review the narrow candidate /32 proposal; change access only if directed, verify a fresh SSH session, then obtain the user-run lifecycle result."
     }
   ]
 }

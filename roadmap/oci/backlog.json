@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "as_of": "2026-11-13",
+  "as_of": "2026-11-16",
   "source": {
     "title": "OCI Implementation Gap Assessment",
     "date": "2026-10-27"
@@ -540,9 +540,9 @@
           }
         },
         "blocker": "INC-OCI-LAUNCH-001",
-        "next_action": "Obtain the captured LaunchInstance 404 authorization/resource trace, resolve the evidenced cause, then complete the broker-principal lifecycle and cleanup.",
-        "updated_at": "2026-11-13",
-        "last_iteration_id": "OCI-20261113-ERROR-READ"
+        "next_action": "Resolve workstation SSH access separately using the reviewed narrow proposal if directed, then inspect user-led lifecycle validation; no current broker-principal acceptance.",
+        "updated_at": "2026-11-16",
+        "last_iteration_id": "OCI-20261116-IP-REVIEW"
       }
     },
     {
@@ -1345,9 +1345,9 @@
           }
         },
         "blocker": "INC-OCI-LAUNCH-001",
-        "next_action": "Obtain the captured LaunchInstance 404 authorization/resource trace, resolve the evidenced cause, then complete the broker-principal lifecycle and cleanup.",
-        "updated_at": "2026-11-13",
-        "last_iteration_id": "OCI-20261113-ERROR-READ"
+        "next_action": "Resolve workstation SSH access separately using the reviewed narrow proposal if directed, then inspect user-led lifecycle validation; no current broker-principal acceptance.",
+        "updated_at": "2026-11-16",
+        "last_iteration_id": "OCI-20261116-IP-REVIEW"
       }
     },
     {
@@ -2021,7 +2021,7 @@
       ]
     }
   },
-  "last_updated": "2026-11-13",
+  "last_updated": "2026-11-16",
   "observed_upstream": {
     "checked_on": "2026-11-12",
     "main_commit": "7b356262d0154db90b312deae6ff64f5bdbbd9b5",
@@ -2034,7 +2034,7 @@
     "current_summary": "CURRENT.md",
     "iterations": "iterations.json",
     "instructions": "../../AGENTS.md",
-    "last_iteration_id": "OCI-20261113-ERROR-READ",
+    "last_iteration_id": "OCI-20261116-IP-REVIEW",
     "rule": "Keep implementation, publication, offline validation and live acceptance separate; append meaningful iteration results."
   },
   "upstream_integrations": [
@@ -2142,13 +2142,13 @@
   "incidents": [
     {
       "id": "INC-OCI-LAUNCH-001",
-      "state": "blocked_external_authorization_trace",
+      "state": "waiting_manual_validation",
       "linked_cards": [
         "PREFLIGHT",
         "ACCEPT-AUTH-SHAPES"
       ],
-      "owner": "Codex investigation; operator access needed for the next read",
-      "last_iteration_id": "OCI-20261113-ERROR-READ",
+      "owner": "Codex read-only access review; user-led broker validation pending",
+      "last_iteration_id": "OCI-20261116-IP-REVIEW",
       "last_good_commit": "7f6f13c568d14785fa76d673ce1f4513ea1fcc79",
       "last_good_date": "2026-10-22",
       "current_tested_commit": "0dbc17f6bdf9d3f00b716d72f3aa7572f6651c2e",
@@ -2156,17 +2156,27 @@
         "Earlier broker-principal native and ORB launches returned 404; equivalent operator stock-image E5 reached RUNNING and was cleaned up.",
         "Historical IAM snapshot has four broad statements; current policy has eleven restrictions and workers target a child compartment. Exact change date/actor is unknown.",
         "The latest catalog test stored error and matching audit now confirm LaunchInstance 404 NotAuthorizedOrNotFound; the exact denied check is not exposed.",
-        "Temporary grants removed, original policy/config restored, zero active test workers/boot volumes, owned sessions closed."
+        "Temporary grants removed, original policy/config restored, zero active test workers/boot volumes, owned sessions closed.",
+        "Nov16: retained broker RUNNING; both launchers reference the same ACTIVE Bastion with two historical /32 entries.",
+        "Two operator API audit events show a current HTTPS source outside the Bastion allowlist. Direct SSH source is unmeasured, so the SSH cause remains unconfirmed.",
+        "The eleven-statement broker policy is unchanged; no IP/network-source conditions in the three checked policy scopes, and no IAM Network Sources listed.",
+        "Read-only IP review renewed the same operator identity/tenancy and created no SSH sessions, IAM grants or workers. Candidate /32 proposal is private and unapplied."
       ],
-      "hypothesis": "Broker authorization/context is implicated; a specific missing permission is not established.",
-      "next_action": "Request tenancy IAM/Compute tracing of the captured OCI request; the private draft is ready. No further permission expansion is justified by the current evidence.",
+      "hypothesis": "Changed workstation egress may explain SSH access; broker-principal launch authorization/context remains unresolved separately.",
+      "next_action": "Review the narrow candidate /32 proposal; change access only if directed, verify a fresh SSH session, then obtain the user-run lifecycle result.",
       "evidence": [
         "work/oci-review-20261110/LIVE_DIAGNOSTIC_HANDOFF.txt",
         "work/oci-review-20261110/live-canary/catalog-diagnostic-271e511d53.json",
         "work/oci-review-20261110/live-canary/catalog-canary-stored-error.json",
         "work/oci-review-20261110/live-canary/catalog-audit-match.json",
-        "work/oci-review-20261110/OCI_IAM_TRACE_REQUEST.txt"
-      ]
+        "work/oci-review-20261110/OCI_IAM_TRACE_REQUEST.txt",
+        "work/oci-review-20261116/ip-restriction-report.json",
+        "work/oci-review-20261116/operator-access-audit.json",
+        "work/oci-review-20261116/public-ip-alternatives.json",
+        "work/oci-review-20261116/bastion-allowlist-proposal.json"
+      ],
+      "support_submission_authorized": false,
+      "user_direction": "User requested read-only investigation of a possible changed-IP restriction and still plans interactive validation; support submission remains declined."
     },
     {
       "id": "ISS-CLI-ERROR-001",
