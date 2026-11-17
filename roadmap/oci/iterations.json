@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "updated_at": "2026-11-16",
+  "updated_at": "2026-11-17",
   "timezone": "America/Los_Angeles",
   "purpose": "Sanitized, append-only meaningful work iterations; raw deployment evidence remains ignored.",
-  "current_focus": "INC-OCI-LAUNCH-001",
+  "current_focus": "PREFLIGHT",
   "entries": [
     {
       "id": "OCI-20261022-BASELINE",
@@ -393,6 +393,297 @@
         "support_submitted": false
       },
       "next_action": "Review the narrow candidate /32 proposal; change access only if directed, verify a fresh SSH session, then obtain the user-run lifecycle result."
+    },
+    {
+      "id": "OCI-20261117-MANUAL-LOGIN",
+      "date": "2026-11-17",
+      "record_origin": "current_iteration",
+      "objective": "Provide the existing broker login and exact installed-build manual lifecycle commands",
+      "work_ids": [
+        "INC-OCI-LAUNCH-001",
+        "PREFLIGHT",
+        "ACCEPT-AUTH-SHAPES"
+      ],
+      "source": {
+        "planning_start_commit": "6ecaab05e42a2144c1111baa72fb20fae2dec784",
+        "planning_started_dirty": false,
+        "runtime_commit": "0dbc17f6bdf9d3f00b716d72f3aa7572f6651c2e",
+        "runtime_source_changed": false
+      },
+      "outcome": "manual_login_and_existing_build_test_handed_to_user",
+      "changes": [
+        "Updated the sanitized fork tracker; no provider, launcher or cloud configuration edits."
+      ],
+      "checks": [
+        "Read the launcher, recorded deployment summary and deployed gate invocation.",
+        "Confirmed the current branch gate is tests/providers/oci/live/gate.py; the older dev-tools location is not the command for this installed checkout.",
+        "The launcher stores a configured key path; sandbox access denied prevents a fresh key-presence check and is not evidence that the key is missing."
+      ],
+      "observed_facts": [
+        "No new live read, authentication flow, SSH session, worker or redeployment was run during this handoff.",
+        "The November 16 proposed single-address Bastion addition remains unapplied.",
+        "No new lifecycle result or cause of the recorded launch 404 has been established."
+      ],
+      "evidence": [
+        "work/oci-manual-broker/ssh.ps1",
+        "work/oci-review-20261110/live-canary/summary.json",
+        "work/oci-review-20261110/run_live_canary.py",
+        "work/oci-review-20261116/bastion-allowlist-proposal.json"
+      ],
+      "remaining_hypotheses": [
+        "Workstation SSH may use the same changed egress as the audited API calls, or a different route."
+      ],
+      "cleanup": {
+        "cloud_changes": false,
+        "new_ssh_sessions": 0,
+        "new_workers": 0,
+        "new_iam_grants": 0,
+        "redeployed": false,
+        "support_submitted": false
+      },
+      "next_action": "Wait for the user login result and one-worker report. If access fails, inspect the fresh tunnel log and resolve its cause before redeployment; the candidate allowlist addition remains unapplied."
+    },
+    {
+      "id": "OCI-20261117-MANUAL-RESULT",
+      "date": "2026-11-17",
+      "record_origin": "current_iteration",
+      "objective": "Classify the user-reported manual result and identify the next non-launch diagnostic",
+      "work_ids": [
+        "INC-OCI-LAUNCH-001",
+        "ISS-CLI-ERROR-001",
+        "PREFLIGHT",
+        "ACCEPT-AUTH-SHAPES"
+      ],
+      "source": {
+        "planning_start_commit": "6ecaab05e42a2144c1111baa72fb20fae2dec784",
+        "planning_started_dirty": [
+          "roadmap/oci/CURRENT.md",
+          "roadmap/oci/backlog.json",
+          "roadmap/oci/iterations.json"
+        ],
+        "preserved_prior_dirty_work": "Nov17 manual-login handoff",
+        "local_implementation_branch": "codex/oci-launch-preflight",
+        "local_implementation_commit": "0dbc17f6bdf9d3f00b716d72f3aa7572f6651c2e",
+        "local_implementation_base": "071f4596ac7983ac0a7954998c10ed106c0a2bee",
+        "local_implementation_clean": true,
+        "runtime_source_changed": false,
+        "remote_commit_reread_this_iteration": false
+      },
+      "outcome": "manual_failure_confirmed_stored_provider_detail_pending",
+      "changes": [
+        "Recorded the user-reported failure privately and appended sanitized tracker findings.",
+        "Updated the earlier access hypothesis using successful user SSH evidence; no access change applied."
+      ],
+      "checks": [
+        "Compared the pasted failure with the earlier stored-error read and the local request-query sources.",
+        "Distinguished the read-only requests list path from request-status provider sync.",
+        "No new cloud, authentication, SSH or launch action was performed by the agent."
+      ],
+      "observed_facts": [
+        "Nov17 manual SSH reached the retained broker and the existing installed checkout. SSH access did not block this run; actual SSH source and any operator-side access changes were not measured.",
+        "User reported pip check passed, then a one-worker canary held at machines request with frontend Unknown error. The new stored provider message is unread; do not assume it is the earlier 404.",
+        "The pasted report has empty final-cleanup terminated/fallback/error lists. It does not establish successful launch or an independent boot-volume inventory.",
+        "The agent did not apply the candidate Bastion allowlist addition. The earlier API-source mismatch alone is not proof of an SSH restriction affecting this manual run."
+      ],
+      "remaining_hypotheses": [
+        "The new failure may be the earlier launch denial or another cause; frontend Unknown error does not classify it."
+      ],
+      "evidence": [
+        "work/oci-review-20261117/manual-result-received.json",
+        "work/oci-review-20261110/read_catalog_failure.py",
+        "work/oci-review-20261110/live-canary/catalog-canary-stored-error.json"
+      ],
+      "cleanup": {
+        "new_agent_ssh_sessions": 0,
+        "new_agent_workers": 0,
+        "new_iam_grants": 0,
+        "allowlist_changed_by_agent": false,
+        "redeployed": false,
+        "support_submitted": false,
+        "user_report_cleanup_errors": 0,
+        "independent_boot_inventory_this_iteration": false
+      },
+      "next_action": "Have the user read the stored message for the exact new request through the non-sync requests list path. Classify that result before a relaunch, IAM change or redeployment."
+    },
+    {
+      "id": "OCI-20261117-OTHER-FORK-LOCAL",
+      "date": "2026-11-17",
+      "record_origin": "current_iteration",
+      "objective": "Fresh-build and locally validate the other team's SDK-based evaluation fork",
+      "work_ids": [
+        "ACCEPT-PLATFORM"
+      ],
+      "source": {
+        "planning_start_commit": "6ecaab05e42a2144c1111baa72fb20fae2dec784",
+        "planning_started_dirty": [
+          "M roadmap/oci/CURRENT.md",
+          " M roadmap/oci/backlog.json",
+          " M roadmap/oci/iterations.json"
+        ],
+        "preserved_prior_dirty_work": "Nov17 retained-broker handoff and manual-result records",
+        "evaluation_fork_commit": "6bc40c19b71c380a47292ad795b56366b2c333b2",
+        "evaluation_fork_clean": true,
+        "implementation_changed": false,
+        "upstream_implementation_changed": false
+      },
+      "outcome": "local_build_and_registration_passed_focused_regression_partial_api_passed",
+      "changes": [
+        "Created ignored fresh source/archive/artifacts, isolated runtime/test environments and validation evidence.",
+        "Appended sanitized platform validation findings; preserved existing launch-incident classification."
+      ],
+      "checks": {
+        "source_commit": "6bc40c19b71c380a47292ad795b56366b2c333b2",
+        "source_clean": true,
+        "package_version": "1.8.5",
+        "sdk_version": "2.192.0",
+        "build": "wheel_and_sdist_passed_with_existing_build_backend",
+        "dependency_check": "passed",
+        "oci_registration": "passed",
+        "focused_tests": {
+          "collected": 834,
+          "passed": 830,
+          "failed": 4,
+          "errors": 0,
+          "skipped": 0,
+          "oci_passed_subset": 260,
+          "wheel_imported_modules": 602
+        },
+        "api_smoke": "pass",
+        "cloud_lifecycle": "not_run_user_selected_local_only",
+        "api_probes": {
+          "/livez": 200,
+          "/health": 503,
+          "/readyz": 200
+        },
+        "health_limit": "System health returned 503 with workstation memory at 95.6%; liveness and database readiness returned 200.",
+        "ui": "not_built_or_tested",
+        "container": "not_built_or_tested",
+        "artifact_inventory": {
+          "oci_inputs_match": 31,
+          "missing_non_oci_json": 10,
+          "missing_data_runtime_impact": "not_established"
+        }
+      },
+      "observed_facts": [
+        "Fresh remote evaluation source matches the previously assessed revision; it is a separate implementation from the current provider follow-ups.",
+        "PEP517 isolated dependency installation was stopped after sustained host pip-runner activity; the documented no-isolation build passed with the installed build tools. This does not demonstrate a fork source build defect.",
+        "The exact 834-case focused selection produced 830 passes and four Windows home/permission/path failures; all 260 OCI cases passed. Counts are subsets, not additive suites.",
+        "Strict socket blocking initially broke Windows asyncio; only loopback was permitted in the retained final run and all loaded ORB modules resolved to the installed wheel.",
+        "All 31 OCI Python/JSON inputs match the wheel. Ten regular AWS/Kubernetes JSON inputs are absent from the wheel; actual runtime impact remains unverified.",
+        "The normal CLI server launcher imports fcntl and requires a compatible POSIX runtime. API smoke uses the real installed Application/FastAPI factory through Uvicorn directly.",
+        "Loopback API smoke verified authentication rejects/accepts and 42-route OpenAPI plus provider/template/local inventory reads. Liveness and readiness returned 200; health returned 503 with workstation memory at 95.6%, so full health was not green.",
+        "This fork supports API-key and OKE workload-identity authentication; broker instance-principal mode is not present in its configuration contract.",
+        "No OCI launch, IAM/access change, image/container publication or cloud lifecycle test was performed; existing broker and request-error incident were left untouched."
+      ],
+      "remaining_hypotheses": [
+        "Missing non-OCI package data may affect unexercised provider paths; inventory alone does not establish their failure."
+      ],
+      "evidence": [
+        "work/other-team-orb/20261117/fresh-build.json",
+        "work/other-team-orb/20261117/artifact-check.json",
+        "work/other-team-orb/20261117/test-evidence/final-provenance.json",
+        "work/other-team-orb/20261117/api-smoke/api-smoke-report.json"
+      ],
+      "cleanup": {
+        "api_server_process_stopped": true,
+        "cloud_changes": false,
+        "api_listener_closed": true,
+        "new_workers": 0,
+        "new_iam_grants": 0,
+        "new_bastion_sessions": 0,
+        "source_modified": false,
+        "private_artifacts_remain_ignored": true
+      },
+      "next_action": "Review the separate fork's Windows portability and package-data findings, then plan a Linux startup and supported-identity cloud lifecycle test when selected."
+    },
+    {
+      "id": "OCI-20261117-IMDS-DENY",
+      "date": "2026-11-17",
+      "record_origin": "current_iteration",
+      "objective": "Identify the launch policy/request mismatch, implement the isolated OCI option and validate an exact fresh build",
+      "work_ids": [
+        "INC-OCI-LAUNCH-001",
+        "ISS-CLI-ERROR-001",
+        "PREFLIGHT",
+        "ACCEPT-AUTH-SHAPES"
+      ],
+      "source": {
+        "planning_start_commit": "6ecaab05e42a2144c1111baa72fb20fae2dec784",
+        "planning_started_dirty": [
+          "roadmap/oci/CURRENT.md",
+          "roadmap/oci/backlog.json",
+          "roadmap/oci/iterations.json"
+        ],
+        "preserved_prior_dirty_work": "Nov17 manual-login and manual-result handoffs",
+        "fix_commit": "708e9b0cb7c8c80e51d17707309eae37630370f7",
+        "fix_branch": "codex/oci-imdsv2-launch",
+        "fix_base": "7b356262d0154db90b312deae6ff64f5bdbbd9b5",
+        "validation_commit": "8a4e4fb10e1df77078e93facf0b6b7ae890c9244",
+        "validation_branch": "codex/oci-imdsv2-preflight-validation",
+        "tested_inputs_match_fix_commit": true,
+        "validation_checkout_clean_when_published": true
+      },
+      "outcome": "resolved_imds_request_constraint",
+      "changes": [
+        "Added the optional OCI-only typed instance metadata option, template normalization and wire mapping, regression coverage and provider documentation.",
+        "Configured the fresh validation deployment to disable legacy metadata endpoints; no IAM or allowlist change.",
+        "Appended sanitized canonical results; private deployment inputs and raw reports remain ignored.",
+        "Preserved the concurrent separate-fork local-validation card and history; retained its CURRENT summary while correcting its now-stale reference to the launch incident."
+      ],
+      "checks": {
+        "isolated_oci_offline": "427 passed, 1 warning",
+        "combined_oci_offline": "529 passed, 1 warning",
+        "counts_overlap": true,
+        "required_ruff_security_format": "passed",
+        "oci_pyright": "0 errors, 0 warnings",
+        "fresh_linux_build": true,
+        "ui_build": "skipped",
+        "docker_build": "not run",
+        "broker_principal_lifecycle": "passed"
+      },
+      "observed_facts": [
+        "The user-read message and matching Nov17 audit confirm LaunchInstance 404 NotAuthorizedOrNotFound under the same broker instance principal.",
+        "Fresh broker reads confirmed the recorded commit, instance-principal auth without a profile, five imported launch/auth source hashes and the E5 deployment tuple. The resolved stock image matches the earlier operator control rather than the restored workstation-state image.",
+        "A fresh policy inventory found explicit root IAM Deny statements rejecting INSTANCE_CREATE unless legacy IMDS endpoints are disabled. The old mapper and launch body omitted instanceOptions.",
+        "Four metadata-related Deny statements are absent from the Oct16 snapshot and present on Nov17; their exact addition time and actor are unproved. These IAM statements are separate from the previously checked load-balancer Security Zone rule.",
+        "Deny overrides Allow. The earlier standard-grant and catalog-read tests were separate, not a combined elimination of every canonical permission set. Default-administrator exemption is consistent with the earlier operator success; operator membership was not independently verified.",
+        "The OCI-only optional instance_options field preserves omission and explicit false, validates booleans, survives defaults/model/DTO conversion and reaches the actual REST request body. This deployment explicitly selects IMDSv2-only metadata.",
+        "The isolated fix and preflight validation stack were pushed to the fork; no new upstream PR or merge is claimed. Their 427-test and 529-test suites overlap and are not 956 unique tests.",
+        "The candidate Bastion IP addition remains unapplied. Fresh temporary access worked without an allowlist change. Operator token expiry interrupted an initial inventory attempt; a local empty-list parsing error stopped a second attempt before resource creation.",
+        "A fresh Linux wheel/source build of the validation stack passed the one-worker E5 instance-principal acquire/status/return gate. OCI reports legacy IMDS endpoints disabled; independent cleanup found zero active owned instances and zero active worker boot volumes, with no operator fallback.",
+        "A post-canary read confirmed the root Assurance policy still matches the earlier recorded statements and retains the active IMDSv2 creation guard."
+      ],
+      "evidence": [
+        "work/oci-review-20261117/manual-result-received.json",
+        "work/oci-review-20261117/manual-stored-error-received.json",
+        "work/oci-review-20261117/manual-canary-audit.json",
+        "work/oci-review-20261117/current-deployment-comparison.json",
+        "work/oci-review-20261117/explicit-deny-policy-read.json",
+        "work/oci-review-20261117/imds-fix-manifest.json",
+        "work/oci-review-20261117/imds-validation-manifest.json",
+        "work/oci-review-20261117/imds-all.xml",
+        "work/oci-review-20261117/imds-preflight-all.xml",
+        "work/oci-review-20261117/imds-live-result.json",
+        "work/oci-review-20261117/imds-guard-read-7856db06.json"
+      ],
+      "remaining_hypotheses": [
+        "Exact change time and actor for the metadata-related Deny statements remain unknown.",
+        "Broader shape/authentication coverage, RDMA measurements and Symphony workloads are not established by this one-worker run."
+      ],
+      "cleanup": {
+        "iam_changes": false,
+        "allowlist_changes": false,
+        "support_submitted": false,
+        "owned_bastion_sessions_created": 1,
+        "owned_bastion_sessions_removed": true,
+        "active_owned_instances": 0,
+        "active_worker_boot_volumes": 0,
+        "operator_fallback_count": 0,
+        "broker_policy_unchanged": true,
+        "unconfirmed_cleanup": false,
+        "broker_retained": true
+      },
+      "next_action": "Review the isolated OCI IMDS option fix for upstream publication, then promote or refresh the preflight publication branch independently; keep generic CLI error propagation separate."
     }
   ]
 }

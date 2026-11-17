@@ -1,123 +1,130 @@
 # OCI work status and next Codex iteration
 
-Updated **16 November 2026**. This is the readable handoff for the fork's
+Updated **17 November 2026**. This is the readable handoff for the fork's
 [canonical backlog](backlog.json) and [iteration history](iterations.json).
 Runtime changes remain on their individual branches.
 
-## Current blocker: broker-principal launch
+## Resolved launch blocker: IMDS policy requirement
 
-The last proven broker-principal E5 lifecycle passed on **22 October at 08:59 PT**,
-commit `7f6f13c5`. Acquire completed, the worker was terminated, and no new
-persistent boot volume remained. It used the original parent compartment. The
-retained historical IAM snapshot has four broad grants; its capture is not a
-timestamped policy audit of the October 22 run.
+The user's manual request failed with stored `404 NotAuthorizedOrNotFound`.
+The matching audit confirms `LaunchInstance` under the retained broker principal;
+its generic error did not name the denied check. SSH worked, so workstation access
+did not block that run. The candidate Bastion IP addition remains unapplied.
 
-The current tested source is `0dbc17f6`, based on `071f4596`. The same retained
-broker now has eleven restricted policy statements, and workers target a dedicated
-child compartment. The original image, subnet, NSG, AD and sizing were otherwise
-unchanged for the initial failing tests. Later controls deliberately used a stock
-Ubuntu image. The date and actor of the IAM changes have not been established.
+A fresh full policy read found a root **IAM Deny** rejecting instance creation
+unless legacy metadata endpoints are disabled. The previous OCI launch body did
+not carry `instanceOptions`. This is separate from the previously inspected
+Security Zone rule, which concerns load-balancer SSL. Four metadata-related Deny
+statements are absent from the 16 October policy snapshot and present on
+17 November. Their exact addition date and actor have not been established.
 
-These are observed differences, **not a proven root cause**:
+Deny takes precedence over Allow. The earlier standard grants and catalog-read
+grant were tested separately, not together. Default administrators are exempt
+from Deny, which is consistent with the earlier operator-identity success;
+operator membership in that group was not independently verified.
 
-- Broker-principal native OCI CLI and ORB launches returned 404 on the earlier
-  attempts. The equivalent stock-image launch under the operator identity reached
-  RUNNING and was cleaned up on 12 November. This points toward broker
-  authorization/context rather than an ORB-only launch defect.
-- Real compatibility reads and an oversized-memory rejection passed on the fresh
-  installed build. The negative probe made zero launch calls.
-- The inherited Security Zone's only enabled rule concerns load-balancer SSL;
-  it does not apply to this Compute launch.
-- The approved scoped IAM test returned the earlier 404. On 13 November, the
-  later catalog test's stored message and matching audit were recovered: its
-  `LaunchInstance` also returned 404 / `NotAuthorizedOrNotFound` under the broker
-  principal. The catalog-read grant did not resolve that recorded failure.
-  The audit does not identify the exact denied permission or resource check.
-- Temporary grants were removed, the original policy and local configuration were
-  restored, and post-test inventory found zero active test workers/boot volumes.
-  Owned temporary Bastion sessions were closed; the broker was retained.
+The last historical successful broker lifecycle was 22 October, commit
+`7f6f13c5`. Current fresh reads confirmed the same broker identity and the old
+installed commit/source hashes, instance-principal authentication without a
+profile, and the expected E5 sizing/network tuple. The resolved image is the
+stock Ubuntu control image, rather than the restored workstation-state image.
+The retained four-grant historical snapshot is not a timestamped policy audit
+of the 22 October success.
 
-Workstation access was renewed through browser SSO and verified as the same
-identity and tenancy. The read-only lookup and audit correlation are complete;
-owned temporary access was closed. No worker or IAM grant was created during
-this iteration. Workstation authentication is separate from broker principals.
+## Fix and validation
+
+The isolated OCI-only fix is **`708e9b0c`** on
+`codex/oci-imdsv2-launch`, based on current observed upstream **`7b356262`**.
+It adds optional typed `instance_options`, preserves it through template defaults
+and serialization, and sends the correct API key
+`instanceOptions.areLegacyImdsEndpointsDisabled`. Omission retains existing OCI
+behavior; explicit `false` is preserved. The validation deployment sets `true`.
+No shared runtime, IAM policy, dynamic-group rule or Bastion allowlist was changed.
+
+The separate validation stack **`8a4e4fb1`** combines the fix with the
+existing preflight feature on current main. Both branches are pushed to the fork;
+no new upstream PR or merge is claimed. The isolated fix passed **427 OCI offline
+tests**; the combined stack passed **529**. Required lint/security/format and OCI
+type checks passed. These suites overlap and are not 956 unique tests.
+
+The fresh combined build passed **one E5 acquire/status/return lifecycle** under
+the retained broker instance principal. OCI reports legacy metadata endpoints
+disabled. Independent inventory found zero active owned workers and zero active
+worker boot volumes, with no operator fallback. The owned Bastion session was
+removed and the broker policy remained unchanged. The broker is retained.
+A post-canary read confirmed that the root Assurance policy still matches the
+earlier recorded statements and retains the active IMDSv2 creation guard.
+
+Workstation security-token expiry interrupted the first pre-canary inventory.
+A local controller empty-list parsing error stopped another attempt before any
+resource creation. The corrected final run used one owned temporary Bastion
+session. The existing broker and earlier test checkout were retained. No support
+request was submitted; support submission remains unauthorized.
+
+Fresh wheel and source-package artifacts were built on Linux from the exact
+validation commit when recorded in the final report. The UI build was skipped.
+No Docker, all-shape, RDMA throughput or Symphony acceptance is claimed.
+
+## Other-team evaluation fork: local validation on 17 November
+
+The user selected local build/validation first for the separate SDK-based
+evaluation fork. A fresh checkout at `6bc40c19` remains clean. A wheel and source
+archive built using the documented existing-backend procedure; a new runtime
+passed dependency checks and OCI plugin registration with SDK `2.192.0`.
+
+The installed-wheel focused selection collected 834 tests: **830 passed and four
+failed**, with all **260 OCI tests passing as a subset**. The four shared scheduler
+failures concern Windows home expansion, POSIX permission assumptions and path
+separators. Tests were retained unchanged. The final run allowed loopback for
+Windows asyncio while blocking outbound connections, and verified 602 imported
+ORB modules under the isolated wheel environment.
+
+All 31 OCI Python/JSON inputs match the wheel; ten AWS/Kubernetes JSON inputs are
+absent. Their unexercised runtime impact remains unknown. Native CLI server startup
+uses `fcntl`; the local API smoke exercises the installed app directly through
+Uvicorn. Its result is **pass**; this does not establish Linux CLI daemon,
+UI, container, OKE or OCI lifecycle acceptance. The test server was stopped.
+Liveness/readiness returned 200; the health endpoint returned 503 with workstation
+memory at 95.6%. This is recorded as a host-health limit, not a full health pass.
+
+The fork's authentication contract offers API keys and OKE workload identity,
+not broker instance principals. No cloud resources, IAM or Bastion access were
+changed by that separate evaluation. Its historical handoff preceded the retained
+broker's IMDS investigation and successful lifecycle reported above. Raw evidence
+stays under ignored `work/other-team-orb/20261117/`.
 
 ## Feature delivery
 
 | Work | Implementation / publication | Acceptance still needed |
 | --- | --- | --- |
-| Base OCI provider and RDMA placement guide | Merged in #234 | Current principal regression; broader shape/auth coverage; measured RDMA |
+| Base OCI provider and RDMA placement guide | Merged in #234 | Broader shape/auth coverage and measured RDMA |
 | Azure optional transport / container fixes | #588 and #589 merged | Deployment-specific container/platform acceptance |
-| Launch compatibility preflight | Pushed, `0dbc17f6`; 501 offline OCI tests | Successful current broker-principal acquire/status/return; upstream review |
-| Hardware sizing helper | Pushed, `60a511cc`; 502 offline OCI tests | Review/merge; generic HostFactory contract and OCI consumer |
+| IMDSv2 launch option incident fix | Pushed, `708e9b0c`; 427 offline tests | Upstream review and merge |
+| Launch compatibility preflight | Original fork branch `0dbc17f6`; fresh combined validation `8a4e4fb1` | Independent publication-branch refresh/review and upstream merge |
+| Hardware sizing helper | Pushed, `60a511cc`; 502 offline OCI tests | Refresh/review/merge; generic HostFactory contract and OCI consumer |
 | Full HostFactory/Symphony capacity | Design/proposal; not integrated | Attribute persistence/CPU policy, bootstrap, registration, workload and return |
 | Placement, public-IP, defined tags, boot performance | Planned | Implement and validate individually |
-| Extra volumes, SDK, OKE, identity, power, pools/scaling | Design or planned | Their ownership/contracts, implementation and operational acceptance |
+| Extra volumes, SDK, OKE, identity, power, pools/scaling | Design or planned | Their contracts, implementation and operational acceptance |
 
-The 25 cards comprise **2 merged cards, 2 additional implemented follow-ups,
-11 design-required, 6 planned and 4 acceptance workstreams**. The helper and
-preflight suites share a 399-test baseline; 501 + 502 is not 1,003 unique tests.
-Branch starters are not completed features.
+The original 25 cards still comprise **2 merged cards, 2 additional implemented
+follow-ups, 11 design-required, 6 planned and 4 acceptance workstreams**. The IMDS
+repair is tracked on the launch incident, outside that original card count.
+The 501/502 historical suites share a 399-test baseline; do not add them as
+1,003 unique tests. Branch starters are not completed features.
 
-## Access review on 16 November
+## Next iteration: `PREFLIGHT`
 
-Read-only inspection found the retained broker RUNNING and both local launchers
-pointing to the same ACTIVE Bastion. Its allowlist still contains the two
-historical single-address entries. Two matching successful operator API audit
-events show a current HTTPS source address outside that allowlist. This is an
-observed API-egress mismatch and a strong candidate for the workstation SSH
-problem; direct SSH egress remains unmeasured and can differ by route.
+Review the isolated OCI IMDS option fix for upstream publication, then promote or refresh the preflight publication branch independently; keep generic CLI error propagation separate.
 
-The broker's eleven-statement policy is unchanged. The three checked policy
-scopes contain no IP/network-source conditions, and no IAM Network Sources were
-listed. No IP-based IAM restriction was found in those checks. External public-IP
-echo services timed out or returned a certificate-chain error; validation was not
-disabled. Successful Bastion access on 13 November has no saved client IP.
-
-A private proposal preserves the existing allowlist and adds one candidate `/32`.
-It has **not** been applied. No new SSH session, IAM grant or worker was created.
-The browser operator session was renewed and verified as the same identity and
-tenancy to perform these reads. Raw addresses, IDs and the proposal stay ignored.
-
-This access finding does not establish the cause of the broker-principal
-`LaunchInstance` 404, which originated on the broker rather than the workstation.
-
-## Next iteration: `INC-OCI-LAUNCH-001`
-
-**User direction:** investigate the possible changed-IP restriction read-only;
-the user still plans to SSH and validate the existing installed build. Support
-submission is not authorized. Manual validation remains pending.
-
-1. Review the proposed single-address Bastion correction and, if authorized,
-   re-read the allowlist/ETag, apply the narrow addition, and test a fresh session.
-   Verify the actual SSH route rather than treating API egress as proof.
-2. Enter the verified preflight checkout on the broker, activate its environment,
-   and run the existing one-worker lifecycle gate, which includes cleanup.
-3. Inspect the user's terminal output, report and stored provider error before
-   another experiment. No new launch or broader IAM grant is part of this review.
-
-This is not an `OutOfHostCapacity` response and supplies no fixture for #677.
-
-Independent work may proceed on the hardware-helper review and the generic
-HostFactory contract. The shared CLI error-detail loss is diagnosed but has no
-implementation; keep that fix separate from OCI behavior.
-
-## Source freshness and review order
-
-The active follow-ups were tested against upstream `071f4596`. GitHub main was
-observed at `7b356262` on 12 November, **34 commits newer**. That comparison changes
-shared HostFactory/DTO/formatting code and contains no OCI-provider file changes.
-Review those changes and refresh each active branch before publication; existing
-test results do not establish compatibility with the newer base.
-
-After the launch investigation: review preflight and the helper independently,
-agree the generic HostFactory contract, then implement its OCI consumer. Preserve
-existing provider behavior and advance the other controls in separate changes.
+Keep the shared CLI acquire-message propagation fix separate from provider
+behavior. This `404` supplies no `OutOfHostCapacity` fixture for #677. Preserve
+the original preflight branch and hardware helper provenance: their earlier
+baselines differ from the newly refreshed validation stack. The hardware helper
+still needs review against current main before publication.
 
 ## Update this handoff each iteration
 
 Read this file first, select one card/incident, and append facts/results to the
-iteration history. Update the corresponding backlog progress dimensions and this
-summary before handing work back. Preserve unknowns and failed experiments.
-Raw deployment evidence stays ignored; planning summaries stay on the fork's
-`codex/oci-feature-roadmap` branch, outside upstream feature PRs.
+iteration history. Keep implementation, publication, offline checks and live
+acceptance separate. Raw deployment evidence stays ignored; planning summaries
+stay on the fork's `codex/oci-feature-roadmap` branch, outside feature PRs.
