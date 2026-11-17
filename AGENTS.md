@@ -20,6 +20,25 @@ This is fork coordination, not an upstream feature change. Keep this file and
    fixes need their own scoped changes. Existing task authorization still applies;
    these instructions add no universal permission gate.
 
+## Scope of new OCI fixes
+
+- Use the provider-review checker's `oci-provider` profile against the actual PR
+  base before editing and again before publication. Allowed paths are only
+  `src/orb/providers/oci/`, `tests/providers/oci/`, and
+  `docs/root/providers/oci/`. The broad `oci-234` profile is historical only.
+- Shared CLI, DTO/domain, scheduler/HostFactory, other-provider, packaging,
+  dependency and workflow changes are outside the OCI fix queue. They require
+  separately scoped work and distinct user direction; do not bundle them here.
+- The user's 17 November landing-page exception is a one-time documentation
+  change on `codex/oci-landing-docs`, limited to `README.md` and
+  `docs/root/index.md`. Record exact head/base, paths and reason through
+  `--allow-path`; do not turn these files into permanent allowed paths or reuse
+  this exception for later changes. No navigation file change is needed.
+  This exception was consumed by commit `fa2745ad8edf1de5c7b61896a949ac4c7d2a5981`;
+  any later outside-document change needs new user direction.
+- A documentation exception never authorizes Python, package metadata or a
+  workflow. Keep fork tooling and this coordination file out of feature PRs.
+
 ## Finish an iteration
 
 - Update the canonical card and CURRENT summary, then append a record to

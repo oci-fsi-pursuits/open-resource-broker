@@ -370,9 +370,10 @@
           }
         },
         "blocker": "Acceptance and design gates remain open",
-        "next_action": "Refresh from tested 071f4596 to observed 7b356262, rerun scoped checks, then review/merge the isolated helper; integrate after the generic contract.",
-        "updated_at": "2026-11-12",
-        "last_iteration_id": "OCI-20261112-TRACKING"
+        "next_action": "Refresh/review the existing OCI-only sizing helper under oci-capacity; do not include shared HostFactory work.",
+        "updated_at": "2026-11-17",
+        "last_iteration_id": "OCI-20261117-PROVIDER-GUARDS",
+        "scope_gate": "oci-capacity"
       }
     },
     {
@@ -421,10 +422,11 @@
             "state": "not_run"
           }
         },
-        "blocker": "Acceptance and design gates remain open",
-        "next_action": "Refresh the proposal against current HostFactory formats; agree authored attributes, persistence and the resolved-template hook.",
-        "updated_at": "2026-11-12",
-        "last_iteration_id": "OCI-20261112-TRACKING"
+        "blocker": "The current OCI scope excludes shared HostFactory runtime changes; a generic hook needs separately authorized work.",
+        "next_action": "Retain the existing proposal and dependency gates; do not implement shared changes in the OCI fix queue.",
+        "updated_at": "2026-11-17",
+        "last_iteration_id": "OCI-20261117-PROVIDER-GUARDS",
+        "scope_gate": "oci-provider"
       }
     },
     {
@@ -478,10 +480,11 @@
             "state": "not_run"
           }
         },
-        "blocker": "Acceptance and design gates remain open",
-        "next_action": "Agree CPU/RAM policy and consume the accepted generic hook plus the already validated hardware helper.",
-        "updated_at": "2026-11-12",
-        "last_iteration_id": "OCI-20261112-TRACKING"
+        "blocker": "The current OCI scope excludes shared HostFactory runtime changes; a generic hook needs separately authorized work.",
+        "next_action": "Retain the existing proposal and dependency gates; do not implement shared changes in the OCI fix queue.",
+        "updated_at": "2026-11-17",
+        "last_iteration_id": "OCI-20261117-PROVIDER-GUARDS",
+        "scope_gate": "oci-provider"
       }
     },
     {
@@ -551,9 +554,10 @@
           }
         },
         "blocker": null,
-        "next_action": "Review the isolated OCI IMDS option fix for upstream publication, then promote or refresh the preflight publication branch independently; keep generic CLI error propagation separate.",
+        "next_action": "Publish the isolated IMDS fix and preflight as OCI-only changes under the strict profile; keep the separate one-time landing docs commit independent.",
         "updated_at": "2026-11-17",
-        "last_iteration_id": "OCI-20261117-IMDS-DENY"
+        "last_iteration_id": "OCI-20261117-PROVIDER-GUARDS",
+        "scope_gate": "oci-provider"
       }
     },
     {
@@ -2085,7 +2089,7 @@
     "current_summary": "CURRENT.md",
     "iterations": "iterations.json",
     "instructions": "../../AGENTS.md",
-    "last_iteration_id": "OCI-20261117-IMDS-DENY",
+    "last_iteration_id": "OCI-20261117-PROVIDER-GUARDS",
     "rule": "Keep implementation, publication, offline validation and live acceptance separate; append meaningful iteration results."
   },
   "upstream_integrations": [
@@ -2288,17 +2292,17 @@
     },
     {
       "id": "ISS-CLI-ERROR-001",
-      "state": "diagnosed_not_implemented",
+      "state": "diagnosed_deferred_outside_oci_scope",
       "linked_cards": [
         "PREFLIGHT"
       ],
       "owner": "Separate generic shared fix",
-      "last_iteration_id": "OCI-20261112-TRACKING",
+      "last_iteration_id": "OCI-20261117-PROVIDER-GUARDS",
       "known_facts": [
         "Acquire output omits the existing stored request message, producing frontend Unknown error.",
         "The Nov12 upstream request-status enrichment is a different path and does not fix acquire output."
       ],
-      "next_action": "Refresh and scope the provider-neutral message propagation change in a separate PR; preserve sanitized messages and current formatter contracts.",
+      "next_action": "Keep the generic CLI error propagation proposal separate; current provider-only authorization does not include implementing it.",
       "evidence": [
         "work/oci-review-20261110/acquire-message-proposal.json"
       ]
@@ -2307,9 +2311,7 @@
   "current_focus": "PREFLIGHT",
   "next_work_order": [
     "PREFLIGHT",
-    "ISS-CLI-ERROR-001",
     "HF-FACTS",
-    "HF-SHARED",
     "HF-OCI"
   ],
   "validation_limits": [
@@ -2317,5 +2319,33 @@
     "Current broker-principal E5 acquisition/return passed only on the identified IMDSv2 validation stack; broader shapes/authentication and workload acceptance remain separate.",
     "Existing starter branches and estimates are plans, not implemented features or delivery dates.",
     "IMDS fix and preflight validation stack use current observed main 7b356262; the old preflight publication branch and hardware helper retain their earlier baselines and require separate review/refresh."
-  ]
+  ],
+  "scope_controls": {
+    "updated_at": "2026-11-17",
+    "new_oci_profile": "oci-provider",
+    "allowed_prefixes": [
+      "src/orb/providers/oci/",
+      "tests/providers/oci/",
+      "docs/root/providers/oci/"
+    ],
+    "permanent_outside_paths": [],
+    "shared_code_authorized_in_oci_work": false,
+    "historical_profile": {
+      "name": "oci-234",
+      "explicit_flag_required": "--historical-audit",
+      "new_publication_allowed": false
+    },
+    "guardrail_commit": "0e89bddff8f607fc18da510a3da11749b94efe19",
+    "installed_skill_verified": true,
+    "one_time_landing_docs": {
+      "branch": "codex/oci-landing-docs",
+      "commit": "fa2745ad8edf1de5c7b61896a949ac4c7d2a5981",
+      "paths": [
+        "README.md",
+        "docs/root/index.md"
+      ],
+      "exception_consumed": true,
+      "future_outside_document_changes_require_new_direction": true
+    }
+  }
 }

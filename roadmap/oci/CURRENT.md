@@ -93,6 +93,31 @@ changed by that separate evaluation. Its historical handoff preceded the retaine
 broker's IMDS investigation and successful lifecycle reported above. Raw evidence
 stays under ignored `work/other-team-orb/20261117/`.
 
+## Provider-only guardrails confirmed on 17 November
+
+All new OCI code work uses the installed **`oci-provider`** gate: only
+`src/orb/providers/oci/`, `tests/providers/oci/`, and
+`docs/root/providers/oci/` are allowed. IMDS (7 paths), combined validation
+(11), original preflight (6), and the capacity helper (2) passed the applicable
+strict profiles with no exceptions. Use these isolated publication branches;
+the main workspace's older coordination branch is not a new OCI PR candidate.
+
+Shared CLI, DTO/domain, scheduler/HostFactory, other-provider, dependency,
+packaging and workflow changes remain outside this queue. The generic
+`Unknown error` and HostFactory proposals are deferred as separately scoped work.
+The wider `oci-234` profile is historical-only and requires an explicit flag.
+
+The sole one-time landing-page exception is **`fa2745ad`** on
+`codex/oci-landing-docs`: `README.md` and `docs/root/index.md` now include OCI
+in their provider introductions/lists. The navigation already linked OCI.
+The two-file branch fails without its exact document declarations and reason;
+these paths are not added to the provider allowlist or authorized for later edits.
+
+Fork-only guardrail commit **`0e89bddf`** is installed locally.
+Guardrail tests recorded **36 passes and one Windows-specific skip**; required
+lint/format and real-branch/negative checks passed. This is a local
+pre-publication gate; no GitHub branch-protection or CI workflow was changed.
+
 ## Feature delivery
 
 | Work | Implementation / publication | Acceptance still needed |
@@ -114,10 +139,10 @@ The 501/502 historical suites share a 399-test baseline; do not add them as
 
 ## Next iteration: `PREFLIGHT`
 
-Review the isolated OCI IMDS option fix for upstream publication, then promote or refresh the preflight publication branch independently; keep generic CLI error propagation separate.
+Publish the isolated IMDS fix and refreshed preflight under `oci-provider`, keeping the one-time two-file landing-page correction independent.
 
-Keep the shared CLI acquire-message propagation fix separate from provider
-behavior. This `404` supplies no `OutOfHostCapacity` fixture for #677. Preserve
+Shared CLI acquire-message propagation and generic HostFactory implementation
+are outside the current provider-only authorization. This `404` supplies no `OutOfHostCapacity` fixture for #677. Preserve
 the original preflight branch and hardware helper provenance: their earlier
 baselines differ from the newly refreshed validation stack. The hardware helper
 still needs review against current main before publication.

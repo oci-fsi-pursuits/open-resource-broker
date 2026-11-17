@@ -684,6 +684,75 @@
         "broker_retained": true
       },
       "next_action": "Review the isolated OCI IMDS option fix for upstream publication, then promote or refresh the preflight publication branch independently; keep generic CLI error propagation separate."
+    },
+    {
+      "id": "OCI-20261117-PROVIDER-GUARDS",
+      "date": "2026-11-17",
+      "record_origin": "current_iteration",
+      "objective": "Enforce provider-only OCI fixes and complete the one-time landing-page documentation exception",
+      "work_ids": [
+        "PREFLIGHT",
+        "HF-FACTS",
+        "HF-SHARED",
+        "HF-OCI",
+        "ISS-CLI-ERROR-001"
+      ],
+      "source": {
+        "planning_start_commit": "a021f1484256d1a0bab39097a9c13ab88878c634",
+        "planning_started_clean": true,
+        "guardrail_start_commit": "eda17185c16cdfcd0a7179c2334dc69410a19b14",
+        "guardrail_commit": "0e89bddff8f607fc18da510a3da11749b94efe19",
+        "landing_docs_base": "7b356262d0154db90b312deae6ff64f5bdbbd9b5",
+        "landing_docs_commit": "fa2745ad8edf1de5c7b61896a949ac4c7d2a5981",
+        "provider_runtime_source_changed": false
+      },
+      "outcome": "strict_scope_installed_and_audited_one_time_docs_fixed",
+      "changes": [
+        "Added the strict OCI profile and documentation-only exact exceptions; historical import scope requires a deliberate flag.",
+        "Rejected code/package/workflow exception attempts and capacity overrides; retained copy/rename/index-flag protection.",
+        "Installed the tested skill and updated fork coordination instructions.",
+        "Added OCI to the README introduction and docs home provider list in a separate two-file commit; no navigation change needed.",
+        "Deferred shared CLI and generic HostFactory implementation outside the OCI fix queue."
+      ],
+      "checks": {
+        "guardrail_unit_tests": {
+          "passed": 36,
+          "skipped": 1,
+          "failed": 0
+        },
+        "required_ruff_and_format": "passed",
+        "real_branch_audits": "IMDS 7, combined 11, preflight 6 and capacity 2 paths pass without exceptions",
+        "landing_without_exception": "expected failure",
+        "landing_with_exact_exception": "pass",
+        "legacy_without_flag": "expected error",
+        "shared_code_override": "expected error",
+        "outside_planned_paths": "expected failure",
+        "new_oci_link_target": "exists",
+        "installed_skill": "byte-for-byte match to tested fork tooling files"
+      },
+      "observed_facts": [
+        "All inspected provider fix branches contain only OCI source, OCI tests and OCI-owned docs.",
+        "The main workspace retains an older coordination branch with earlier unrelated history; it is not the publication branch for these fixes.",
+        "The former oci-234 profile had broader metadata and integration-doc allowances; it is now historical-only.",
+        "Only the two named landing documents were corrected under the one-time exception. They are not permanent allowed paths.",
+        "The installed tool is a local pre-publication scope gate, not a new GitHub branch-protection rule."
+      ],
+      "remaining_hypotheses": [],
+      "evidence": [
+        "work/oci-guardrail-review-20261117/audit-summary.json",
+        "work/oci-guardrail-review-20261117/guardrail-test-result.json",
+        "work/oci-guardrail-review-20261117/publication-and-installation.json",
+        "work/oci-guardrail-review-20261117/oci-landing-docs-committed-scope.json",
+        "work/oci-guardrail-review-20261117/landing-committed-without-exception.json"
+      ],
+      "cleanup": {
+        "cloud_changes": false,
+        "provider_runtime_changes": false,
+        "installed_previous_files_backed_up": true,
+        "tooling_kept_out_of_feature_branches": true,
+        "shared_implementation_started": false
+      },
+      "next_action": "Use the strict profile for OCI publication; submit the isolated IMDS/preflight fixes and the independent two-file docs correction without expanding scope."
     }
   ]
 }
