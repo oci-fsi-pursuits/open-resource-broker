@@ -66,6 +66,7 @@ def relative_path(value: str, *, prefix: bool = False) -> str:
         or "\\" in candidate
         or ":" in candidate
         or "\0" in candidate
+        or any(character in candidate for character in "*?[]")
         or any(part in {"", ".", ".."} for part in candidate.split("/"))
         or (prefix and not value.endswith("/"))
     ):
@@ -143,6 +144,10 @@ def load_profile(name: str) -> tuple[dict[str, Any], str]:
             relative_path(prefix, prefix=True)
         if not isinstance(profile["content_review"], str):
             raise ScopeError("Invalid scope policy review note")
+        if profile.get("exception_type", "any") not in {"any", "documentation", "none"}:
+            raise ScopeError("Invalid scope exception type")
+        if not isinstance(profile.get("historical_only", False), bool):
+            raise ScopeError("Invalid historical scope marker")
     except (OSError, ValueError, KeyError, TypeError) as exc:
         raise ScopeError("Unknown profile or invalid bundled scope policy") from exc
     return profile, hashlib.sha256(raw).hexdigest()
@@ -150,10 +155,27 @@ def load_profile(name: str) -> tuple[dict[str, Any], str]:
 
 def audit(args: argparse.Namespace) -> dict[str, Any]:
     profile, digest = load_profile(args.profile)
+    if profile.get("historical_only") and not getattr(args, "historical_audit", False):
+        raise ScopeError(
+            "This profile is historical only; use oci-provider for new OCI work. "
+            "Historical review requires --historical-audit."
+        )
     exceptions = sorted({relative_path(path) for path in args.allow_path})
     if bool(exceptions) != bool(args.reason and args.reason.strip()):
         raise ScopeError(
             "Exact --allow-path exceptions and a nonempty --reason are required together"
+        )
+    exception_type = profile.get("exception_type", "any")
+    if exceptions and exception_type == "none":
+        raise ScopeError("This profile does not permit scope exceptions")
+    if exception_type == "documentation" and any(
+        path not in {"README.md", "docs/mkdocs.yml"}
+        and not (path.startswith("docs/") and path.endswith(".md"))
+        for path in exceptions
+    ):
+        raise ScopeError(
+            "OCI provider exceptions are documentation only; shared code, package metadata "
+            "and workflows cannot be exceptions."
         )
     if args.base_ref.startswith("-") or not args.base_ref.strip():
         raise ScopeError("A non-option Git base reference is required")
@@ -218,6 +240,7 @@ def audit(args: argparse.Namespace) -> dict[str, Any]:
         "result": "fail" if violations or conflicts or index_flags else "pass",
         "repository": str(repo),
         "profile": args.profile,
+        "historical_audit": bool(getattr(args, "historical_audit", False)),
         "policy_sha256": digest,
         "base_ref": args.base_ref,
         "base_commit": base,
@@ -253,6 +276,11 @@ def main(argv: list[str] | None = None) -> int:
         "--base-ref", required=True, help="Explicit PR base reference, resolved without fetching"
     )
     parser.add_argument("--profile", required=True, help="Explicit profile in the bundled policy")
+    parser.add_argument(
+        "--historical-audit",
+        action="store_true",
+        help="Explicitly review a historical import profile; not for new OCI work",
+    )
     parser.add_argument(
         "--planned-path",
         action="append",

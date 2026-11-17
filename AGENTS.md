@@ -8,6 +8,12 @@ paths and validation, then proceed within the user's existing authorization.
 - Provider behavior belongs under `src/orb/providers/<provider>/`, using the
   registered extension points. Do not put provider imports, provider-name
   branches, or provider-specific fields into shared runtime code.
+- All new OCI work must pass `--profile oci-provider` against its actual PR base.
+  Only OCI source, OCI tests and OCI-owned documentation are admitted. The wider
+  `oci-234` profile is historical only and requires `--historical-audit`.
+- Landing-page exceptions are one-time exact documentation paths declared with
+  `--allow-path` and `--reason`, tied to the reviewed head/base in the evidence.
+  They never authorize shared code, package metadata, workflows or later edits.
 - Keep OCI #234, Azure #588, packaging #589, and generic HostFactory changes
   separate. A needed shared extension is a separate change to explain and scope;
   do not quietly widen the OCI feature.

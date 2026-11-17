@@ -66,7 +66,7 @@ class ScopeTests(unittest.TestCase):
     def commit(self, message):
         self.git("commit", "-qm", message)
 
-    def check_scope(self, *extra, profile="oci-234", base=None, expected=0):
+    def check_scope(self, *extra, profile="oci-provider", base=None, expected=0):
         result = subprocess.run(
             [
                 sys.executable,
@@ -94,6 +94,43 @@ class ScopeTests(unittest.TestCase):
         self.assertEqual(first["merge_base"], self.base)
         self.assertFalse(first["dirty"])
         self.assertEqual(first["paths"], [])
+
+    def test_provider_profile_allows_only_oci_source_tests_and_provider_docs(self):
+        allowed = [
+            "src/orb/providers/oci/metadata.py",
+            "tests/providers/oci/test_metadata.py",
+            "docs/root/providers/oci/metadata.md",
+        ]
+        for path in allowed:
+            self.write(path)
+
+        report = self.check_scope()
+
+        self.assertEqual(report["profile"], "oci-provider")
+        self.assertEqual([item["path"] for item in report["paths"]], sorted(allowed))
+        self.assertTrue(all(item["scope"] == "allowed" for item in report["paths"]))
+
+    def test_provider_profile_rejects_shared_runtime_metadata_and_unnamed_documents(self):
+        outside = [
+            "src/orb/application/shared.py",
+            "src/orb/providers/aws/worker.py",
+            "src/orb/providers/azure/worker.py",
+            "src/orb/providers/gcp/worker.py",
+            "pyproject.toml",
+            "uv.lock",
+            ".github/workflows/ci.yml",
+            "README.md",
+            "docs/root/index.md",
+            "docs/mkdocs.yml",
+            "config/oci_config.local.example.json",
+        ]
+        for path in outside:
+            self.write(path, "a change outside the provider boundary\n")
+
+        report = self.check_scope(expected=1)
+
+        self.assertEqual(report["violations"], sorted(outside))
+        self.assertEqual(report["declared_exceptions"], {"paths": [], "reason": None})
 
     def test_union_keeps_all_four_change_origins(self):
         self.write("src/orb/providers/oci/committed.py")
@@ -275,28 +312,95 @@ class ScopeTests(unittest.TestCase):
         self.assertEqual(report["paths"][0]["origins"], ["planned"])
         self.assertFalse((self.repo / "src/orb/application/planned.py").exists())
 
-    def test_exception_is_exact_and_recorded_with_reason(self):
+    def test_historical_exception_is_exact_and_recorded_with_reason(self):
         self.write("src/orb/application/one.py")
         report = self.check_scope(
+            "--historical-audit",
             "--allow-path",
             "src/orb/application/one.py",
             "--reason",
             "User selected one compatibility fix",
+            profile="oci-234",
         )
         self.assertEqual(report["paths"][0]["scope"], "exception")
         self.assertEqual(report["declared_exceptions"]["paths"], ["src/orb/application/one.py"])
         self.write("src/orb/application/two.py")
         report = self.check_scope(
+            "--historical-audit",
             "--allow-path",
             "src/orb/application/one.py",
             "--reason",
             "User selected one compatibility fix",
+            profile="oci-234",
             expected=1,
         )
         self.assertEqual(report["violations"], ["src/orb/application/two.py"])
 
+    def test_provider_document_exceptions_are_exact_recorded_and_not_persistent(self):
+        approved = ["README.md", "docs/root/index.md", "docs/mkdocs.yml"]
+        reason = "User selected these exact landing-page documents"
+        for path in approved:
+            self.write(path, "landing-page update\n")
+        arguments = [item for path in approved for item in ("--allow-path", path)]
+        arguments.extend(("--reason", reason))
+
+        report = self.check_scope(*arguments)
+
+        self.assertEqual(
+            report["declared_exceptions"], {"paths": sorted(approved), "reason": reason}
+        )
+        self.assertEqual([item["path"] for item in report["paths"]], sorted(approved))
+        self.assertTrue(all(item["scope"] == "exception" for item in report["paths"]))
+        self.write("docs/root/sibling.md", "not one of the selected documents\n")
+        self.assertEqual(
+            self.check_scope(*arguments, expected=1)["violations"], ["docs/root/sibling.md"]
+        )
+        # Exceptions belong to one invocation, not to the next audit or policy.
+        self.assertEqual(
+            self.check_scope(expected=1)["violations"], sorted([*approved, "docs/root/sibling.md"])
+        )
+
+    def test_provider_document_exception_can_name_a_nested_markdown_document(self):
+        path = "docs/root/getting_started/quick_start.md"
+        self.write(path)
+
+        report = self.check_scope(
+            "--allow-path", path, "--reason", "User selected one linked landing-page document"
+        )
+
+        self.assertEqual(report["paths"][0]["scope"], "exception")
+
+    def test_provider_profile_rejects_code_or_non_document_exceptions_even_with_reason(self):
+        forbidden = [
+            "src/orb/application/shared.py",
+            "src/orb/providers/aws/worker.py",
+            "src/orb/providers/oci/base.py",
+            "pyproject.toml",
+            "uv.lock",
+            ".github/workflows/ci.yml",
+            "AGENTS.md",
+            "config/oci_config.local.example.json",
+            "docs/generated.py",
+            "docs/config.yaml",
+            "readme.md",
+        ]
+        for path in forbidden:
+            with self.subTest(path=path):
+                report = self.check_scope(
+                    "--allow-path", path, "--reason", "A reason cannot widen code scope", expected=2
+                )
+                self.assertEqual(report["result"], "error")
+
+    def test_provider_document_exceptions_reject_patterns(self):
+        for path in ("docs/*.md", "docs/**/index.md", "docs/root/index?.md", "docs/root/[ab].md"):
+            with self.subTest(path=path):
+                self.check_scope(
+                    "--allow-path", path, "--reason", "Patterns are not exact documents", expected=2
+                )
+
     def test_exception_requires_reason_and_cannot_be_directory(self):
         self.check_scope("--allow-path", "README.md", expected=2)
+        self.check_scope("--allow-path", "README.md", "--reason", "   ", expected=2)
         self.check_scope("--reason", "No exception path", expected=2)
         self.check_scope(
             "--allow-path", "src/orb/application/", "--reason", "Too broad", expected=2
@@ -311,22 +415,48 @@ class ScopeTests(unittest.TestCase):
     def test_profiles_are_separate(self):
         self.write("AGENTS.md")
         self.check_scope(profile="fork-tooling")
-        self.check_scope(profile="oci-234", expected=1)
+        self.check_scope(expected=1)
         (self.repo / "AGENTS.md").unlink()
         self.write("Dockerfile")
         self.check_scope(profile="packaging-589")
-        self.check_scope(profile="oci-234", expected=1)
+        self.check_scope(expected=1)
         (self.repo / "Dockerfile").unlink()
         self.write(
             "src/orb/providers/azure/infrastructure/services/spot_placement_score_adapter.py"
         )
         self.check_scope(profile="azure-588")
-        self.check_scope(profile="oci-234", expected=1)
+        self.check_scope(expected=1)
 
     def test_capacity_profile_does_not_admit_shared_metadata(self):
         self.write("README.md", "changed shared doc\n")
-        self.check_scope(profile="oci-234")
+        self.check_scope("--historical-audit", profile="oci-234")
         self.check_scope(profile="oci-capacity", expected=1)
+
+    def test_capacity_profile_disallows_even_exact_document_exceptions(self):
+        self.write("README.md", "changed shared doc\n")
+        self.check_scope(
+            "--allow-path",
+            "README.md",
+            "--reason",
+            "This capacity-only profile does not accept overrides",
+            profile="oci-capacity",
+            expected=2,
+        )
+
+    def test_historical_profile_requires_explicit_audit_flag(self):
+        self.write("README.md", "historical shared integration edit\n")
+
+        report = self.check_scope(profile="oci-234", expected=2)
+        self.assertEqual(report["result"], "error")
+        self.check_scope("--historical-audit", profile="oci-234")
+
+    def test_historical_audit_flag_does_not_widen_provider_profile(self):
+        self.write("README.md", "shared doc requires an exact document exception\n")
+
+        report = self.check_scope("--historical-audit", expected=1)
+
+        self.assertEqual(report["profile"], "oci-provider")
+        self.assertEqual(report["violations"], ["README.md"])
 
     def test_conflicts_fail_even_when_path_is_allowed(self):
         self.git("checkout", "-qb", "other")

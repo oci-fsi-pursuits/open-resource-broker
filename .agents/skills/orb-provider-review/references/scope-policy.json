@@ -1,7 +1,14 @@
 {
   "version": 1,
   "profiles": {
+    "oci-provider": {
+      "prefixes": ["src/orb/providers/oci/", "tests/providers/oci/", "docs/root/providers/oci/"],
+      "paths": [],
+      "exception_type": "documentation",
+      "content_review": "New OCI work only: provider code, provider tests and provider-owned documentation. Outside documentation requires an exact one-time user-selected path and reason; shared runtime and other-provider code cannot be exceptions."
+    },
     "oci-234": {
+      "historical_only": true,
       "prefixes": ["src/orb/providers/oci/", "tests/providers/oci/", "docs/root/providers/oci/"],
       "paths": [
         "config/oci_config.local.example.json", "config/oci_config.remote.example.json",
@@ -17,6 +24,7 @@
     "oci-capacity": {
       "prefixes": ["src/orb/providers/oci/", "tests/providers/oci/"],
       "paths": [],
+      "exception_type": "none",
       "content_review": "OCI sizing calculations and focused tests only. Shared HostFactory integration is a separate PR."
     },
     "azure-588": {
