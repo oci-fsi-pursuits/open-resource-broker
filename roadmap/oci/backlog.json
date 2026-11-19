@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "as_of": "2026-11-17",
+  "as_of": "2026-11-19",
   "source": {
     "title": "OCI Implementation Gap Assessment",
     "date": "2026-10-27"
@@ -340,7 +340,8 @@
       "owner_role": "OCI compute engineering",
       "owner": "unassigned",
       "evidence": [
-        "Fork commit 60a511cc rebased onto 071f4596; 502 offline tests and quality/type checks; not integrated with HostFactory."
+        "Fork commit 60a511cc rebased onto 071f4596; 502 offline tests and quality/type checks; not integrated with HostFactory.",
+        "18 November: refreshed review 1f84d755 on 3ab6716a, strict scope and OCI offline checks pass; PR #878 held draft for owner inspection."
       ],
       "historical_status_2026_10_28": "implemented_pending_integration",
       "historical_evidence": [
@@ -351,11 +352,22 @@
       "progress": {
         "implementation": {
           "state": "complete",
-          "commit": "60a511cc7f2bbfd0495dacff25a4735bb07d58f0"
+          "commit": "60a511cc7f2bbfd0495dacff25a4735bb07d58f0",
+          "refreshed_review_commit": "1f84d7553799af41a5cf85a299d38740e250578a"
         },
         "publication": {
-          "state": "pushed_to_fork",
-          "branch": "codex/oci-capacity-helper"
+          "state": "upstream_draft_description_verified",
+          "branch": "codex/oci-capacity-review",
+          "commit": "1f84d7553799af41a5cf85a299d38740e250578a",
+          "upstream_pr": "https://github.com/finos/open-resource-broker/pull/878",
+          "remote_head_branch_is_historical_name": true,
+          "neutral_branch_publication_authorized": false,
+          "upstream_merged": false,
+          "review_local_branch": "feat/oci-shape-capacity",
+          "description_sha256_normalized": "330740c163f7b37713e3fc808045cdb4d50c4099b0921d6e0ab279da4b3716a3",
+          "github_markdown_verified": true,
+          "draft": true,
+          "latest_approved_action": "update_pull_request"
         },
         "validation": {
           "offline": {
@@ -367,12 +379,28 @@
           },
           "live": {
             "state": "not_applicable_nominal_facts_only"
+          },
+          "refreshed_review": {
+            "base": "3ab6716a6f1f82a3feed42bbd0ca0b357a1e4e7a",
+            "commit": "1f84d7553799af41a5cf85a299d38740e250578a",
+            "passed_tests": 502,
+            "scope": "passed with no exceptions",
+            "required_quality": "passed",
+            "live_rerun": false
+          },
+          "locked_local_quality": {
+            "date": "2026-11-18",
+            "ruff": "0.17.4",
+            "state": "passed_with_explicit_windows_symlink_alias_adjustment",
+            "scope": "full repository lint, source security and format checks",
+            "evidence": "work/oci-local-ci-20261118/results-windows-compatible.json",
+            "full_linux_ci": false
           }
         },
-        "blocker": "Acceptance and design gates remain open",
-        "next_action": "Refresh/review the existing OCI-only sizing helper under oci-capacity; do not include shared HostFactory work.",
-        "updated_at": "2026-11-17",
-        "last_iteration_id": "OCI-20261117-PROVIDER-GUARDS",
+        "blocker": "Shared formatter action dependency violates full-SHA policy; maintainer review, CI clearance and readiness remain pending.",
+        "next_action": "Keep the bounded OCI draft separate from shared CI. Scope any workflow fix independently; do not alter approved source/body without renewed review.",
+        "updated_at": "2026-11-18",
+        "last_iteration_id": "OCI-20261118-UPSTREAM-DESCRIPTIONS",
         "scope_gate": "oci-capacity"
       }
     },
@@ -519,16 +547,28 @@
       "historical_status_2026_10_28": "planned",
       "historical_evidence": [],
       "evidence": [
-        "Fork commit 0dbc17f6; 501 offline tests, quality/type/package checks; live metadata/negative check passed; current lifecycle hold."
+        "Fork commit 0dbc17f6; 501 offline tests, quality/type/package checks; live metadata/negative check passed; current lifecycle hold.",
+        "18 November: refreshed review acf16590 on 3ab6716a, strict scope and OCI offline checks pass; PR #879 held draft for owner inspection."
       ],
       "progress": {
         "implementation": {
           "state": "complete",
-          "commit": "0dbc17f6bdf9d3f00b716d72f3aa7572f6651c2e"
+          "commit": "0dbc17f6bdf9d3f00b716d72f3aa7572f6651c2e",
+          "refreshed_review_commit": "acf16590eff03b7449a79ed1d9237ffc44ed3b33"
         },
         "publication": {
-          "state": "pushed_to_fork",
-          "branch": "codex/oci-launch-preflight"
+          "state": "upstream_draft_description_verified",
+          "branch": "codex/oci-launch-preflight-review",
+          "commit": "acf16590eff03b7449a79ed1d9237ffc44ed3b33",
+          "upstream_pr": "https://github.com/finos/open-resource-broker/pull/879",
+          "remote_head_branch_is_historical_name": true,
+          "neutral_branch_publication_authorized": false,
+          "upstream_merged": false,
+          "review_local_branch": "feat/oci-launch-preflight",
+          "description_sha256_normalized": "7b880b02e773b69fd1be4a5aa8f4c1a68afe73dd0ddedcc59c2a92d3eb9ab620",
+          "github_markdown_verified": true,
+          "draft": true,
+          "latest_approved_action": "update_pull_request"
         },
         "validation": {
           "offline": {
@@ -551,13 +591,50 @@
             "base": "7b356262d0154db90b312deae6ff64f5bdbbd9b5",
             "original_preflight_commit": "0dbc17f6bdf9d3f00b716d72f3aa7572f6651c2e",
             "passed_offline_tests": 529
+          },
+          "refreshed_review": {
+            "base": "3ab6716a6f1f82a3feed42bbd0ca0b357a1e4e7a",
+            "commit": "acf16590eff03b7449a79ed1d9237ffc44ed3b33",
+            "passed_tests": 501,
+            "scope": "passed with no exceptions",
+            "required_quality": "passed",
+            "live_rerun": false
+          },
+          "locked_local_quality": {
+            "date": "2026-11-18",
+            "ruff": "0.17.4",
+            "state": "passed_with_explicit_windows_symlink_alias_adjustment",
+            "scope": "full repository lint, source security and format checks",
+            "evidence": "work/oci-local-ci-20261118/results-windows-compatible.json",
+            "full_linux_ci": false
           }
         },
-        "blocker": null,
-        "next_action": "Publish the isolated IMDS fix and preflight as OCI-only changes under the strict profile; keep the separate one-time landing docs commit independent.",
-        "updated_at": "2026-11-17",
-        "last_iteration_id": "OCI-20261117-PROVIDER-GUARDS",
-        "scope_gate": "oci-provider"
+        "blocker": "Shared formatter action dependency violates full-SHA policy; maintainer review, CI clearance and readiness remain pending.",
+        "next_action": "Inspect the roadmap checkpoint and named starter-branch cleanup plan, then resume the OCI-only launch bundle locally. No new feature publication is approved.",
+        "updated_at": "2026-11-19",
+        "last_iteration_id": "OCI-20261119-REPO-CHECKPOINT",
+        "scope_gate": "oci-provider",
+        "delivery_plan": {
+          "state": "planned_not_implemented",
+          "features": [
+            "IMDSv2",
+            "PREFLIGHT",
+            "NETWORK",
+            "BOOT-PERF"
+          ],
+          "proposed_branch": "feat/oci-launch-controls",
+          "proposed_base": "3ab6716a6f1f82a3feed42bbd0ca0b357a1e4e7a",
+          "branch_created": false,
+          "tests_run_for_combination": false,
+          "reason": "Git metadata writes were blocked by the sandbox and the requested escalation was declined. No retry or alternate implementation path was used.",
+          "next_action": "Establish fork main and roadmap checkpoint first, then revisit local consolidation permission. Keep existing implementations and PRs unchanged."
+        },
+        "repository_checkpoint": {
+          "main": "3ab6716a6f1f82a3feed42bbd0ca0b357a1e4e7a",
+          "state": "synchronized",
+          "cleanup": "pending_named_list_review",
+          "launch_bundle": "not_created"
+        }
       }
     },
     {
@@ -608,8 +685,14 @@
         },
         "blocker": "Acceptance and design gates remain open",
         "next_action": "Add optional existing fault-domain/capacity-reservation mappings and validation.",
-        "updated_at": "2026-11-12",
-        "last_iteration_id": "OCI-20261112-TRACKING"
+        "updated_at": "2026-11-18",
+        "last_iteration_id": "OCI-20261118-REPO-PROTOCOL",
+        "design_review": {
+          "state": "read_only_contract_prepared_not_implemented",
+          "evidence": "work/oci-next-controls-20261118/controls-proposal.json",
+          "scope": "OCI-only typed fields, aliases, defaults, DTO, wire mapping, tests and live prerequisites",
+          "next_step": "TAGS direct-instance mapping can follow the launch bundle. PLACEMENT additionally needs optional reservation/fault-domain metadata validation; preserve explicit empty reservation opt-out."
+        }
       }
     },
     {
@@ -617,7 +700,7 @@
       "title": "Expose explicit public-IP assignment",
       "phase": 2,
       "priority": "P2",
-      "status": "planned",
+      "status": "implemented_pending_merge",
       "scope": "provider",
       "branch": "codex/oci-network-controls",
       "depends_on": [
@@ -643,26 +726,110 @@
       "historical_status_2026_10_28": "planned",
       "progress": {
         "implementation": {
-          "state": "not_started",
-          "commit": null
+          "state": "complete",
+          "commit": "d837609c8e83e6c5299741dfeb1fe0ec61a37281",
+          "base": "3ab6716a6f1f82a3feed42bbd0ca0b357a1e4e7a",
+          "branch": "feat/oci-public-ip",
+          "tested_inputs_match_committed": true
         },
         "publication": {
-          "state": "not_started",
-          "branch": "codex/oci-network-controls"
+          "state": "staged_locally_pending_owner_approval",
+          "branch": "feat/oci-public-ip",
+          "pushed": false,
+          "upstream_pr": null,
+          "approval": "not_granted",
+          "commit": "d837609c8e83e6c5299741dfeb1fe0ec61a37281",
+          "base": "3ab6716a6f1f82a3feed42bbd0ca0b357a1e4e7a",
+          "review_packet": "work/oci-public-ip-stage-20261118/STAGED_PR.html",
+          "review_manifest": "work/oci-public-ip-stage-20261118/review-manifest.json",
+          "push_manifest": "work/oci-public-ip-stage-20261118/push-manifest.json"
         },
         "validation": {
           "offline": {
-            "state": "not_run"
+            "state": "passed",
+            "passed_tests": 434,
+            "skipped": 1,
+            "focused_passed_tests_included": 35,
+            "commit": "d837609c8e83e6c5299741dfeb1fe0ec61a37281",
+            "evidence": "work/oci-status-batch-20261117/network/canonical/validation.json"
           },
           "live": {
-            "state": "not_run"
+            "state": "not_run",
+            "required": "Controlled address readback"
+          },
+          "locked_local_quality": {
+            "date": "2026-11-18",
+            "ruff": "0.17.4",
+            "state": "passed_with_explicit_windows_symlink_alias_adjustment",
+            "scope": "full repository lint, source security and format checks",
+            "evidence": "work/oci-local-ci-20261118/results-windows-compatible.json",
+            "full_linux_ci": false
+          },
+          "staged_offline": {
+            "date": "2026-11-18",
+            "commit": "d837609c8e83e6c5299741dfeb1fe0ec61a37281",
+            "base": "3ab6716a6f1f82a3feed42bbd0ca0b357a1e4e7a",
+            "state": "passed",
+            "passed_tests": 434,
+            "live_subtree": "excluded",
+            "versions": {
+              "python": "3.12.14 (main, Aug 25 2026, 14:01:42) [MSC v.1944 64 bit (AMD64)]",
+              "pytest": "9.2.0",
+              "pytest-cov": "7.1.0",
+              "coverage": "7.16.2",
+              "ruff": "0.17.4"
+            },
+            "changed_source_lines": {
+              "covered": 9,
+              "total": 9,
+              "percent": 100.0
+            },
+            "changed_decision_branch_arcs": {
+              "covered": 6,
+              "total": 6,
+              "percent": 100.0
+            },
+            "provider_line_coverage": {
+              "covered": 1237,
+              "total": 1337,
+              "percent": 92.52
+            },
+            "evidence": "work/oci-public-ip-stage-20261118/coverage-summary.json",
+            "counts_overlap_previous_runs": true
           }
         },
-        "blocker": "Acceptance and design gates remain open",
-        "next_action": "Agree omitted/default public-IP semantics; implement the optional control.",
-        "updated_at": "2026-11-12",
-        "last_iteration_id": "OCI-20261112-TRACKING"
-      }
+        "blocker": "Owner approval before push/PR; live address acceptance pending; shared formatter CI dependency remains a separate merge blocker.",
+        "next_action": "Inspect the roadmap checkpoint and named starter-branch cleanup plan, then resume the OCI-only launch bundle locally. No new feature publication is approved.",
+        "updated_at": "2026-11-19",
+        "last_iteration_id": "OCI-20261119-REPO-CHECKPOINT",
+        "design_resolution": "Use existing public_ip_assignment with strict OCI validation and saved-false precedence.",
+        "scope_gate": "oci-provider",
+        "delivery_plan": {
+          "state": "planned_not_implemented",
+          "features": [
+            "IMDSv2",
+            "PREFLIGHT",
+            "NETWORK",
+            "BOOT-PERF"
+          ],
+          "proposed_branch": "feat/oci-launch-controls",
+          "proposed_base": "3ab6716a6f1f82a3feed42bbd0ca0b357a1e4e7a",
+          "branch_created": false,
+          "tests_run_for_combination": false,
+          "reason": "Git metadata writes were blocked by the sandbox and the requested escalation was declined. No retry or alternate implementation path was used.",
+          "next_action": "Establish fork main and roadmap checkpoint first, then revisit local consolidation permission. Keep existing implementations and PRs unchanged."
+        },
+        "repository_checkpoint": {
+          "main": "3ab6716a6f1f82a3feed42bbd0ca0b357a1e4e7a",
+          "state": "synchronized",
+          "cleanup": "pending_named_list_review",
+          "launch_bundle": "not_created"
+        }
+      },
+      "evidence": [
+        "Local commit d837609c on 3ab6716a; 434 OCI tests passed, one opt-in live test skipped; required quality/scope pass. No push or PR; live acceptance pending.",
+        "18 November focused stage:d837609c remains clean and current;434offline tests pass in frozen CI groups,9/9changed executable source lines and6/6new-decision outcomes covered. Five-file strict scope passes; no push or PR."
+      ]
     },
     {
       "id": "TAGS",
@@ -710,8 +877,14 @@
         },
         "blocker": "Acceptance and design gates remain open",
         "next_action": "Add defined tags while preserving freeform and reserved ownership tags.",
-        "updated_at": "2026-11-12",
-        "last_iteration_id": "OCI-20261112-TRACKING"
+        "updated_at": "2026-11-18",
+        "last_iteration_id": "OCI-20261118-REPO-PROTOCOL",
+        "design_review": {
+          "state": "read_only_contract_prepared_not_implemented",
+          "evidence": "work/oci-next-controls-20261118/controls-proposal.json",
+          "scope": "OCI-only typed fields, aliases, defaults, DTO, wire mapping, tests and live prerequisites",
+          "next_step": "TAGS direct-instance mapping can follow the launch bundle. PLACEMENT additionally needs optional reservation/fault-domain metadata validation; preserve explicit empty reservation opt-out."
+        }
       }
     },
     {
@@ -719,7 +892,7 @@
       "title": "Expose boot-volume performance settings",
       "phase": 2,
       "priority": "P2",
-      "status": "planned",
+      "status": "implemented_pending_merge",
       "scope": "provider",
       "branch": "codex/oci-boot-performance",
       "depends_on": [
@@ -744,26 +917,72 @@
       "historical_status_2026_10_28": "planned",
       "progress": {
         "implementation": {
-          "state": "not_started",
-          "commit": null
+          "state": "complete",
+          "commit": "92fedef4abccd00a46cd02b440359d1618ab1485",
+          "base": "3ab6716a6f1f82a3feed42bbd0ca0b357a1e4e7a",
+          "branch": "feat/oci-boot-volume-performance",
+          "tested_inputs_match_committed": true
         },
         "publication": {
-          "state": "not_started",
-          "branch": "codex/oci-boot-performance"
+          "state": "local_only_pending_owner_inspection",
+          "branch": "feat/oci-boot-volume-performance",
+          "pushed": false,
+          "upstream_pr": null,
+          "approval": "not_granted"
         },
         "validation": {
           "offline": {
-            "state": "not_run"
+            "state": "passed",
+            "passed_tests": 541,
+            "skipped": 1,
+            "focused_passed_tests_included": 142,
+            "commit": "92fedef4abccd00a46cd02b440359d1618ab1485",
+            "evidence": "work/oci-status-batch-20261117/boot/result.json"
           },
           "live": {
-            "state": "not_run"
+            "state": "not_run",
+            "required": "VPU readback, performance and boot-volume cleanup"
+          },
+          "locked_local_quality": {
+            "date": "2026-11-18",
+            "ruff": "0.17.4",
+            "state": "passed_with_explicit_windows_symlink_alias_adjustment",
+            "scope": "full repository lint, source security and format checks",
+            "evidence": "work/oci-local-ci-20261118/results-windows-compatible.json",
+            "full_linux_ci": false
           }
         },
-        "blocker": "Acceptance and design gates remain open",
-        "next_action": "Verify service values and add the optional boot performance control.",
-        "updated_at": "2026-11-12",
-        "last_iteration_id": "OCI-20261112-TRACKING"
-      }
+        "blocker": "Owner inspection and explicit snapshot approval; live acceptance and upstream review/merge pending.",
+        "next_action": "Inspect the roadmap checkpoint and named starter-branch cleanup plan, then resume the OCI-only launch bundle locally. No new feature publication is approved.",
+        "updated_at": "2026-11-19",
+        "last_iteration_id": "OCI-20261119-REPO-CHECKPOINT",
+        "design_resolution": "Current Oracle image-source API values verified; narrow OCI row hook preserves authored sizing precedence.",
+        "scope_gate": "oci-provider",
+        "delivery_plan": {
+          "state": "planned_not_implemented",
+          "features": [
+            "IMDSv2",
+            "PREFLIGHT",
+            "NETWORK",
+            "BOOT-PERF"
+          ],
+          "proposed_branch": "feat/oci-launch-controls",
+          "proposed_base": "3ab6716a6f1f82a3feed42bbd0ca0b357a1e4e7a",
+          "branch_created": false,
+          "tests_run_for_combination": false,
+          "reason": "Git metadata writes were blocked by the sandbox and the requested escalation was declined. No retry or alternate implementation path was used.",
+          "next_action": "Establish fork main and roadmap checkpoint first, then revisit local consolidation permission. Keep existing implementations and PRs unchanged."
+        },
+        "repository_checkpoint": {
+          "main": "3ab6716a6f1f82a3feed42bbd0ca0b357a1e4e7a",
+          "state": "synchronized",
+          "cleanup": "pending_named_list_review",
+          "launch_bundle": "not_created"
+        }
+      },
+      "evidence": [
+        "Local commit 92fedef4 on 3ab6716a; 541 OCI tests passed, one opt-in live test skipped; required quality/scope pass. No push or PR; live acceptance pending."
+      ]
     },
     {
       "id": "VOLUMES",
@@ -1365,9 +1584,9 @@
           }
         },
         "blocker": null,
-        "next_action": "Review the isolated OCI IMDS option fix for upstream publication, then promote or refresh the preflight publication branch independently; keep generic CLI error propagation separate.",
-        "updated_at": "2026-11-17",
-        "last_iteration_id": "OCI-20261117-IMDS-DENY"
+        "next_action": "After the current base and local launch bundle are agreed and tested, run bounded acceptance against that exact build. Preserve historical one-E5 stack proof; broader auth/shape coverage remains pending.",
+        "updated_at": "2026-11-18",
+        "last_iteration_id": "OCI-20261118-REPO-PROTOCOL"
       }
     },
     {
@@ -1528,10 +1747,10 @@
             "state": "pending"
           }
         },
-        "blocker": "Acceptance and design gates remain open",
-        "next_action": "Review the separate fork's Windows portability and package-data findings, then plan a Linux startup and supported-identity cloud lifecycle test when selected.",
-        "updated_at": "2026-11-17",
-        "last_iteration_id": "OCI-20261117-OTHER-FORK-LOCAL",
+        "blocker": "NCUSATO key-path correction is user-reported only; file-permission repair, ORB profile activation, read-only authentication/health verification and live acceptance remain pending.",
+        "next_action": "Have the user run the provided OCI setup repair-file-permissions commands for the exact private PEM and standard SDK config, then the read-only region-subscriptions check. Confirm permitted ORB selection of NCUSATO and run read-only ORB health before resource testing; do not retry the rejected activation helper.",
+        "updated_at": "2026-11-18",
+        "last_iteration_id": "OCI-20261118-NCUSATO-READINESS",
         "local_other_fork_validation": {
           "source_commit": "6bc40c19b71c380a47292ad795b56366b2c333b2",
           "source_clean": true,
@@ -1564,6 +1783,124 @@
             "missing_non_oci_json": 10,
             "missing_data_runtime_impact": "not_established"
           }
+        },
+        "manual_verification_handoff": {
+          "date": "2026-11-17",
+          "state": "awaiting_user_run_and_output",
+          "existing_runtime_paths": "existence_verified_by_parent_agent",
+          "new_test_run": false,
+          "new_result": null,
+          "scope": "local_installed_api_only_no_cloud"
+        },
+        "manual_live_readiness_handoff": {
+          "date": "2026-11-18",
+          "source_commit": "6bc40c19b71c380a47292ad795b56366b2c333b2",
+          "state": "choice_resolved_local_compatibility_build_selected",
+          "review": "Parent agent read-only source review",
+          "supported_auth": [
+            "api_key",
+            "oke_workload_identity"
+          ],
+          "unsupported_requested_context": [
+            "workstation_security_token",
+            "broker_instance_principal"
+          ],
+          "required_launch_option": "instanceOptions.areLegacyImdsEndpointsDisabled",
+          "option_mapped_in_unchanged_fork": false,
+          "choice_options": [
+            "prepare_local_oci_only_fork_fix_first",
+            "use_already_tested_orb_build"
+          ],
+          "new_live_test": false,
+          "new_live_result": null,
+          "new_iam_grants_required": "not_established",
+          "selected_choice": "prepare_local_oci_only_fork_fix_first",
+          "resolved_by_iteration_id": "OCI-20261118-OTHER-FORK-LOCAL-CLI"
+        },
+        "local_other_fork_cli_compatibility": {
+          "date": "2026-11-18",
+          "source_commit": "47fec82e192ec5a9ac1d46f0846c2720edf26f63",
+          "base_commit": "6bc40c19b71c380a47292ad795b56366b2c333b2",
+          "branch": "fix/oci-imdsv2-compat",
+          "source_clean": true,
+          "publication": "local_only_owner_hold_unchanged",
+          "scope": {
+            "runtime_files": 3,
+            "oci_test_files": 2,
+            "profile": "oci-provider",
+            "result": "pass",
+            "exceptions": []
+          },
+          "contract": "Optional strict provider-level instance_options for direct Compute and InstancePool; omitted preserves prior behavior and explicit false is preserved. No per-template support.",
+          "oci_tests": {
+            "passed": 302,
+            "failed": 0,
+            "errors": 0,
+            "skipped": 0,
+            "new_cases_subset": 42,
+            "tested_inputs_matched_final_commit": true
+          },
+          "build": "wheel_and_sdist_passed_new_runtime_installed",
+          "dependency_check": "passed",
+          "sdk_version": "2.192.0",
+          "offline_installed_cli": {
+            "commands": [
+              "config validate",
+              "providers list",
+              "templates list",
+              "templates validate"
+            ],
+            "all_passed": true,
+            "cloud_calls_blocked": true,
+            "outbound_attempts": 0
+          },
+          "sdk_wire_proof": {
+            "legacy_imds_disabled": true,
+            "ocpus": 1,
+            "memory_gbs": 8,
+            "public_ip": false
+          },
+          "api_key_setup": "pending_dedicated_sdk_config_and_DEFAULT_profile_not_yet_present",
+          "existing_authentication": "only_browser_session_token_profiles_observed_not_compatible_with_this_fork",
+          "manual_live_test": "one_e5_create_status_return_and_exact_worker_boot_cleanup_commands_prepared_user_run_pending",
+          "new_live_result": null,
+          "template_prototype": "Archived template-level attempt failed defaults/persistence; this smaller provider-policy contract avoids unsupported template behavior and does not fix shared runtime."
+        },
+        "api_key_handoff": {
+          "date": "2026-11-18",
+          "state": "NCUSATO_user_reported_path_correction_permissions_activation_verification_pending",
+          "console_owner": "user_by_explicit_choice",
+          "agent_instructions_scope": "CLI_local_profile_setup_only",
+          "local_profile": "NCUSATO",
+          "local_config": "existing_standard_OCI_SDK_config",
+          "region": "us-phoenix-1",
+          "key_material": "user_downloaded_PEM_not_generated_or_read_by_agent",
+          "existing_profile_review": "metadata_only_two_security_token_profiles",
+          "dedicated_config_exists": false,
+          "browser_inventory": "approval_timeout_no_browser_control_or_registration",
+          "console_technically_required": false,
+          "alternative_not_executed": "CLI bootstrap registration with a suitable valid token",
+          "read_only_cloud_verification": "pending_user_region_subscriptions_then_ORB_health",
+          "new_live_result": null,
+          "authentication_changes": false,
+          "selected_config_exists": true,
+          "required_API_key_fields_present": true,
+          "security_token_file_present": false,
+          "key_file_at_inspection": "literal_surrounding_double_quotes_unquoted_target_exists",
+          "user_reported_quotes_removed": true,
+          "correction_reverified_by_agent": false,
+          "private_key_content_read": false,
+          "fingerprint_read_or_verified": false,
+          "activation_helper": "prepared_ignored_but_user_approval_rejected_command_not_executed",
+          "rejected_actions": [
+            "backup_config",
+            "remove_key_path_quotes",
+            "read_and_compare_key_fingerprint",
+            "change_ORB_profile_selection"
+          ],
+          "ORB_selected_profile": "old_DEFAULT_in_absent_dedicated_config_unchanged",
+          "permission_guidance": "user_commands_for_exact_private_PEM_and_standard_config_via_OCI_setup_repair_file_permissions",
+          "permission_repair_executed_by_agent": false
         }
       }
     },
@@ -2074,7 +2411,7 @@
       ]
     }
   },
-  "last_updated": "2026-11-17",
+  "last_updated": "2026-11-18",
   "observed_upstream": {
     "checked_on": "2026-11-17",
     "main_commit": "7b356262d0154db90b312deae6ff64f5bdbbd9b5",
@@ -2083,13 +2420,16 @@
     "shared_hostfactory_dto_formatter_changes": true,
     "source": "https://github.com/finos/open-resource-broker/compare/071f4596ac7983ac0a7954998c10ed106c0a2bee...7b356262d0154db90b312deae6ff64f5bdbbd9b5",
     "latest_validation_upstream_base": "7b356262d0154db90b312deae6ff64f5bdbbd9b5",
-    "latest_validation_stack": "8a4e4fb10e1df77078e93facf0b6b7ae890c9244"
+    "latest_validation_stack": "8a4e4fb10e1df77078e93facf0b6b7ae890c9244",
+    "latest_review_base": "3ab6716a6f1f82a3feed42bbd0ca0b357a1e4e7a",
+    "latest_review_checked_on": "2026-11-18",
+    "fork_main_sync_pending_owner_review": true
   },
   "tracking": {
     "current_summary": "CURRENT.md",
     "iterations": "iterations.json",
     "instructions": "../../AGENTS.md",
-    "last_iteration_id": "OCI-20261117-PROVIDER-GUARDS",
+    "last_iteration_id": "OCI-20261118-NETWORK-STAGE",
     "rule": "Keep implementation, publication, offline validation and live acceptance separate; append meaningful iteration results."
   },
   "upstream_integrations": [
@@ -2203,7 +2543,7 @@
         "ACCEPT-AUTH-SHAPES"
       ],
       "owner": "Codex: isolated OCI fix review and publication",
-      "last_iteration_id": "OCI-20261117-IMDS-DENY",
+      "last_iteration_id": "OCI-20261118-UPSTREAM-DESCRIPTIONS",
       "last_good_commit": "7f6f13c568d14785fa76d673ce1f4513ea1fcc79",
       "last_good_date": "2026-10-22",
       "current_tested_commit": "8a4e4fb10e1df77078e93facf0b6b7ae890c9244",
@@ -2229,10 +2569,11 @@
         "The isolated fix and preflight validation stack were pushed to the fork; no new upstream PR or merge is claimed. Their 427-test and 529-test suites overlap and are not 956 unique tests.",
         "The candidate Bastion IP addition remains unapplied. Fresh temporary access worked without an allowlist change. Operator token expiry interrupted an initial inventory attempt; a local empty-list parsing error stopped a second attempt before resource creation.",
         "A fresh Linux wheel/source build of the validation stack passed the one-worker E5 instance-principal acquire/status/return gate. OCI reports legacy IMDS endpoints disabled; independent cleanup found zero active owned instances and zero active worker boot volumes, with no operator fallback.",
-        "A post-canary read confirmed the root Assurance policy still matches the earlier recorded statements and retains the active IMDSv2 creation guard."
+        "A post-canary read confirmed the root Assurance policy still matches the earlier recorded statements and retains the active IMDSv2 creation guard.",
+        "18 November: three code branches refreshed to 3ab6716a, then IMDS/preflight/sizing PRs opened and held as drafts after the user required prior inspection. Earlier no-new-PR statements remain historical. The live proof still belongs only to 8a4e4fb1."
       ],
       "hypothesis": "The metadata request setting corrected the demonstrated instance-principal launch block; the change time and actor remain unknown.",
-      "next_action": "Review the isolated OCI IMDS option fix for upstream publication, then promote or refresh the preflight publication branch independently; keep generic CLI error propagation separate.",
+      "next_action": "Upstream description is verified. Await separately scoped shared CI clearance and maintainer review; retain exact live proof on8a4e4fb1.",
       "evidence": [
         "work/oci-review-20261110/LIVE_DIAGNOSTIC_HANDOFF.txt",
         "work/oci-review-20261110/live-canary/catalog-diagnostic-271e511d53.json",
@@ -2266,8 +2607,13 @@
         },
         "publication": {
           "fork_pushed": true,
-          "upstream_pr": null,
-          "upstream_merged": false
+          "upstream_pr": "https://github.com/finos/open-resource-broker/pull/877",
+          "upstream_merged": false,
+          "state": "upstream_draft_description_verified",
+          "neutral_replacement_authorized": false,
+          "draft": true,
+          "github_markdown_verified": true,
+          "description_sha256_normalized": "4706385a64038246d91ced72e7d6cf9c07d310e970b9776a87a0dbf9f33de5a1"
         },
         "offline": {
           "isolated_fix_passed_tests": 427,
@@ -2287,6 +2633,12 @@
           "commit": "8a4e4fb10e1df77078e93facf0b6b7ae890c9244",
           "evidence": "work/oci-review-20261117/imds-live-result.json",
           "scope": "one E5 worker, instance principal, stock Ubuntu, IMDSv2"
+        },
+        "review_candidate": {
+          "branch": "fix/oci-imdsv2-launch",
+          "head": "139c275398464edc14e918e23a7c8f3bd7e38e65",
+          "base": "3ab6716a6f1f82a3feed42bbd0ca0b357a1e4e7a",
+          "offline_tests": 427
         }
       }
     },
@@ -2306,19 +2658,51 @@
       "evidence": [
         "work/oci-review-20261110/acquire-message-proposal.json"
       ]
+    },
+    {
+      "id": "ISS-CI-ACTION-PIN-001",
+      "state": "diagnosed_and_locally_detectable_outside_provider_scope",
+      "linked_cards": [
+        "PREFLIGHT",
+        "HF-FACTS"
+      ],
+      "last_iteration_id": "OCI-20261118-UPSTREAM-DESCRIPTIONS",
+      "known_facts": [
+        "All four draft PR formatter suggestion jobs stop before formatting because the pinned outer reviewdog/action-suggester action uses an unpinned nested setup action, rejected by FINOS full-SHA policy.",
+        "EasyCLA passed for all four at the recorded read; no shared workflow change made.",
+        "18 November local CI iteration: isolated frozen lint group uses Ruff0.17.4, whereas the earlier shared development venv has0.16.10. No earlier test counts were changed.",
+        "The six full-repository native Windows Ruff runs fail only on the tracked test_dispatcher.py symlink represented as plaintext with core.symlinks=false. No shared script was modified.",
+        "With an explicit exclusion of that verified alias only, retaining its regular-file target in discovery, the six full-repository Ruff lint/security/format runs pass. This adjusted Windows result is not a full Linux CI pass.",
+        "The repository Python-version drift and action-SHA consistency validators pass. The latter does not follow nested external action dependencies.",
+        "A bounded read-only metadata walk of the selected formatter-suggestion job detects the exact unpinned reviewdog/action-setup@v1.5.0 dependency before publication. No action code was executed or GitHub check rerun.",
+        "18 November publication verification:877-879 each have zero pending checks and only Auto-Format Suggestions failing; EasyCLA passes. Replacement docs881 confirms the same unpinned action-setup dependency in its own new job log. No workflow was modified."
+      ],
+      "affected_path": ".github/workflows/ci-quality.yml",
+      "evidence": [
+        "work/oci-status-batch-20261117/github-status.json",
+        "work/oci-status-batch-20261117/ci-877-134995986111.log",
+        "work/oci-local-ci-20261118/results-native.json",
+        "work/oci-local-ci-20261118/results-windows-compatible.json",
+        "work/oci-local-ci-20261118/job-action-pin-result.json",
+        "work/oci-local-ci-20261118/LOCAL-CI.html",
+        "work/oci-pr-descriptions-20261118/upstream-verification.json",
+        "work/oci-pr-descriptions-20261118/docs-source-and-ci.json"
+      ],
+      "next_action": "Owner reviews local results. Use frozen CI groups on Linux for full parity; separately scope any shared workflow dependency fix. No publication without explicit snapshot approval."
     }
   ],
-  "current_focus": "PREFLIGHT",
+  "current_focus": "NETWORK",
   "next_work_order": [
+    "NETWORK",
+    "BOOT-PERF",
     "PREFLIGHT",
-    "HF-FACTS",
-    "HF-OCI"
+    "HF-FACTS"
   ],
   "validation_limits": [
     "The historical 501/502 branch suites share a 399-test baseline. The new isolated 427-test and combined 529-test suites also overlap; none may be summed as unique tests.",
     "Current broker-principal E5 acquisition/return passed only on the identified IMDSv2 validation stack; broader shapes/authentication and workload acceptance remain separate.",
     "Existing starter branches and estimates are plans, not implemented features or delivery dates.",
-    "IMDS fix and preflight validation stack use current observed main 7b356262; the old preflight publication branch and hardware helper retain their earlier baselines and require separate review/refresh."
+    "Refreshed IMDS/preflight/capacity review candidates use 3ab6716a and passed offline checks; original refs and live validation stack8a4e4fb1 on7b356262 remain historical. Newcontrols have no liveacceptance or combined-stack pass."
   ],
   "scope_controls": {
     "updated_at": "2026-11-17",
@@ -2345,7 +2729,165 @@
         "docs/root/index.md"
       ],
       "exception_consumed": true,
-      "future_outside_document_changes_require_new_direction": true
+      "future_outside_document_changes_require_new_direction": true,
+      "local_refresh": "e2e32a6a272e2a8cde912178d39ac27353a49794",
+      "local_refresh_not_published": false,
+      "reviewed_refresh_publication": {
+        "commit": "e2e32a6a272e2a8cde912178d39ac27353a49794",
+        "branch": "docs/oci-provider-introductions",
+        "url": "https://github.com/finos/open-resource-broker/pull/881",
+        "draft": true,
+        "replaces": 880,
+        "old_pr_closed": true,
+        "old_branch_preserved": true,
+        "reviewed_paths": [
+          "README.md",
+          "docs/root/index.md"
+        ],
+        "no_new_outside_document_edit": true
+      }
+    },
+    "owner_review": {
+      "required": true,
+      "snapshot_approval": "Scoped approved actions applied; new or changed publication actions require approval.",
+      "draft_creation_also_requires_approval": true,
+      "neutral_branch_names": true,
+      "ai_attribution_trailers": false,
+      "source": "Explicit user direction on 18 November 2026",
+      "description_format_review": {
+        "state": "applied_and_verified_for_three_existing_drafts_and_docs_replacement",
+        "iteration": "OCI-20261118-PR-DESCRIPTIONS",
+        "template_sections": 14,
+        "short_disclosure_wording_approved": true,
+        "publication_approval_recorded": false,
+        "evidence": "work/oci-pr-descriptions-20261118/DESCRIPTIONS.html"
+      },
+      "last_scoped_publication_approval": {
+        "date": "2026-11-18",
+        "source": "Explicit user reply after the formatted preview: yes fix it and make sure its good upstream",
+        "applied_scope": [
+          "description updates877-879",
+          "reviewed docs branch push and replacement PR881",
+          "close superseded880"
+        ],
+        "not_included": [
+          "network/boot PR creation",
+          "readiness changes",
+          "shared workflow edits",
+          "merges",
+          "future changed snapshots"
+        ],
+        "action_gate_results": "all five passed",
+        "evidence": "work/oci-pr-descriptions-20261118/approved-execution/"
+      }
+    }
+  },
+  "repository_coordination": {
+    "updated_at": "2026-11-19",
+    "repository_of_record": "oci-fsi-pursuits/open-resource-broker",
+    "upstream": "finos/open-resource-broker",
+    "roadmap_branch": "codex/oci-feature-roadmap",
+    "roadmap_local_checkout": "work/oci-feature-roadmap/roadmap",
+    "state": "main_sync_verified_local_roadmap_checkpoint_prepared_cleanup_pending_review",
+    "main_sync": {
+      "observed_at_utc": "2026-11-19T16:07:50.493043+00:00",
+      "client_date": "2026-11-19",
+      "state": "already_synced_before_agent_fetch",
+      "origin_main": "3ab6716a6f1f82a3feed42bbd0ca0b357a1e4e7a",
+      "upstream_main": "3ab6716a6f1f82a3feed42bbd0ca0b357a1e4e7a",
+      "local_main": "3ab6716a6f1f82a3feed42bbd0ca0b357a1e4e7a",
+      "ahead": 0,
+      "behind": 0,
+      "origin_branch_count": 39,
+      "remote_push_performed_by_this_iteration": false,
+      "evidence": [
+        "git fetch upstream main exit0, tool882268",
+        "git fetch origin exit0, tool28065d",
+        "rev-parse main/origin/main/upstream/main and rev-list verified0/0, toolbbaa7d"
+      ]
+    },
+    "rules": [
+      "Keep organization main aligned with FINOS main using fast-forward updates; inspect and preserve unique commits if it diverges.",
+      "Keep planning on the canonical roadmap branch; do not merge fork coordination files into upstream feature PRs.",
+      "Use backlog cards for future work; create neutral feature/fix/docs branches only when implementation starts.",
+      "Use one branch and one implementation checkout per cohesive PR. Record exact branch/head/base and dirty state before edits.",
+      "Refreshing main does not refresh feature branches. Check and refresh each feature branch against current upstream before review.",
+      "Prepare full diff, scope, tests, PR description and live limitations; require explicit exact-snapshot owner approval before feature publication or PR changes.",
+      "Checkpoint roadmap changes locally and publish only after inspection; do not describe uncommitted status as remotely available.",
+      "After merge or supersession, verify patch equivalence, preserve required evidence and obtain approval for exact branch/worktree cleanup. Never delete dirty or unmerged implementation work."
+    ],
+    "cleanup": {
+      "inventory": "work/oci-repo-protocol-20261118/branch-audit.json",
+      "candidate_starter_names": 16,
+      "deleted": 0,
+      "preserve": [
+        "active PR heads",
+        "unpublished public-IP and boot implementations",
+        "dirty roadmap and guardrails",
+        "historical live-validation refs until archived",
+        "gh-pages documentation publishing branch"
+      ],
+      "state": "named_candidates_prepared_not_approved_or_deleted",
+      "names": [
+        "codex/hostfactory-template-attributes",
+        "codex/machine-identity-aliases",
+        "codex/oci-boot-performance",
+        "codex/oci-defined-tags",
+        "codex/oci-identity-aliases",
+        "codex/oci-instance-pools",
+        "codex/oci-network-controls",
+        "codex/oci-oke-deployment",
+        "codex/oci-oke-workload-identity",
+        "codex/oci-placement-controls",
+        "codex/oci-power-actions",
+        "codex/oci-scheduled-scaling",
+        "codex/oci-sdk-transport",
+        "codex/oci-secondary-volumes",
+        "codex/oci-validation-runbooks",
+        "codex/pool-lifecycle-contracts"
+      ],
+      "open_pr_check": {
+        "complete": true,
+        "evidence": "work/oci-repo-protocol-20261118/open-prs.json",
+        "candidate_open_pr_sources": 0,
+        "preserved_source_branches": [
+          "codex/oci-capacity-review",
+          "codex/oci-imdsv2-review",
+          "codex/oci-launch-preflight-review",
+          "docs/oci-provider-introductions"
+        ]
+      },
+      "historical_mapping_policy": "Retain the original19 branch records and25 card branch mappings; capture exact candidate heads and dependency bases before any later cleanup. Historical references are not promises that those branch names will continue to exist."
+    },
+    "publication_authorized": false,
+    "previous_main_observation": {
+      "observed_at_utc": "2026-11-19T02:15:19.119671+00:00",
+      "client_date": "2026-11-18",
+      "origin": "https://github.com/oci-fsi-pursuits/open-resource-broker",
+      "upstream": "https://github.com/finos/open-resource-broker",
+      "origin_main": "ff7732e3711e3a2366643bfe489617490ec3613a",
+      "upstream_main": "3ab6716a6f1f82a3feed42bbd0ca0b357a1e4e7a",
+      "origin_main_ahead": 0,
+      "origin_main_behind": 1642,
+      "origin_branch_count": 38,
+      "roadmap_branch": "codex/oci-feature-roadmap",
+      "roadmap_remote_head": "5846623f5dc58755d5a71b8a2d85b47873d9f317",
+      "roadmap_has_uncommitted_local_updates": true,
+      "evidence": [
+        "Successful read-only git ls-remote --heads origin, tool5e148f",
+        "Successful read-only git ls-remote --heads upstream main, toolbbe6ea",
+        "Existing-object rev-list origin/main...upstream/main returned0/1642"
+      ],
+      "remote_mutations": false,
+      "sync_plan": "Normal fast-forward of organization fork main from ff7732e3 to3ab6716a; not executed. No force or discard required for the observed organization fork main.",
+      "other_screenshot": "The one-branch fork showing one unique commit is not this observed38-branch origin. Owner URL and unique commit need inspection before discarding anything there."
+    },
+    "roadmap_checkpoint": {
+      "state": "prepared_for_local_commit",
+      "parent": "5846623f5dc58755d5a71b8a2d85b47873d9f317",
+      "branch": "codex/oci-feature-roadmap",
+      "publication": "not_pushed_pending_inspection_of_exact_checkpoint",
+      "review_packet": "work/oci-repo-protocol-20261118/REVIEW.html"
     }
   }
 }

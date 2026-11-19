@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "updated_at": "2026-11-17",
+  "updated_at": "2026-11-18",
   "timezone": "America/Los_Angeles",
   "purpose": "Sanitized, append-only meaningful work iterations; raw deployment evidence remains ignored.",
-  "current_focus": "PREFLIGHT",
+  "current_focus": "NETWORK",
   "entries": [
     {
       "id": "OCI-20261022-BASELINE",
@@ -753,6 +753,899 @@
         "shared_implementation_started": false
       },
       "next_action": "Use the strict profile for OCI publication; submit the isolated IMDS/preflight fixes and the independent two-file docs correction without expanding scope."
+    },
+    {
+      "id": "OCI-20261117-OTHER-FORK-MANUAL-HANDOFF",
+      "date": "2026-11-17",
+      "record_origin": "current_iteration",
+      "objective": "Hand the user a short manual check of the already-installed separate evaluation fork",
+      "work_ids": [
+        "ACCEPT-PLATFORM"
+      ],
+      "source": {
+        "planning_start_commit": "5846623f5dc58755d5a71b8a2d85b47873d9f317",
+        "planning_started_dirty": [],
+        "evaluation_source_commit": "6bc40c19b71c380a47292ad795b56366b2c333b2",
+        "runtime_source_changed": false
+      },
+      "outcome": "manual_verification_instructions_handed_off_result_pending",
+      "changes": [
+        "Updated only the canonical platform card, CURRENT summary and appended iteration record; preserved prior checks and incident resolution."
+      ],
+      "checks": [
+        "Read the latest canonical handoff/card/history and fork coordination instructions.",
+        "The parent agent verified that the retained runtime Python and API smoke script paths exist.",
+        "Existing roadmap validator and append-only/unchanged-result semantic checks passed; no application tests repeated."
+      ],
+      "observed_facts": [
+        "The prior fresh build, installed-wheel focused result and local API smoke remain historical evidence for this handoff; no new pass is claimed.",
+        "The user is to run the installed local API check with a fresh timestamped evidence directory and return its checks table.",
+        "The user-run result is pending. PREFLIGHT remains the current focus, and the resolved launch incident is unchanged."
+      ],
+      "remaining_hypotheses": [
+        "The user-run API outcome has not yet been observed; current host health can differ from the earlier agent-run result."
+      ],
+      "evidence": [
+        "work/other-team-orb/20261117/fresh-build.json",
+        "work/other-team-orb/20261117/test-evidence/final-provenance.json",
+        "work/other-team-orb/20261117/api_smoke.py"
+      ],
+      "cleanup": {
+        "source_changes": false,
+        "new_application_tests": false,
+        "new_api_server_started_by_agent": false,
+        "cloud_changes": false,
+        "runtime_and_prior_evidence_retained": true
+      },
+      "next_action": "Have the user run the retained installed API smoke manually and share the resulting checks table; classify any failed check before further work."
+    },
+    {
+      "id": "OCI-20261118-NETWORK",
+      "date": "2026-11-18",
+      "objective": "Implement and validate NETWORK locally for owner inspection",
+      "work_ids": [
+        "NETWORK"
+      ],
+      "source": {
+        "branch": "feat/oci-public-ip",
+        "commit": "d837609c8e83e6c5299741dfeb1fe0ec61a37281",
+        "base": "3ab6716a6f1f82a3feed42bbd0ca0b357a1e4e7a",
+        "dirty": false,
+        "tested_dirty_input_hashes_match_commit": true
+      },
+      "outcome": "local_implementation_offline_passed_owner_review_and_live_pending",
+      "changes": [
+        "Optional OCI control, provider-owned documentation and serialization/default/request-body tests.",
+        "No shared runtime, other-provider, workflow or dependency edits."
+      ],
+      "checks": {
+        "oci_passed": 434,
+        "oci_skipped": 1,
+        "focused_included": 35,
+        "required_quality": "passed",
+        "scope": "passed with no exceptions"
+      },
+      "observed_facts": [
+        "The exact local commit matches tested inputs.",
+        "No push, PR or cloud run was performed for this control."
+      ],
+      "remaining_hypotheses": [
+        "Live resulting resources and cleanup have not been observed."
+      ],
+      "evidence": [
+        "work/oci-status-batch-20261117/network/canonical/validation.json",
+        "work/oci-status-batch-20261117/controls-local.json"
+      ],
+      "cleanup": {
+        "cloud_resources_created": false,
+        "iam_changes": false
+      },
+      "next_action": "Owner inspects the full review packet; obtain explicit approval before publication and keep live acceptance separate."
+    },
+    {
+      "id": "OCI-20261118-BOOT-PERF",
+      "date": "2026-11-18",
+      "objective": "Implement and validate BOOT-PERF locally for owner inspection",
+      "work_ids": [
+        "BOOT-PERF"
+      ],
+      "source": {
+        "branch": "feat/oci-boot-volume-performance",
+        "commit": "92fedef4abccd00a46cd02b440359d1618ab1485",
+        "base": "3ab6716a6f1f82a3feed42bbd0ca0b357a1e4e7a",
+        "dirty": false,
+        "tested_dirty_input_hashes_match_commit": true
+      },
+      "outcome": "local_implementation_offline_passed_owner_review_and_live_pending",
+      "changes": [
+        "Optional OCI control, provider-owned documentation and serialization/default/request-body tests.",
+        "No shared runtime, other-provider, workflow or dependency edits."
+      ],
+      "checks": {
+        "oci_passed": 541,
+        "oci_skipped": 1,
+        "focused_included": 142,
+        "required_quality": "passed",
+        "scope": "passed with no exceptions"
+      },
+      "observed_facts": [
+        "The exact local commit matches tested inputs.",
+        "No push, PR or cloud run was performed for this control."
+      ],
+      "remaining_hypotheses": [
+        "Live resulting resources and cleanup have not been observed."
+      ],
+      "evidence": [
+        "work/oci-status-batch-20261117/boot/result.json",
+        "work/oci-status-batch-20261117/controls-local.json"
+      ],
+      "cleanup": {
+        "cloud_resources_created": false,
+        "iam_changes": false
+      },
+      "next_action": "Owner inspects the full review packet; obtain explicit approval before publication and keep live acceptance separate."
+    },
+    {
+      "id": "OCI-20261118-REVIEW-PREP",
+      "date": "2026-11-18",
+      "objective": "Refresh ready OCI follow-ups and record their actual publication/review state",
+      "work_ids": [
+        "PREFLIGHT",
+        "HF-FACTS",
+        "INC-OCI-LAUNCH-001",
+        "ISS-CI-ACTION-PIN-001"
+      ],
+      "source": {
+        "planning_start_commit": "5846623f5dc58755d5a71b8a2d85b47873d9f317",
+        "planning_started_dirty_paths": [
+          "roadmap/oci/CURRENT.md",
+          "roadmap/oci/backlog.json",
+          "roadmap/oci/iterations.json"
+        ],
+        "preexisting_manual_handoff_preserved": true,
+        "review_base": "3ab6716a6f1f82a3feed42bbd0ca0b357a1e4e7a",
+        "imds": "139c275398464edc14e918e23a7c8f3bd7e38e65",
+        "preflight": "acf16590eff03b7449a79ed1d9237ffc44ed3b33",
+        "capacity": "1f84d7553799af41a5cf85a299d38740e250578a"
+      },
+      "outcome": "four_prs_created_then_held_draft_for_owner_review",
+      "changes": [
+        "Refreshed IMDS, preflight and sizing onto observed upstream main; preserved original source refs.",
+        "Opened PRs 877-880 before user inspection, then converted all four to drafts after user correction.",
+        "Prepared unchanged two-line docs correction locally on current main; existing PR880 remains on its older head.",
+        "Recorded shared formatter action pinning failure without changing shared CI."
+      ],
+      "checks": {
+        "imds_offline": 427,
+        "preflight_offline": 501,
+        "capacity_offline": 502,
+        "counts_overlap": true,
+        "required_quality": "passed",
+        "scope": "strict; docs use exact two-path exception",
+        "cla": "passed"
+      },
+      "observed_facts": [
+        "The code review refs are zero commits behind observed main.",
+        "The original docs PR was 16 commits behind main.",
+        "Fork main is 1642 commits behind observed upstream main; local main was fast-forwarded only.",
+        "All four existing PRs are drafts; no merges were performed."
+      ],
+      "remaining_hypotheses": [
+        "CI still had pending checks at the recorded snapshot; only diagnosed failures are classified."
+      ],
+      "evidence": [
+        "work/oci-status-batch-20261117/publication.json",
+        "work/oci-status-batch-20261117/owner-review-hold.json",
+        "work/oci-status-batch-20261117/review-candidates.json",
+        "work/oci-status-batch-20261117/landing-local-refresh.json"
+      ],
+      "cleanup": {
+        "cloud_changes": false,
+        "draft_holds_verified": true,
+        "remote_main_updated": false,
+        "support_submitted": false
+      },
+      "next_action": "Owner inspects all local diffs, checks and proposed PR text; no new publication before exact-snapshot approval."
+    },
+    {
+      "id": "OCI-20261118-OWNER-REVIEW",
+      "date": "2026-11-18",
+      "objective": "Require owner inspection, branch freshness and neutral names before publication",
+      "work_ids": [
+        "PREFLIGHT",
+        "HF-FACTS",
+        "NETWORK",
+        "BOOT-PERF"
+      ],
+      "source": {
+        "guardrail_start_commit": "0e89bddff8f607fc18da510a3da11749b94efe19",
+        "tooling_dirty_local_changes": true,
+        "runtime_source_changed_for_guardrails": false
+      },
+      "outcome": "local_review_and_approval_gate_prepared_publication_on_hold",
+      "changes": [
+        "Explicit owner review supersedes earlier standing publication authorization; a draft also requires prior approval.",
+        "Publication snapshot binds branch/head/base, full diff, PR body and evidence, with missing/stale approval rejected.",
+        "Per-branch freshness is checked separately from fetching refs; local review candidates contain current observed main.",
+        "Prepared neutral descriptive local branches with no AI attribution trailers; published old names remain untouched pending owner review.",
+        "Retired the prior private publication helper; no approval record was created."
+      ],
+      "checks": {
+        "owner_approval": "not granted",
+        "local_candidate_freshness": "six candidates zero behind 3ab6716a",
+        "source_commits_preserved": true,
+        "publication_gate_tests": {
+          "passed": 21,
+          "failed": 0
+        },
+        "existing_scope_tests": {
+          "passed": 36,
+          "skipped": 1,
+          "failed": 0
+        },
+        "required_lint_security_format_and_types": "passed",
+        "installed_files": "four files byte-verified; previous files backed up",
+        "six_real_publication_checks": "expected block: explicit owner approval missing"
+      },
+      "observed_facts": [
+        "The user explicitly requires inspecting all changes before PR publication.",
+        "The user does not want AI-branded branch names or AI attribution signatures."
+      ],
+      "remaining_hypotheses": [],
+      "evidence": [
+        "work/oci-status-batch-20261117/review-candidates.json",
+        "work/oci-status-batch-20261117/owner-review-hold.json",
+        "work/oci-status-batch-20261117/publication-gate/validation.json",
+        "work/oci-status-batch-20261117/publication-gate/installed.json",
+        "work/oci-status-batch-20261117/review/REVIEW.html"
+      ],
+      "cleanup": {
+        "new_prs_after_hold": false,
+        "new_feature_pushes_after_hold": false,
+        "cloud_changes": false
+      },
+      "next_action": "Deliver the complete local review packet and keep all publication blocked until the user approves the exact snapshot."
+    },
+    {
+      "id": "OCI-20261118-OTHER-FORK-LIVE-READINESS",
+      "date": "2026-11-18",
+      "record_origin": "current_iteration",
+      "objective": "Check prerequisites before handing off real-resource CLI commands for the unchanged separate evaluation fork",
+      "work_ids": [
+        "ACCEPT-PLATFORM"
+      ],
+      "source": {
+        "planning_start_commit": "5846623f5dc58755d5a71b8a2d85b47873d9f317",
+        "planning_started_dirty_paths": [
+          " M AGENTS.md",
+          " M roadmap/oci/CURRENT.md",
+          " M roadmap/oci/backlog.json",
+          " M roadmap/oci/iterations.json"
+        ],
+        "preserved_prior_dirty_work": "Nov18 owner-review, candidate and publication-hold tracking plus earlier manual handoff",
+        "evaluation_source_commit": "6bc40c19b71c380a47292ad795b56366b2c333b2",
+        "runtime_source_changed": false
+      },
+      "outcome": "unchanged_fork_live_instructions_blocked_on_prerequisites_user_choice_pending",
+      "changes": [
+        "Appended sanitized real-resource readiness findings to the platform card, CURRENT summary and history; retained prior evidence and owner-review restrictions."
+      ],
+      "checks": [
+        "Read the latest canonical files and owner-inspection instructions before updating bookkeeping.",
+        "Parent agent source review found no launch mapping for the required IMDSv2 instance option and only API-key/OKE workload identity authentication.",
+        "Existing roadmap structural validator and append-only/unchanged-history semantic checks passed; no application or live tests repeated."
+      ],
+      "observed_facts": [
+        "The user requested manual CLI validation against real resources rather than another local API-only smoke.",
+        "The unchanged evaluation snapshot does not map instanceOptions.areLegacyImdsEndpointsDisabled, which the recorded tenancy IAM Deny requires for the intended launch context.",
+        "Its supported authentication is API key or OKE workload identity; the workstation security-token and broker instance-principal contexts cannot be assumed compatible.",
+        "Real-resource instructions for the unchanged fork await prerequisite resolution and the user choice between a local OCI-only correction and the already-tested ORB build.",
+        "No new live acceptance, need for new IAM grants, runtime change or cloud action was established. Prior offline/API results, resolved incident facts and owner publication hold remain unchanged."
+      ],
+      "evidence": [
+        "work/other-team-orb/20261117/source",
+        "work/other-team-orb/20261117/fresh-build.json",
+        "work/other-team-orb/20261117/test-evidence/final-provenance.json"
+      ],
+      "remaining_hypotheses": [
+        "The user build choice is pending; supported identity/deployment inputs and a bounded live-test plan must be selected before execution."
+      ],
+      "cleanup": {
+        "runtime_source_changes": false,
+        "new_application_tests": false,
+        "new_cloud_actions": false,
+        "new_iam_grants": false,
+        "existing_dirty_work_preserved": true
+      },
+      "next_action": "Obtain the user build choice, prepare its required local inputs and supported authentication, then provide bounded real-resource CLI instructions without broadening IAM by assumption."
+    },
+    {
+      "id": "OCI-20261118-LOCAL-CI",
+      "date": "2026-11-18",
+      "objective": "Exercise upstream PR checker commands locally and detect the linked formatter action policy failure without publication",
+      "work_ids": [
+        "ISS-CI-ACTION-PIN-001"
+      ],
+      "source": {
+        "upstream_base": "3ab6716a6f1f82a3feed42bbd0ca0b357a1e4e7a",
+        "candidate_heads": {
+          "imds": "139c275398464edc14e918e23a7c8f3bd7e38e65",
+          "capacity": "1f84d7553799af41a5cf85a299d38740e250578a",
+          "preflight": "acf16590eff03b7449a79ed1d9237ffc44ed3b33",
+          "network": "d837609c8e83e6c5299741dfeb1fe0ec61a37281",
+          "boot": "92fedef4abccd00a46cd02b440359d1618ab1485",
+          "landing": "e2e32a6a272e2a8cde912178d39ac27353a49794"
+        },
+        "candidate_branches_clean_before_and_after": true,
+        "feature_source_changes": false,
+        "planning_started_dirty": true,
+        "prior_iteration_records_preserved": 21
+      },
+      "outcome": "local_checks_mapped_and_exercised_known_job_blocker_detected",
+      "changes": [
+        "Created an isolated lint environment from the frozen CI dependency group.",
+        "Added ignored local runners and a readable results/commands report; no feature or shared CI source changes.",
+        "Recorded raw Windows failure separately from the adjusted source-check pass.",
+        "Read bounded public composite-action metadata to prevalidate the exact failed dependency; no downloaded code execution."
+      ],
+      "checks": {
+        "locked_ruff": "0.17.4",
+        "python": "3.12.14",
+        "raw_windows_full_repo": "six fail due to one tracked symlink placeholder",
+        "explicit_windows_compatibility_full_repo": "six pass lint/security/format, real target retained",
+        "python_version_drift": "passed",
+        "existing_action_sha_consistency": "passed; direct consistency only",
+        "nested_action_metadata": "expected failure: unpinned action-setup@v1.5.0",
+        "full_ci_matrix": "not run"
+      },
+      "observed_facts": [
+        "Make targets expose the local quality, architecture, provider-test and workflow checks.",
+        "The example job runs a mutating format target and posts GitHub suggestions; read-only checks are the safe preparation path.",
+        "FINOS organization policy and review posting are GitHub-side; the metadata preflight detects this known failure without claiming to emulate the policy engine.",
+        "WSL and Docker are not installed on the workstation."
+      ],
+      "remaining_hypotheses": [
+        "Exact Linux runner and full language/build/security matrix outcomes were not re-executed in this iteration."
+      ],
+      "evidence": [
+        "work/oci-local-ci-20261118/LOCAL-CI.html",
+        "work/oci-local-ci-20261118/results-native.json",
+        "work/oci-local-ci-20261118/results-windows-compatible.json",
+        "work/oci-local-ci-20261118/job-action-pin-result.json"
+      ],
+      "cleanup": {
+        "cloud_resources_created": false,
+        "feature_sources_changed": false,
+        "github_mutations": false,
+        "action_code_executed": false,
+        "owner_approval_created": false,
+        "local_lint_environment_retained": true
+      },
+      "next_action": "Owner inspects the local results and review packet; separately agree any shared workflow fix and Linux validation. Keep publication held."
+    },
+    {
+      "id": "OCI-20261118-OTHER-FORK-LOCAL-CLI",
+      "date": "2026-11-18",
+      "record_origin": "current_iteration",
+      "objective": "Build and verify a local installed CLI compatibility fix for the separate evaluation fork, then prepare bounded manual resource validation",
+      "work_ids": [
+        "ACCEPT-PLATFORM"
+      ],
+      "source": {
+        "planning_start_commit": "5846623f5dc58755d5a71b8a2d85b47873d9f317",
+        "planning_started_dirty_paths": [
+          " M AGENTS.md",
+          " M roadmap/oci/CURRENT.md",
+          " M roadmap/oci/backlog.json",
+          " M roadmap/oci/iterations.json"
+        ],
+        "prior_owner_review_and_LOCAL_CI_work_preserved": true,
+        "implementation_branch": "fix/oci-imdsv2-compat",
+        "implementation_commit": "47fec82e192ec5a9ac1d46f0846c2720edf26f63",
+        "implementation_base": "6bc40c19b71c380a47292ad795b56366b2c333b2",
+        "implementation_clean": true,
+        "tested_inputs_matched_final_commit": true
+      },
+      "outcome": "local_cli_compatibility_build_passed_api_key_setup_and_user_live_run_pending",
+      "changes": [
+        "Implemented the optional strict provider-level OCI instance_options policy in three OCI runtime files with two OCI regression test files; no shared runtime change.",
+        "Prepared a fresh wheel/source package and isolated installed runtime plus local manual CLI instructions and shell entry helper.",
+        "Archived the initial template-level prototype and retained its defaults/persistence failure evidence; per-template support remains unsupported.",
+        "Updated sanitized canonical results while preserving prior dirty owner-review/LOCAL-CI work, history, overall focus and publication hold."
+      ],
+      "checks": {
+        "oci_suite": {
+          "passed": 302,
+          "new_cases_subset": 42,
+          "failed": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        "scope": "oci-provider pass; no exceptions",
+        "tested_input_provenance": "matched final local commit",
+        "wheel_and_sdist": "passed; hashes retained in ignored build report",
+        "fresh_runtime_dependencies": "passed",
+        "oci_sdk": "2.192.0",
+        "installed_cli": "config validate, providers list, templates list and templates validate passed with cloud access blocked and zero outbound attempts",
+        "sdk_wire": "required IMDS option true; E5 1 OCPU/8 GB; private primary VNIC",
+        "live_lifecycle": "not run",
+        "canonical_validation": "existing structural validator and append-only/history preservation checks passed"
+      },
+      "observed_facts": [
+        "The user chose the local CLI compatibility build; the earlier build-choice blocker is resolved.",
+        "The clean local commit changes only three OCI runtime files and two OCI test files. No remote publication occurred.",
+        "Metadata policy belongs only to OCIProviderConfig. Omission leaves existing launch behavior, explicit false survives config JSON round trip, and direct/pool SDK mappings use the provider setting.",
+        "The initial per-template attempt exposed a save/reload/default conflict. Provider-level policy avoids that unsupported feature; the shared template contract was not fixed.",
+        "Fresh package build, installed runtime dependency checks and four actual offline CLI commands passed. These results do not establish live cloud acceptance.",
+        "Only browser-token profiles were observed. This fork supports API keys or OKE workload identity; the prepared dedicated API-key SDK file/DEFAULT profile is not yet present.",
+        "One-worker E5 acquire/status/return and exact worker/boot-volume cleanup instructions are ready; the user-run outcome is pending.",
+        "No cloud, authentication, IAM or grant changes were performed, and no need for additional IAM grants was established. Owner publication approval remains required."
+      ],
+      "evidence": [
+        "work/other-team-orb/20261118/build-report.json",
+        "work/other-team-orb/20261118/provider-policy-tests/summary.json",
+        "work/other-team-orb/20261118/offline-cli-report.json",
+        "work/other-team-orb/20261118/MANUAL_CLI.txt",
+        "work/other-team-orb/20261118/enter-cli.ps1",
+        "work/other-team-orb/20261118/template-attempt"
+      ],
+      "remaining_hypotheses": [
+        "The selected API-key identity authorization and the installed evaluation build live lifecycle remain unproved until the user configures credentials and runs the bounded test."
+      ],
+      "cleanup": {
+        "cloud_actions": false,
+        "authentication_actions": false,
+        "iam_changes": false,
+        "new_grants": false,
+        "remote_publication": false,
+        "prior_evidence_and_original_source_retained": true,
+        "new_runtime_and_local_handoff_retained": true
+      },
+      "next_action": "Set up the dedicated API-key SDK profile, enter the prepared installed CLI environment, then manually acquire/status/return one E5 worker and verify exact owned worker/boot-volume cleanup. Preserve any stored provider error privately before repeating a failed launch."
+    },
+    {
+      "id": "OCI-20261118-PR-DESCRIPTIONS",
+      "date": "2026-11-18",
+      "objective": "Format all six local PR descriptions against the upstream template before owner publication review",
+      "work_ids": [
+        "PREFLIGHT",
+        "HF-FACTS",
+        "NETWORK",
+        "BOOT-PERF"
+      ],
+      "source": {
+        "template_upstream_commit": "3ab6716a6f1f82a3feed42bbd0ca0b357a1e4e7a",
+        "template_sha256": "0e290fc295e207c65097a08ae122f64e926a7cb07c1278204cbe81a1e6522ed3",
+        "feature_source_commits_unchanged": true,
+        "planning_started_dirty": true,
+        "previous_iteration_records_preserved": 23
+      },
+      "outcome": "template_formatted_local_descriptions_ready_for_owner_review",
+      "changes": [
+        "Preserved all 14 upstream sections and original checklist labels in each body.",
+        "Replaced empty issue placeholders; recorded OCI/N/A configuration instead of implying AWS tests.",
+        "Kept unsupported warnings/full-CI/manual/integration/performance assertions unchecked and identified historical live evidence separately.",
+        "Added the short factual assistance disclosure selected by the user, without signature or attribution trailers.",
+        "Updated the local preview and snapshot inputs; no remote description or feature branch was changed."
+      ],
+      "checks": {
+        "upstream_template": "current main fetched read-only; matches review-base template",
+        "local_descriptions": 6,
+        "headings_each": 14,
+        "all_checkbox_labels": "match upstream template",
+        "placeholder_and_attribution_trailer_checks": "passed",
+        "independent_prose_review": "one ambiguous historical-stack sentence corrected",
+        "application_tests": "not rerun: prose only"
+      },
+      "observed_facts": [
+        "User selected a short factual assistance disclosure after the upstream checklist requirement was identified.",
+        "The refreshed landing description describes e2e32a6a; existing draft880 retains older fa2745ad and must not receive a misleading description-only replacement.",
+        "No publication approval of the newly formatted snapshots was recorded."
+      ],
+      "remaining_hypotheses": [],
+      "evidence": [
+        "work/oci-pr-descriptions-20261118/template-source.json",
+        "work/oci-pr-descriptions-20261118/format-check.json",
+        "work/oci-pr-descriptions-20261118/validation.json",
+        "work/oci-pr-descriptions-20261118/DESCRIPTIONS.html"
+      ],
+      "cleanup": {
+        "feature_source_changes": false,
+        "new_tests": false,
+        "github_mutations": false,
+        "cloud_changes": false,
+        "publication_approval_recorded": false
+      },
+      "next_action": "Owner reviews the formatted descriptions and exact snapshots; obtain explicit approval before publishing or updating PRs, with a matching landing branch plan."
+    },
+    {
+      "id": "OCI-20261118-UPSTREAM-DESCRIPTIONS",
+      "date": "2026-11-18",
+      "objective": "Apply owner-approved PR template descriptions upstream and correct the stale docs PR without rewriting history",
+      "work_ids": [
+        "PREFLIGHT",
+        "HF-FACTS",
+        "INC-OCI-LAUNCH-001",
+        "ISS-CI-ACTION-PIN-001"
+      ],
+      "source": {
+        "base": "3ab6716a6f1f82a3feed42bbd0ca0b357a1e4e7a",
+        "reviewed_heads": {
+          "877": "139c275398464edc14e918e23a7c8f3bd7e38e65",
+          "878": "1f84d7553799af41a5cf85a299d38740e250578a",
+          "879": "acf16590eff03b7449a79ed1d9237ffc44ed3b33",
+          "881": "e2e32a6a272e2a8cde912178d39ac27353a49794"
+        },
+        "planning_started_dirty": true,
+        "prior_records_preserved": 24,
+        "feature_source_changed": false
+      },
+      "outcome": "upstream_descriptions_render_verified_docs_replaced_shared_ci_block_remains",
+      "changes": [
+        "Applied the exact reviewed template bodies to877-879 without changing their source heads or readiness.",
+        "Pushed only the approved neutral docs branch at e2e32a6a, created draft881 and closed superseded880 after verification.",
+        "Preserved old branch/history; no force push, source edit, merge, additional feature PR or comment posting.",
+        "Recorded narrowly scoped explicit approval and passed action/destination/source/body gates."
+      ],
+      "checks": {
+        "scope_and_publication_gates": "five actions passed",
+        "github_saved_bodies": "exact normalized text match",
+        "github_markdown_renderer": "all four:14sections,28checkboxes,checked counts match Markdown",
+        "replacement_docs_files": [
+          "README.md",
+          "docs/root/index.md"
+        ],
+        "code_pr_ci": "877-879 completed; only shared Auto-Format Suggestions failure",
+        "new_docs_ci": "same shared failure confirmed; five other checks pending at captured read",
+        "cla": "passed all four",
+        "application_tests": "not rerun: approved source unchanged"
+      },
+      "observed_facts": [
+        "All four current PRs remain drafts; no readiness or merge was authorized/performed.",
+        "The reviewed short assistance disclosure is present; no signature/coauthor trailer or new AI-branded branch was added.",
+        "The old code PR branch names remain historical existing heads; new docs publication uses its neutral reviewed name.",
+        "NETWORK and BOOT-PERF remain local; description approval did not become an automatic new feature rollout."
+      ],
+      "remaining_hypotheses": [
+        "Remaining docs job outcomes had not completed at the captured status read."
+      ],
+      "evidence": [
+        "work/oci-pr-descriptions-20261118/upstream-applied.json",
+        "work/oci-pr-descriptions-20261118/upstream-verification.json",
+        "work/oci-pr-descriptions-20261118/docs-source-and-ci.json",
+        "work/oci-pr-descriptions-20261118/approved-execution/"
+      ],
+      "cleanup": {
+        "old_pr880_closed": true,
+        "old_head_and_branch_preserved": true,
+        "force_push": false,
+        "cloud_changes": false,
+        "shared_workflow_changes": false,
+        "comments_posted": false
+      },
+      "next_action": "Keep OCI changes isolated. Address the diagnosed shared formatter dependency through separately scoped review; await maintainer review and CI clearance before readiness/merge."
+    },
+    {
+      "id": "OCI-20261118-NETWORK-STAGE",
+      "date": "2026-11-18",
+      "objective": "Stage the next bounded OCI feature PR for owner inspection with frozen offline and changed-code coverage evidence",
+      "work_ids": [
+        "NETWORK"
+      ],
+      "source": {
+        "branch": "feat/oci-public-ip",
+        "head": "d837609c8e83e6c5299741dfeb1fe0ec61a37281",
+        "base": "3ab6716a6f1f82a3feed42bbd0ca0b357a1e4e7a",
+        "dirty_before": false,
+        "dirty_after": false,
+        "feature_source_changed": false,
+        "planning_started_dirty": true,
+        "previous_iteration_records_preserved": 25
+      },
+      "outcome": "single_pr_staged_locally_not_published",
+      "changes": [
+        "Selected the ready five-file OCI public-IP feature before boot performance.",
+        "Prepared an isolated frozen test/lint environment and measured current OCI and changed-source coverage.",
+        "Prepared one focused packet with full diff, upstream-template description, evidence, compatibility notes and separate unapproved push/create manifests.",
+        "Kept all feature code, GitHub state, IAM and cloud resources unchanged."
+      ],
+      "checks": {
+        "upstream_freshness": "git fetch upstream main passed; source zero behind3ab6716a",
+        "oci_offline": {
+          "passed": 434,
+          "failed": 0,
+          "live": "explicitly excluded"
+        },
+        "changed_executable_source_lines": {
+          "covered": 9,
+          "total": 9
+        },
+        "changed_decision_branch_arcs": {
+          "covered": 6,
+          "total": 6
+        },
+        "oci_package_line_coverage_percent": 92.52,
+        "frozen_tools": {
+          "python": "3.12.14 (main, Aug 25 2026, 14:01:42) [MSC v.1944 64 bit (AMD64)]",
+          "pytest": "9.2.0",
+          "pytest-cov": "7.1.0",
+          "coverage": "7.16.2",
+          "ruff": "0.17.4"
+        },
+        "strict_scope": "pass, five OCI-owned paths, no exceptions",
+        "prior_quality": "exact-commit OCI Pyright and locked Ruff proof retained; no unnecessary repeat",
+        "independent_review": "no concrete source blocker; saved-default/address compatibility correctly documented",
+        "publication_gates": "both expected block: explicit approval record missing"
+      },
+      "observed_facts": [
+        "Whole-provider coverage and changed-line coverage use different denominators.",
+        "The434test run overlaps prior runs and includes the35focused tests; no cross-run unique total claimed.",
+        "Existing explicit public_ip_assignment values now take effect and must be reviewed before rollout.",
+        "No live address readback or full Linux CI acceptance is established."
+      ],
+      "remaining_hypotheses": [
+        "Actual public/private-subnet addressing and bootstrap behavior remain untested live."
+      ],
+      "evidence": [
+        "work/oci-public-ip-stage-20261118/STAGED_PR.html",
+        "work/oci-public-ip-stage-20261118/stage-summary.json",
+        "work/oci-public-ip-stage-20261118/coverage-summary.json",
+        "work/oci-public-ip-stage-20261118/review-manifest.json"
+      ],
+      "cleanup": {
+        "pushed": false,
+        "pr_created": false,
+        "approval_created": false,
+        "feature_source_changes": false,
+        "cloud_changes": false,
+        "test_environment_and_reports": "retained under ignored work"
+      },
+      "next_action": "Owner reviews the staged public-IP packet and explicitly approves publication if desired; boot performance remains next in queue and live acceptance is separate."
+    },
+    {
+      "id": "OCI-20261118-API-KEY-HANDOFF",
+      "date": "2026-11-18",
+      "record_origin": "current_iteration",
+      "objective": "Hand off CLI-only local API-key profile setup while the user owns Console key registration",
+      "work_ids": [
+        "ACCEPT-PLATFORM"
+      ],
+      "source": {
+        "planning_start_commit": "5846623f5dc58755d5a71b8a2d85b47873d9f317",
+        "planning_started_dirty_paths": [
+          " M AGENTS.md",
+          " M roadmap/oci/CURRENT.md",
+          " M roadmap/oci/backlog.json",
+          " M roadmap/oci/iterations.json"
+        ],
+        "prior_PR_description_NETWORK_stage_owner_review_and_LOCAL_CI_work_preserved": true,
+        "retained_local_build_commit": "47fec82e192ec5a9ac1d46f0846c2720edf26f63",
+        "runtime_source_changed": false
+      },
+      "outcome": "user_owned_console_registration_local_profile_and_verification_pending",
+      "changes": [
+        "Recorded the user-selected Console/CLI ownership split and local profile prerequisites in the platform card and CURRENT summary.",
+        "Appended this sanitized handoff without replacing prior build, test, review or publication records."
+      ],
+      "checks": [
+        "Read the latest canonical state and preserved existing dirty Nov18 work.",
+        "Parent inspection read only existing profile metadata: the two named profiles use security tokens and the dedicated API-key config is absent.",
+        "Browser inventory was attempted but app approval timed out; no browser control or key registration occurred.",
+        "Structural validation, unchanged-history/result checks and whitespace validation passed; no new application test or cloud verification was run."
+      ],
+      "observed_facts": [
+        "The user explicitly chose to obtain/register the key in OCI Console and requested only CLI instructions to add the local profile.",
+        "The planned DEFAULT profile uses a separate local SDK config pointing to the user-downloaded PEM and Console-provided user, tenancy and fingerprint values in us-phoenix-1. No key material or config was created by the agent.",
+        "Console registration is the chosen workflow, not a technical requirement; CLI bootstrap can register with a suitable valid token, but that path was not run.",
+        "The local compatibility build and its 302 OCI passes/offline CLI evidence remain unchanged. Profile activation, read-only identity verification and live resource acceptance remain pending.",
+        "No authentication, cloud API, IAM, key-registration, resource or publication action occurred in this handoff."
+      ],
+      "evidence": [
+        "work/other-team-orb/20261118/MANUAL_CLI.txt",
+        "work/other-team-orb/20261118/enter-cli.ps1",
+        "work/other-team-orb/20261118/build-report.json",
+        "work/other-team-orb/20261118/offline-cli-report.json"
+      ],
+      "remaining_hypotheses": [
+        "The downloaded key/profile credentials and their live authorization have not yet been verified."
+      ],
+      "cleanup": {
+        "key_generated": false,
+        "local_config_created": false,
+        "authentication_changed": false,
+        "browser_control": false,
+        "cloud_API_actions": false,
+        "IAM_changes": false,
+        "new_resources": false,
+        "committed_or_pushed": false
+      },
+      "next_action": "The user obtains/registers the key in Console, then follows CLI-only local setup instructions for a dedicated DEFAULT SDK profile pointing to the downloaded PEM and Console user/tenancy/fingerprint values in us-phoenix-1. Verify read-only authentication before the prepared one-E5 lifecycle and exact cleanup."
+    },
+    {
+      "id": "OCI-20261118-NCUSATO-READINESS",
+      "date": "2026-11-18",
+      "record_origin": "current_iteration",
+      "objective": "Assess user-reported NCUSATO API-key profile readiness and hand off local permission checks without executing a rejected activation action",
+      "work_ids": [
+        "ACCEPT-PLATFORM"
+      ],
+      "source": {
+        "planning_start_commit": "5846623f5dc58755d5a71b8a2d85b47873d9f317",
+        "planning_started_dirty_paths": [
+          " M AGENTS.md",
+          " M roadmap/oci/CURRENT.md",
+          " M roadmap/oci/backlog.json",
+          " M roadmap/oci/iterations.json"
+        ],
+        "prior_concurrent_tracking_work_preserved": true,
+        "retained_local_build_commit": "47fec82e192ec5a9ac1d46f0846c2720edf26f63",
+        "runtime_source_changed": false
+      },
+      "outcome": "profile_metadata_present_user_reported_path_correction_permissions_and_verification_pending",
+      "changes": [
+        "Updated only sanitized canonical readiness facts, next action and append-only history; no local SDK or ORB configuration was changed."
+      ],
+      "checks": [
+        "Read the latest canonical files before modifying bookkeeping and preserved all earlier records/results.",
+        "Protected inspection read profile metadata only: NCUSATO has all required API-key fields and no security_token_file.",
+        "The key_file value had literal surrounding double quotes; the exact unquoted target existed. No key content or fingerprint was read.",
+        "An ignored activation helper was prepared, but user approval rejected its backup/path-correction/fingerprint/ORB-selection command; that command was not executed or retried.",
+        "The user subsequently reported removing the quotes manually; the agent has not reverified that correction.",
+        "Structural validation, unchanged-history/result and whitespace checks passed; no application or live verification was run."
+      ],
+      "observed_facts": [
+        "The earlier token-only observation is superseded for current readiness by the newly identified NCUSATO API-key profile; prior observations remain historical records.",
+        "The prepared ORB environment still selects the older DEFAULT profile in a dedicated config that is absent. NCUSATO activation is not established.",
+        "The latest request is PowerShell guidance for OCI setup repair-file-permissions on the exact private PEM and standard SDK config, followed by a read-only region-subscriptions check. These are user-run steps and remain pending.",
+        "Quote removal is user-reported, not agent-verified; neither valid authentication nor successful ORB health follows from metadata/file existence alone.",
+        "The agent made no SDK/key/config/authentication/cloud/IAM changes, did not bypass the rejected action, and claims no new test or live acceptance result."
+      ],
+      "evidence": [
+        "work/other-team-orb/20261118/enter-cli.ps1",
+        "work/other-team-orb/20261118/MANUAL_CLI.txt",
+        "work/other-team-orb/20261118/build-report.json"
+      ],
+      "evidence_context": "Protected metadata inspection, rejected activation action and latest user correction report; raw private paths and identifiers omitted.",
+      "remaining_hypotheses": [
+        "The manually corrected path, private-key permissions, profile validity and cloud authorization remain unverified.",
+        "Read-only OCI region-subscriptions and ORB health results are pending before any resource lifecycle acceptance."
+      ],
+      "cleanup": {
+        "SDK_config_modified_by_agent": false,
+        "key_read_by_agent": false,
+        "fingerprint_read_by_agent": false,
+        "ORB_config_modified_by_agent": false,
+        "authentication_changed": false,
+        "cloud_API_actions": false,
+        "IAM_changes": false,
+        "new_resources": false,
+        "rejected_action_retried": false,
+        "committed_or_pushed": false
+      },
+      "next_action": "Have the user run the provided OCI setup repair-file-permissions commands for the exact private PEM and standard SDK config, then the read-only region-subscriptions check. Confirm permitted ORB selection of NCUSATO and run read-only ORB health before resource testing; do not retry the rejected activation helper."
+    },
+    {
+      "id": "OCI-20261118-REPO-PROTOCOL",
+      "date": "2026-11-18",
+      "record_origin": "current_iteration",
+      "objective": "Reestablish the organization fork workflow, locate the canonical roadmap and prepare branch hygiene without discarding work",
+      "work_ids": [
+        "NETWORK",
+        "BOOT-PERF",
+        "PREFLIGHT",
+        "TAGS",
+        "PLACEMENT",
+        "ACCEPT-AUTH-SHAPES"
+      ],
+      "source": {
+        "planning_commit": "5846623f5dc58755d5a71b8a2d85b47873d9f317",
+        "planning_started_dirty": true,
+        "prior_concurrent_history_preserved": true,
+        "main_workspace": "feat/oci-provider-refresh at eeadbae4; not current upstream implementation",
+        "origin_main": "ff7732e3711e3a2366643bfe489617490ec3613a",
+        "upstream_main": "3ab6716a6f1f82a3feed42bbd0ca0b357a1e4e7a",
+        "runtime_source_changed": false
+      },
+      "outcome": "organization_fork_and_roadmap_verified_sync_and_cleanup_proposed_only",
+      "changes": [
+        "Recorded the organization-first fast-forward workflow and exact main sync target.",
+        "Inventoried38 remote branch names,45 local branches and19 worktrees;16 baseline-only starter names are conditional cleanup candidates.",
+        "Recorded the read-only TAGS/PLACEMENT contract and corrected delivery status: four-feature consolidation has not been implemented.",
+        "Preserved all prior records and the other chat platform-readiness card unchanged."
+      ],
+      "checks": [
+        "Read canonical roadmap/backlog/history and actual worktrees/remotes.",
+        "Read-only live ls-remote confirmed organization main and roadmap heads and current FINOS main.",
+        "Existing Git ancestry showed origin main0ahead/1642behind upstream, allowing a normal fast-forward.",
+        "Stable patch IDs matched four historical-to-refreshed single-feature patches; that alone is not deletion approval.",
+        "No new application test, combined coverage, cloud or live acceptance run was performed."
+      ],
+      "observed_facts": [
+        "Feature review branches and local main were refreshed, but remote organization main was not; fetching did not update it.",
+        "Canonical roadmap is present locally and remotely, but the newest roadmap updates are uncommitted locally.",
+        "The user screenshots show different histories; the one-branch fork with a unique commit is not the observed38-branch origin.",
+        "The local branch-creation command failed on protected Git metadata. Escalated execution was rejected by user; agents stopped and no launch-controls branch/worktree exists.",
+        "New source work and Git mutations were stopped when the user steered to synchronization/protocols."
+      ],
+      "remaining_hypotheses": [
+        "The owner and unique commit in the separate one-branch screenshot have not been identified.",
+        "Human review and feature-combination behavior remain unverified for the uncreated launch-controls bundle."
+      ],
+      "evidence": [
+        "work/oci-repo-protocol-20261118/branch-audit.json",
+        "work/oci-repo-protocol-20261118/remote-observation.json",
+        "work/oci-next-controls-20261118/controls-proposal.json"
+      ],
+      "cleanup": {
+        "branch_deletions": 0,
+        "worktree_removals": 0,
+        "git_ref_writes": false,
+        "sync_or_push": false,
+        "pull_request_mutations": false,
+        "cloud_or_authentication_changes": false,
+        "rejected_git_write_retried_or_circumvented": false
+      },
+      "next_action": "Owner can sync the verified organization main with Update branch; next inspect and checkpoint the dirty canonical roadmap, then approve a named cleanup list and resume the cohesive OCI launch bundle."
+    },
+    {
+      "id": "OCI-20261119-REPO-CHECKPOINT",
+      "date": "2026-11-19",
+      "record_origin": "current_iteration",
+      "objective": "Verify organization main sync, checkpoint canonical roadmap work locally and prepare a precise starter-branch cleanup review",
+      "work_ids": [
+        "NETWORK",
+        "BOOT-PERF",
+        "PREFLIGHT"
+      ],
+      "source": {
+        "planning_parent": "5846623f5dc58755d5a71b8a2d85b47873d9f317",
+        "planning_started_dirty_paths": [
+          "AGENTS.md",
+          "roadmap/oci/CURRENT.md",
+          "roadmap/oci/backlog.json",
+          "roadmap/oci/iterations.json"
+        ],
+        "upstream_main": "3ab6716a6f1f82a3feed42bbd0ca0b357a1e4e7a",
+        "origin_main_after_fetch": "3ab6716a6f1f82a3feed42bbd0ca0b357a1e4e7a",
+        "runtime_source_changed": false,
+        "previous_concurrent_history_preserved": true
+      },
+      "outcome": "main_synchronized_verified_checkpoint_prepared_cleanup_and_publication_held_for_inspection",
+      "changes": [
+        "Recorded that organization main was already synchronized before this iteration fetched refs; no sync push was necessary.",
+        "Prepared the existing dirty roadmap and owner-review instructions as a four-file local checkpoint.",
+        "Retained historical branch/card mappings and prepared16 named starter branches for cleanup review, excluding39th origin branch gh-pages.",
+        "Kept all active PRs, unpublished implementations and live evidence unchanged."
+      ],
+      "checks": [
+        "Fresh upstream and origin fetches passed. main, origin/main and upstream/main all resolve to3ab6716a; ahead/behind is0/0.",
+        "Read-only GitHub enumeration examined14 open FINOS PRs and0 open organization PRs with complete pagination.",
+        "All four current OCI PR source branches are outside the16 candidate names.",
+        "No application test or live cloud acceptance is claimed for coordination-only changes."
+      ],
+      "observed_facts": [
+        "Origin gained gh-pages and main advanced since the previous observation. The syncing actor was not determined.",
+        "The roadmap contains25 cards,19 historical branch records,39 coverage rows and preserved append-only iteration history.",
+        "The shared CI and four-feature launch bundle remain separate unfinished work."
+      ],
+      "remaining_hypotheses": [
+        "A final ref/head and worktree/PR recheck is still required immediately before any approved cleanup.",
+        "No combined launch-controls behavior has yet been tested."
+      ],
+      "evidence": [
+        "work/oci-repo-protocol-20261118/open-prs.json",
+        "work/oci-repo-protocol-20261118/CLEANUP_REVIEW.json",
+        "work/oci-repo-protocol-20261118/REVIEW.html"
+      ],
+      "cleanup": {
+        "branches_deleted": 0,
+        "worktrees_removed": 0,
+        "feature_or_roadmap_push": false,
+        "PR_mutations": false,
+        "cloud_or_auth_changes": false,
+        "local_checkpoint": "Exact resulting commit is recorded in the ignored review packet after successful creation."
+      },
+      "next_action": "Owner inspects the exact local checkpoint and16-name cleanup proposal. Publish the roadmap or remove listed refs only after approval; then resume the OCI-only launch bundle."
     }
   ]
 }

@@ -39,6 +39,28 @@ This is fork coordination, not an upstream feature change. Keep this file and
 - A documentation exception never authorizes Python, package metadata or a
   workflow. Keep fork tooling and this coordination file out of feature PRs.
 
+## Owner inspection before publication
+
+The user requires a complete local review packet and explicit approval of its
+exact snapshot before feature pushes, PR creation (draft included), PR branch or
+description updates, or marking a PR ready. Earlier broad publication
+authorization is superseded. Continue local implementation, tests and commits.
+Never infer approval from "proceed", a test pass, another agent's review, or an
+older instruction. Do not create an approval record before that explicit reply.
+
+Fetch upstream, then check every candidate branch contains the observed PR base;
+fetching refs alone does not synchronize a branch. Include all paths and full
+diffs, head/base/dirty state, proposed PR descriptions, scope/check evidence and
+remaining live acceptance. Use the installed publication approval checker before
+any publication; missing or stale approval blocks it. Changes to the snapshot
+require renewed inspection and approval. Fork-only tracking and safeguards stay
+outside upstream feature PRs.
+
+Use descriptive branch names such as `fix/oci-imdsv2-launch`, without AI branding
+or AI attribution/signature trailers in commits or PR text. Preserve published
+history until the user approves any branch replacement. Existing planning branch
+names and historical records are retained as provenance, not a naming template.
+
 ## Finish an iteration
 
 - Update the canonical card and CURRENT summary, then append a record to
