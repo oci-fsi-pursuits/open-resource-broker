@@ -1646,6 +1646,65 @@
         "local_checkpoint": "Exact resulting commit is recorded in the ignored review packet after successful creation."
       },
       "next_action": "Owner inspects the exact local checkpoint and16-name cleanup proposal. Publish the roadmap or remove listed refs only after approval; then resume the OCI-only launch bundle."
+    },
+    {
+      "id": "OCI-20261119-FORK-HYGIENE",
+      "date": "2026-11-19",
+      "record_origin": "current_iteration",
+      "objective": "Apply the explicitly approved roadmap publication and16-name starter cleanup only to the organization fork and local refs",
+      "work_ids": [
+        "NETWORK",
+        "BOOT-PERF",
+        "PREFLIGHT"
+      ],
+      "source": {
+        "published_checkpoint": "ce9be5fee48dc0251aa7320294575759896e5a91",
+        "fork_main": "3ab6716a6f1f82a3feed42bbd0ca0b357a1e4e7a",
+        "upstream_main": "21adc63cd31f4db724d804f6223a821e5dda0f45",
+        "planning_started_clean": true,
+        "runtime_source_changed": false,
+        "approved_push_manifest_sha256": "1b9e6539cd446c8445d29fb79f8049bb53fce508de957d10974ae49f461d6366",
+        "approved_cleanup_manifest_sha256": "cb3ed31c547ec0ce00886c341e857b679b009edc386d7c129fbbcba2d6419ac6"
+      },
+      "outcome": "reviewed_fork_checkpoint_published_and16_starters_removed_upstream_and_active_PRs_unchanged",
+      "changes": [
+        "Normal fast-forward push published reviewed ce9be5fee only to the existing organization planning branch.",
+        "An atomic lease-protected batch removed exactly16 approved origin branches; compare-and-swap removed only their local and tracking refs.",
+        "Recorded retired historical branch mappings without dropping any work card, acceptance requirement or previous iteration.",
+        "Saved this later receipt locally; it is not authorized for another push by the prior snapshot approval."
+      ],
+      "checks": [
+        "Publication checker passed against the immutable reviewed packet and actual explicit owner approval.",
+        "Fresh full open-PR, exact-head, baseline-ancestor and worktree checks passed immediately before cleanup.",
+        "All unapproved fork/local refs,19 worktrees, FINOS branch refs and active OCI PR source/draft states matched before and after.",
+        "Fork branch count39to23; local branch count45to29. No application test or cloud acceptance is claimed."
+      ],
+      "observed_facts": [
+        "All remote mutation commands targeted only oci-fsi-pursuits/open-resource-broker. There were zero upstream writes and zero PR write calls.",
+        "The fork main, gh-pages, four active OCI PR sources, implementation branches and live-proof refs were preserved.",
+        "FINOS main independently advanced to21adc63c after the review. The first preflight stopped before writes; the unchanged approved housekeeping targets were then verified independently of main synchronization.",
+        "Windows text-mode pipe input was rejected before the initial local ref transaction applied anything. The same approved CAS transaction succeeded with raw UTF-8 LF input.",
+        "Publishing fork coordination does not merge a provider feature upstream; the launch bundle remains uncreated."
+      ],
+      "remaining_hypotheses": [
+        "Combined launch-controls behavior and later live acceptance remain unverified."
+      ],
+      "evidence": [
+        "work/oci-repo-protocol-20261118/approved-execution/execution-result.json",
+        "work/oci-repo-protocol-20261118/approved-execution/before.json",
+        "work/oci-repo-protocol-20261118/approved-execution/after.json",
+        "work/oci-repo-protocol-20261118/approved-execution/publication-gate.json"
+      ],
+      "cleanup": {
+        "deleted_remote_starter_branches": 16,
+        "deleted_local_starter_branches": 16,
+        "worktrees_or_files_removed": 0,
+        "upstream_changes": false,
+        "PR_mutations": false,
+        "cloud_or_auth_changes": false,
+        "later_receipt_pushed": false
+      },
+      "next_action": "Refresh and sync the fork main to the newer FINOS baseline, then resume local OCI launch-controls consolidation and prepare a new owner review packet before feature publication."
     }
   ]
 }

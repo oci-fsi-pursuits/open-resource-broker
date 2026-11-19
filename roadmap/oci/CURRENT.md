@@ -4,6 +4,33 @@ Updated **19 November 2026**. This is the readable handoff for the fork's
 [canonical backlog](backlog.json) and [iteration history](iterations.json).
 Runtime changes remain on their individual branches.
 
+## Approved fork housekeeping completed — 19 November
+
+The reviewed roadmap checkpoint **`ce9be5fee` is now published** on the existing
+organization planning branch. Exactly **16 approved starter branches** were
+removed locally and from OCI FSI: **39 to23 remote branches**, **45 to29 local
+branches**. All **19 worktrees** remain. The25 cards and original historical
+branch/card/dependency mappings are preserved; retired branch records are marked
+`existing: false`. Future work starts from fresh neutral branches when needed.
+
+Before/after checks verified **all FINOS branch refs and the active OCI PR source
+and draft states are unchanged**. The fork main, gh-pages, implementations,
+guardrails and live-test evidence are preserved. Every remote mutation targeted
+only OCI FSI; there were no upstream, PR or cloud writes.
+
+Evidence: ignored `work/oci-repo-protocol-20261118/approved-execution/` contains
+the approval, publication gate, before/after snapshots and exact execution result.
+This later execution receipt is committed locally and is not part of the earlier
+approved remote checkpoint. No additional publication is implied.
+
+Next: resume the OCI-only IMDSv2/preflight/public-IP/boot-performance bundle
+locally after first refreshing and syncing main. FINOS independently advanced
+to **`21adc63c`** after the reviewed checkpoint; fork main was preserved at
+`3ab6716a` during this scoped cleanup. Validate the combined launch path and
+present a fresh review packet.
+The bundle remains uncreated; standalone test/live evidence keeps its original
+commit scope. Historical sections below describe their dated observations.
+
 ## Current checkpoint — 19 November
 
 Fresh fetches confirm **organization main, local main and FINOS main all match

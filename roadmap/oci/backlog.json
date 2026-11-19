@@ -44,9 +44,18 @@
     "codex/hostfactory-template-attributes": {
       "base_ref": "upstream/main",
       "scope": "shared",
-      "existing": true,
+      "existing": false,
       "state": "starter",
-      "description": "Generic explicit-attribute preservation and optional resolved-template derivation."
+      "description": "Generic explicit-attribute preservation and optional resolved-template derivation.",
+      "historical_existing": true,
+      "retired": true,
+      "retirement": {
+        "date": "2026-11-19",
+        "last_head": "2a7724796318d85eb171f50ad2f2bbba886187ec",
+        "local_and_origin_deleted": true,
+        "original_scope_base_and_card_mapping_retained": true,
+        "replacement_rule": "Keep this as historical mapping; create a fresh neutral branch from current main only when implementation starts."
+      }
     },
     "codex/oci-capacity-helper": {
       "base_ref": "071f4596ac7983ac0a7954998c10ed106c0a2bee",
@@ -80,105 +89,240 @@
       "scope": "provider",
       "existing": false,
       "state": "starter",
-      "description": "Fault domains and existing capacity reservations."
+      "description": "Fault domains and existing capacity reservations.",
+      "historical_existing": false,
+      "retired": true,
+      "retirement": {
+        "date": "2026-11-19",
+        "last_head": "21b3bd05878850c3ee2adca62d83ea56ddfd0748",
+        "local_and_origin_deleted": true,
+        "original_scope_base_and_card_mapping_retained": true,
+        "replacement_rule": "Keep this as historical mapping; create a fresh neutral branch from current main only when implementation starts."
+      }
     },
     "codex/oci-network-controls": {
       "base_ref": "pr/oci-provider-scoped",
       "scope": "provider",
       "existing": false,
       "state": "starter",
-      "description": "Explicit public-IP assignment with existing subnet/NSG compatibility."
+      "description": "Explicit public-IP assignment with existing subnet/NSG compatibility.",
+      "historical_existing": false,
+      "retired": true,
+      "retirement": {
+        "date": "2026-11-19",
+        "last_head": "21b3bd05878850c3ee2adca62d83ea56ddfd0748",
+        "local_and_origin_deleted": true,
+        "original_scope_base_and_card_mapping_retained": true,
+        "replacement_rule": "Keep this as historical mapping; create a fresh neutral branch from current main only when implementation starts."
+      }
     },
     "codex/oci-defined-tags": {
       "base_ref": "pr/oci-provider-scoped",
       "scope": "provider",
       "existing": false,
       "state": "starter",
-      "description": "Defined tags with preserved freeform/ownership tags."
+      "description": "Defined tags with preserved freeform/ownership tags.",
+      "historical_existing": false,
+      "retired": true,
+      "retirement": {
+        "date": "2026-11-19",
+        "last_head": "21b3bd05878850c3ee2adca62d83ea56ddfd0748",
+        "local_and_origin_deleted": true,
+        "original_scope_base_and_card_mapping_retained": true,
+        "replacement_rule": "Keep this as historical mapping; create a fresh neutral branch from current main only when implementation starts."
+      }
     },
     "codex/oci-boot-performance": {
       "base_ref": "pr/oci-provider-scoped",
       "scope": "provider",
       "existing": false,
       "state": "starter",
-      "description": "Boot-volume performance controls."
+      "description": "Boot-volume performance controls.",
+      "historical_existing": false,
+      "retired": true,
+      "retirement": {
+        "date": "2026-11-19",
+        "last_head": "21b3bd05878850c3ee2adca62d83ea56ddfd0748",
+        "local_and_origin_deleted": true,
+        "original_scope_base_and_card_mapping_retained": true,
+        "replacement_rule": "Keep this as historical mapping; create a fresh neutral branch from current main only when implementation starts."
+      }
     },
     "codex/oci-secondary-volumes": {
       "base_ref": "pr/oci-provider-scoped",
       "scope": "provider",
       "existing": false,
       "state": "starter",
-      "description": "Owned block volumes, attachment, retention and cleanup."
+      "description": "Owned block volumes, attachment, retention and cleanup.",
+      "historical_existing": false,
+      "retired": true,
+      "retirement": {
+        "date": "2026-11-19",
+        "last_head": "21b3bd05878850c3ee2adca62d83ea56ddfd0748",
+        "local_and_origin_deleted": true,
+        "original_scope_base_and_card_mapping_retained": true,
+        "replacement_rule": "Keep this as historical mapping; create a fresh neutral branch from current main only when implementation starts."
+      }
     },
     "codex/oci-sdk-transport": {
       "base_ref": "pr/oci-provider-scoped",
       "scope": "provider",
       "existing": false,
       "state": "starter",
-      "description": "Optional SDK transport with CLI/auth/lifecycle parity."
+      "description": "Optional SDK transport with CLI/auth/lifecycle parity.",
+      "historical_existing": false,
+      "retired": true,
+      "retirement": {
+        "date": "2026-11-19",
+        "last_head": "21b3bd05878850c3ee2adca62d83ea56ddfd0748",
+        "local_and_origin_deleted": true,
+        "original_scope_base_and_card_mapping_retained": true,
+        "replacement_rule": "Keep this as historical mapping; create a fresh neutral branch from current main only when implementation starts."
+      }
     },
     "codex/oci-oke-deployment": {
       "base_ref": "pr/oci-provider-scoped",
       "scope": "deployment",
       "existing": false,
       "state": "starter",
-      "description": "Portable OKE manifests and image/probe/persistence validation."
+      "description": "Portable OKE manifests and image/probe/persistence validation.",
+      "historical_existing": false,
+      "retired": true,
+      "retirement": {
+        "date": "2026-11-19",
+        "last_head": "21b3bd05878850c3ee2adca62d83ea56ddfd0748",
+        "local_and_origin_deleted": true,
+        "original_scope_base_and_card_mapping_retained": true,
+        "replacement_rule": "Keep this as historical mapping; create a fresh neutral branch from current main only when implementation starts."
+      }
     },
     "codex/oci-identity-aliases": {
       "base_ref": "pr/oci-provider-scoped",
       "scope": "provider",
       "existing": false,
       "state": "starter",
-      "description": "OCI consumer of the accepted generic recorded-identity resolver."
+      "description": "OCI consumer of the accepted generic recorded-identity resolver.",
+      "historical_existing": false,
+      "retired": true,
+      "retirement": {
+        "date": "2026-11-19",
+        "last_head": "21b3bd05878850c3ee2adca62d83ea56ddfd0748",
+        "local_and_origin_deleted": true,
+        "original_scope_base_and_card_mapping_retained": true,
+        "replacement_rule": "Keep this as historical mapping; create a fresh neutral branch from current main only when implementation starts."
+      }
     },
     "codex/oci-power-actions": {
       "base_ref": "pr/oci-provider-scoped",
       "scope": "provider",
       "existing": false,
       "state": "starter",
-      "description": "Direct-instance start/stop through the existing generic action surface."
+      "description": "Direct-instance start/stop through the existing generic action surface.",
+      "historical_existing": false,
+      "retired": true,
+      "retirement": {
+        "date": "2026-11-19",
+        "last_head": "21b3bd05878850c3ee2adca62d83ea56ddfd0748",
+        "local_and_origin_deleted": true,
+        "original_scope_base_and_card_mapping_retained": true,
+        "replacement_rule": "Keep this as historical mapping; create a fresh neutral branch from current main only when implementation starts."
+      }
     },
     "codex/oci-instance-pools": {
       "base_ref": "pr/oci-provider-scoped",
       "scope": "provider",
       "existing": false,
       "state": "starter",
-      "description": "OCI pool lifecycle using accepted generic controller/member contracts."
+      "description": "OCI pool lifecycle using accepted generic controller/member contracts.",
+      "historical_existing": false,
+      "retired": true,
+      "retirement": {
+        "date": "2026-11-19",
+        "last_head": "21b3bd05878850c3ee2adca62d83ea56ddfd0748",
+        "local_and_origin_deleted": true,
+        "original_scope_base_and_card_mapping_retained": true,
+        "replacement_rule": "Keep this as historical mapping; create a fresh neutral branch from current main only when implementation starts."
+      }
     },
     "codex/oci-validation-runbooks": {
       "base_ref": "pr/oci-provider-scoped",
       "scope": "validation",
       "existing": false,
       "state": "starter",
-      "description": "Offline/live acceptance and portable runbooks; no cloud execution implied."
+      "description": "Offline/live acceptance and portable runbooks; no cloud execution implied.",
+      "historical_existing": false,
+      "retired": true,
+      "retirement": {
+        "date": "2026-11-19",
+        "last_head": "21b3bd05878850c3ee2adca62d83ea56ddfd0748",
+        "local_and_origin_deleted": true,
+        "original_scope_base_and_card_mapping_retained": true,
+        "replacement_rule": "Keep this as historical mapping; create a fresh neutral branch from current main only when implementation starts."
+      }
     },
     "codex/oci-oke-workload-identity": {
       "base_ref": "codex/oci-sdk-transport",
       "scope": "provider",
       "existing": false,
       "state": "starter",
-      "description": "OKE SDK signer and IAM acceptance after transport/deployment foundations."
+      "description": "OKE SDK signer and IAM acceptance after transport/deployment foundations.",
+      "historical_existing": false,
+      "retired": true,
+      "retirement": {
+        "date": "2026-11-19",
+        "last_head": "21b3bd05878850c3ee2adca62d83ea56ddfd0748",
+        "local_and_origin_deleted": true,
+        "original_scope_base_and_card_mapping_retained": true,
+        "replacement_rule": "Keep this as historical mapping; create a fresh neutral branch from current main only when implementation starts."
+      }
     },
     "codex/machine-identity-aliases": {
       "base_ref": "upstream/main",
       "scope": "shared",
       "existing": false,
       "state": "starter",
-      "description": "Generic recorded name/DNS identity resolution and persistence."
+      "description": "Generic recorded name/DNS identity resolution and persistence.",
+      "historical_existing": false,
+      "retired": true,
+      "retirement": {
+        "date": "2026-11-19",
+        "last_head": "2a7724796318d85eb171f50ad2f2bbba886187ec",
+        "local_and_origin_deleted": true,
+        "original_scope_base_and_card_mapping_retained": true,
+        "replacement_rule": "Keep this as historical mapping; create a fresh neutral branch from current main only when implementation starts."
+      }
     },
     "codex/pool-lifecycle-contracts": {
       "base_ref": "upstream/main",
       "scope": "shared",
       "existing": false,
       "state": "starter",
-      "description": "Generic controller/member identity, refresh, ownership and return contracts."
+      "description": "Generic controller/member identity, refresh, ownership and return contracts.",
+      "historical_existing": false,
+      "retired": true,
+      "retirement": {
+        "date": "2026-11-19",
+        "last_head": "2a7724796318d85eb171f50ad2f2bbba886187ec",
+        "local_and_origin_deleted": true,
+        "original_scope_base_and_card_mapping_retained": true,
+        "replacement_rule": "Keep this as historical mapping; create a fresh neutral branch from current main only when implementation starts."
+      }
     },
     "codex/oci-scheduled-scaling": {
       "base_ref": "codex/oci-instance-pools",
       "scope": "provider",
       "existing": false,
       "state": "starter",
-      "description": "UTC schedules with agreed scheduler authority, drain and scale-in policy."
+      "description": "UTC schedules with agreed scheduler authority, drain and scale-in policy.",
+      "historical_existing": false,
+      "retired": true,
+      "retirement": {
+        "date": "2026-11-19",
+        "last_head": "21b3bd05878850c3ee2adca62d83ea56ddfd0748",
+        "local_and_origin_deleted": true,
+        "original_scope_base_and_card_mapping_retained": true,
+        "replacement_rule": "Keep this as historical mapping; create a fresh neutral branch from current main only when implementation starts."
+      }
     }
   },
   "items": [
@@ -610,9 +754,9 @@
           }
         },
         "blocker": "Shared formatter action dependency violates full-SHA policy; maintainer review, CI clearance and readiness remain pending.",
-        "next_action": "Inspect the roadmap checkpoint and named starter-branch cleanup plan, then resume the OCI-only launch bundle locally. No new feature publication is approved.",
+        "next_action": "Refresh and sync fork main to the newer observed FINOS head, then resume the OCI-only launch-controls bundle locally. Keep standalone evidence and all feature publication pending exact-snapshot review.",
         "updated_at": "2026-11-19",
-        "last_iteration_id": "OCI-20261119-REPO-CHECKPOINT",
+        "last_iteration_id": "OCI-20261119-FORK-HYGIENE",
         "scope_gate": "oci-provider",
         "delivery_plan": {
           "state": "planned_not_implemented",
@@ -631,9 +775,10 @@
         },
         "repository_checkpoint": {
           "main": "3ab6716a6f1f82a3feed42bbd0ca0b357a1e4e7a",
-          "state": "synchronized",
-          "cleanup": "pending_named_list_review",
-          "launch_bundle": "not_created"
+          "state": "fork_main_preserved_new_FINOS_main_pending_sync",
+          "cleanup": "completed_verified_only16_approved_starters",
+          "launch_bundle": "not_created",
+          "upstream_observed": "21adc63cd31f4db724d804f6223a821e5dda0f45"
         }
       }
     },
@@ -799,9 +944,9 @@
           }
         },
         "blocker": "Owner approval before push/PR; live address acceptance pending; shared formatter CI dependency remains a separate merge blocker.",
-        "next_action": "Inspect the roadmap checkpoint and named starter-branch cleanup plan, then resume the OCI-only launch bundle locally. No new feature publication is approved.",
+        "next_action": "Refresh and sync fork main to the newer observed FINOS head, then resume the OCI-only launch-controls bundle locally. Keep standalone evidence and all feature publication pending exact-snapshot review.",
         "updated_at": "2026-11-19",
-        "last_iteration_id": "OCI-20261119-REPO-CHECKPOINT",
+        "last_iteration_id": "OCI-20261119-FORK-HYGIENE",
         "design_resolution": "Use existing public_ip_assignment with strict OCI validation and saved-false precedence.",
         "scope_gate": "oci-provider",
         "delivery_plan": {
@@ -821,9 +966,10 @@
         },
         "repository_checkpoint": {
           "main": "3ab6716a6f1f82a3feed42bbd0ca0b357a1e4e7a",
-          "state": "synchronized",
-          "cleanup": "pending_named_list_review",
-          "launch_bundle": "not_created"
+          "state": "fork_main_preserved_new_FINOS_main_pending_sync",
+          "cleanup": "completed_verified_only16_approved_starters",
+          "launch_bundle": "not_created",
+          "upstream_observed": "21adc63cd31f4db724d804f6223a821e5dda0f45"
         }
       },
       "evidence": [
@@ -953,9 +1099,9 @@
           }
         },
         "blocker": "Owner inspection and explicit snapshot approval; live acceptance and upstream review/merge pending.",
-        "next_action": "Inspect the roadmap checkpoint and named starter-branch cleanup plan, then resume the OCI-only launch bundle locally. No new feature publication is approved.",
+        "next_action": "Refresh and sync fork main to the newer observed FINOS head, then resume the OCI-only launch-controls bundle locally. Keep standalone evidence and all feature publication pending exact-snapshot review.",
         "updated_at": "2026-11-19",
-        "last_iteration_id": "OCI-20261119-REPO-CHECKPOINT",
+        "last_iteration_id": "OCI-20261119-FORK-HYGIENE",
         "design_resolution": "Current Oracle image-source API values verified; narrow OCI row hook preserves authored sizing precedence.",
         "scope_gate": "oci-provider",
         "delivery_plan": {
@@ -975,9 +1121,10 @@
         },
         "repository_checkpoint": {
           "main": "3ab6716a6f1f82a3feed42bbd0ca0b357a1e4e7a",
-          "state": "synchronized",
-          "cleanup": "pending_named_list_review",
-          "launch_bundle": "not_created"
+          "state": "fork_main_preserved_new_FINOS_main_pending_sync",
+          "cleanup": "completed_verified_only16_approved_starters",
+          "launch_bundle": "not_created",
+          "upstream_observed": "21adc63cd31f4db724d804f6223a821e5dda0f45"
         }
       },
       "evidence": [
@@ -2430,7 +2577,8 @@
     "iterations": "iterations.json",
     "instructions": "../../AGENTS.md",
     "last_iteration_id": "OCI-20261118-NETWORK-STAGE",
-    "rule": "Keep implementation, publication, offline validation and live acceptance separate; append meaningful iteration results."
+    "rule": "Keep implementation, publication, offline validation and live acceptance separate; append meaningful iteration results.",
+    "branch_registry_semantics": "The19 registered names retain historical scope/base/card mapping. Records marked retired and existing=false were approved starter-ref cleanup, not implementation. Actual current sources are in card progress. New implementation uses fresh neutral branches."
   },
   "upstream_integrations": [
     {
@@ -2788,7 +2936,7 @@
     "upstream": "finos/open-resource-broker",
     "roadmap_branch": "codex/oci-feature-roadmap",
     "roadmap_local_checkout": "work/oci-feature-roadmap/roadmap",
-    "state": "main_sync_verified_local_roadmap_checkpoint_prepared_cleanup_pending_review",
+    "state": "approved_checkpoint_published_starter_cleanup_verified",
     "main_sync": {
       "observed_at_utc": "2026-11-19T16:07:50.493043+00:00",
       "client_date": "2026-11-19",
@@ -2798,13 +2946,20 @@
       "local_main": "3ab6716a6f1f82a3feed42bbd0ca0b357a1e4e7a",
       "ahead": 0,
       "behind": 0,
-      "origin_branch_count": 39,
+      "origin_branch_count": 23,
       "remote_push_performed_by_this_iteration": false,
       "evidence": [
         "git fetch upstream main exit0, tool882268",
         "git fetch origin exit0, tool28065d",
         "rev-parse main/origin/main/upstream/main and rev-list verified0/0, toolbbaa7d"
-      ]
+      ],
+      "subsequent_execution_observation": {
+        "date": "2026-11-19",
+        "fork_main": "3ab6716a6f1f82a3feed42bbd0ca0b357a1e4e7a",
+        "upstream_main": "21adc63cd31f4db724d804f6223a821e5dda0f45",
+        "state": "FINOS_advanced_after_review_both_main_branches_preserved_during_approved_cleanup",
+        "next_step": "Refresh and sync fork main before starting new feature work."
+      }
     },
     "rules": [
       "Keep organization main aligned with FINOS main using fast-forward updates; inspect and preserve unique commits if it diverges.",
@@ -2819,7 +2974,7 @@
     "cleanup": {
       "inventory": "work/oci-repo-protocol-20261118/branch-audit.json",
       "candidate_starter_names": 16,
-      "deleted": 0,
+      "deleted": 16,
       "preserve": [
         "active PR heads",
         "unpublished public-IP and boot implementations",
@@ -2827,7 +2982,7 @@
         "historical live-validation refs until archived",
         "gh-pages documentation publishing branch"
       ],
-      "state": "named_candidates_prepared_not_approved_or_deleted",
+      "state": "completed_and_verified",
       "names": [
         "codex/hostfactory-template-attributes",
         "codex/machine-identity-aliases",
@@ -2857,7 +3012,15 @@
           "docs/oci-provider-introductions"
         ]
       },
-      "historical_mapping_policy": "Retain the original19 branch records and25 card branch mappings; capture exact candidate heads and dependency bases before any later cleanup. Historical references are not promises that those branch names will continue to exist."
+      "historical_mapping_policy": "Retain the original19 branch records and25 card branch mappings; capture exact candidate heads and dependency bases before any later cleanup. Historical references are not promises that those branch names will continue to exist.",
+      "deleted_local": 16,
+      "deleted_remote": 16,
+      "remaining_origin_branches": 23,
+      "remaining_local_branches": 29,
+      "worktrees_preserved": 19,
+      "execution_evidence": "work/oci-repo-protocol-20261118/approved-execution/execution-result.json",
+      "upstream_refs_unchanged": true,
+      "active_PRs_unchanged": true
     },
     "publication_authorized": false,
     "previous_main_observation": {
@@ -2883,11 +3046,25 @@
       "other_screenshot": "The one-branch fork showing one unique commit is not this observed38-branch origin. Owner URL and unique commit need inspection before discarding anything there."
     },
     "roadmap_checkpoint": {
-      "state": "prepared_for_local_commit",
+      "state": "published",
       "parent": "5846623f5dc58755d5a71b8a2d85b47873d9f317",
       "branch": "codex/oci-feature-roadmap",
-      "publication": "not_pushed_pending_inspection_of_exact_checkpoint",
-      "review_packet": "work/oci-repo-protocol-20261118/REVIEW.html"
+      "publication": "approved_exact_checkpoint_pushed_to_organization_only",
+      "review_packet": "work/oci-repo-protocol-20261118/REVIEW.html",
+      "published_commit": "ce9be5fee48dc0251aa7320294575759896e5a91",
+      "local_execution_receipt": "This later local receipt is not included in the approved published checkpoint."
+    },
+    "last_housekeeping_approval": {
+      "date": "2026-11-19",
+      "user_reply": "yeah, make sure this doesnt impact upstream",
+      "scope": "Reviewed ce9be5fee fork roadmap push and exact16 starter names locally and in OCI FSI only",
+      "does_not_authorize": [
+        "additional roadmap publication",
+        "feature publication",
+        "upstream writes",
+        "PR changes",
+        "cloud changes"
+      ]
     }
   }
 }
