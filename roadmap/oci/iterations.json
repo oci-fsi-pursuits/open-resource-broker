@@ -1705,6 +1705,80 @@
         "later_receipt_pushed": false
       },
       "next_action": "Refresh and sync the fork main to the newer FINOS baseline, then resume local OCI launch-controls consolidation and prepare a new owner review packet before feature publication."
+    },
+    {
+      "id": "OCI-20261119-LAUNCH-BUNDLE",
+      "date": "2026-11-19",
+      "record_origin": "current_iteration",
+      "objective": "Consolidate four OCI launch controls on the freshly synced main, fix saved launch-choice regressions and stage a complete exact-snapshot owner review",
+      "work_ids": [
+        "NETWORK",
+        "BOOT-PERF",
+        "PREFLIGHT",
+        "INC-OCI-LAUNCH-001"
+      ],
+      "source": {
+        "planning_parent": "cd3d8a29194746c6b20ab376652bff9ac50db3be",
+        "planning_started_clean": true,
+        "implementation_worktree": "work/oci-pr-prep/launch-controls",
+        "branch": "feat/oci-launch-controls",
+        "base": "21adc63cd31f4db724d804f6223a821e5dda0f45",
+        "tested_commit": "84be3f64182bba9a90cc2155e4b5e05b55ab550b",
+        "tested_dirty": false,
+        "standalone_sources": [
+          "139c275398464edc14e918e23a7c8f3bd7e38e65",
+          "acf16590eff03b7449a79ed1d9237ffc44ed3b33",
+          "d837609c8e83e6c5299741dfeb1fe0ec61a37281",
+          "92fedef4abccd00a46cd02b440359d1618ab1485"
+        ]
+      },
+      "outcome": "local_bundle_implemented_validated_staged_no_publication_or_live_acceptance",
+      "changes": [
+        "Created one neutral implementation branch from verified synced21adc63c; preserved every historical feature ref.",
+        "Combined existing IMDS/preflight/public-IP/boot patches, resolving only OCI import, payload and provider-documentation overlaps.",
+        "Fixed saved explicit IMDS and capacity values being masked by lower flat defaults using an OCI-only hook composing the unchanged boot helper.",
+        "Added56 real defaults/save-reload/DTO/CLI-payload combined cases and21 meaningful preflight edge cases.",
+        "Prepared upstream-template-formatted description, complete19-file diff, evidence and separate unapproved action manifests."
+      ],
+      "checks": [
+        "Fresh upstream and origin fetches plus live read-only main checks confirm21adc63c and zero commits behind.",
+        "Clean84be3f641 passed783 offline OCI tests with live subtree explicitly excluded; focused272 cases are included and not added to the total.",
+        "Locked0.17.4 full-repository Ruff lint/security/format passed with the documented verified Windows symlink-placeholder adjustment.",
+        "OCI Pyright, strict provider scope with no exceptions, whitespace and independent saved-controls review passed.",
+        "Changed executable source230/233 lines and105/108 branch outcomes covered; OCI package1457/1559 lines. Three defensive gaps reviewed without percentage-only tests.",
+        "Both publication gates correctly block on missing explicit approval only. PR text matches14 sections and28 checkbox labels."
+      ],
+      "observed_facts": [
+        "Both opposing saved IMDS boolean defaults reproduced a real bug; the narrow source fix preserves explicit booleans and existing unset inheritance.",
+        "Combined fallback testing revealed saved preemptible capacity becoming ondemand; tests retain the original failure setup and the OCI hook now preserves the saved choice.",
+        "Preflight remains provider configuration only, disabled by default; no per-template preflight option or default-clearing mechanism was added.",
+        "Fresh PR comment inventories contain automation but no human requests. The observed shared formatter failure remains outside this OCI scope; first100 check-runs for code PRs were not a complete CI verdict.",
+        "Desktop update interrupted the public-IP/boot apply. Actual Git state was checked before resuming; a sandbox launcher sharing lock required approved external read/test processes.",
+        "Historical live proof remains tied to8a4e4fb1. No current candidate live, container, RDMA or Symphony acceptance is claimed."
+      ],
+      "remaining_hypotheses": [
+        "The exact candidate still needs live broker-principal address/IMDS/VPU/cleanup validation.",
+        "Shared CI pinning, maintainer review and upstream merge are pending independently of offline provider correctness."
+      ],
+      "evidence": [
+        "work/oci-launch-bundle-20261119/REVIEW.html",
+        "work/oci-launch-bundle-20261119/result.json",
+        "work/oci-launch-bundle-20261119/source-manifest.json",
+        "work/oci-launch-bundle-20261119/freshness.json",
+        "work/oci-launch-bundle-20261119/preflight-edge/final-source-review.json",
+        "work/oci-launch-bundle-20261119/preflight-edge/coverage-gap-review.json"
+      ],
+      "cleanup": {
+        "new_active_feature_worktree": 1,
+        "future_starter_branches_created": 0,
+        "branches_deleted": 0,
+        "feature_pushes": 0,
+        "PR_mutations": 0,
+        "cloud_or_auth_actions": 0,
+        "source_worktree_clean": true,
+        "planning_receipt": "Locally checkpointed separately from the feature branch; not pushed by this iteration."
+      },
+      "next_action": "Owner inspects full packet before any feature push, combined PR creation or replacement of877/879. Keep capacity878 and landing881 separate; shared CI repair and live acceptance remain separately scoped."
     }
   ]
 }

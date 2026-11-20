@@ -4,6 +4,46 @@ Updated **19 November 2026**. This is the readable handoff for the fork's
 [canonical backlog](backlog.json) and [iteration history](iterations.json).
 Runtime changes remain on their individual branches.
 
+## Current local OCI launch bundle — 19 November
+
+The four launch changes are now combined on **`feat/oci-launch-controls`**, clean
+tested commit **`84be3f641`**, based on freshly verified fork/upstream main
+**`21adc63c`**, zero commits behind. The full owner packet is ignored
+**`work/oci-launch-bundle-20261119/REVIEW.html`**: all19 OCI-owned paths, full diff,
+exact evidence, proposed PR description and unapproved publication/replacement
+snapshots. No feature push, PR update/closure/readiness action or cloud run occurred.
+
+The bundle includes IMDS endpoint options, optional provider preflight, explicit
+public-IP assignment and boot VPUs. Real save/reload tests found two persistence
+bugs: explicit IMDS booleans and capacity choices could be masked by lower flat
+defaults. An OCI-only row hook now preserves them and composes the unchanged boot
+helper. Empty/null values retain unset inheritance. No shared or other-provider
+code, workflow, package metadata, dependencies or landing documents were changed.
+
+**783 offline OCI tests passed** on the clean candidate, with the live subtree
+excluded. The56 combined cases and21 new edge cases are included, as is the
+272-case focused selection; these counts overlap and must not be summed. Locked
+full-repository Ruff lint/security/format, OCI Pyright, whitespace, strict scope
+and independent source review passed. Ruff has the documented Windows symlink
+placeholder adjustment and is not an exact Linux CI run.
+
+Changed executable coverage is **230/233 lines (98.71%)**, **105/108 decision
+outcomes (97.22%)**. OCI package line coverage is **93.46% (1457/1559)**, separate
+from whole-project coverage. Three defensive fallback/boundary paths were reviewed;
+no percentage-only tests or source coverage exclusions were added.
+
+Both publication gates block correctly until exact-snapshot owner approval.
+Proposed publication is one neutral combined PR for review and, only if approved,
+replacement of launch drafts877/879. Capacity878 and landing881 stay separate.
+The existing four PRs remain unchanged. Shared formatter pinning is separate.
+Actual image/bootstrap, address, boot-VPU and cleanup acceptance remain pending
+for this exact build; historical one-E5 live proof remains tied to8a4e4fb1.
+
+This planning receipt is committed locally, separate from the earlier published
+ce9be5fee checkpoint and from the feature PR. The other chat's platform card and
+every earlier iteration remain unchanged. Next: owner inspects this full packet;
+no new feature publication is authorized by the earlier fork-cleanup approval.
+
 ## Approved fork housekeeping completed — 19 November
 
 The reviewed roadmap checkpoint **`ce9be5fee` is now published** on the existing
